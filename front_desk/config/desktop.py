@@ -7,7 +7,7 @@ def get_data():
 		{
 			"module_name": "Front Desk",
 			"color": "blue",
-			"icon": "octicon octicon-file-directory",
+			"icon": "octicon octicon-book",
 			"type": "module",
 			"label": _("Front Desk")
 		}
