@@ -6,11 +6,55 @@ def get_data():
 	config = [
 		{
 			"label": _("Transaction"),
-			"items": []
+			"items": [
+				{
+					"label": _("Create Reservation"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Create guest reservation.")
+				},
+				{
+					"label": _("Check In"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Guest check in.")
+				},
+				{
+					"label": _("Check Out"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Guest Checkout")
+				},
+				{
+					"label": _("Issue Card"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Issue access card.")
+				},
+				{
+					"label": _("Create Desk Folio"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Desk folio for event / banquet order.")
+				},
+			]
 		},
 		{
 			"label": _("Report"),
-			"items": []
+			"items": [
+				{
+					"label": _("Reservation"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("List of reservation.")
+				},
+				{
+					"label": _("Folio Transaction"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("List guest transaction.")
+				},
+			]
 		},
 		{
 			"label": _("Setup"),
@@ -49,7 +93,26 @@ def get_data():
 		},
 		{
 			"label": _("Help"),
-			"items": []
+			"items": [
+				{
+					"label": _("How to create reservation ?"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Manual for creating reservation.")
+				},
+				{
+					"label": _("How to issue card ?"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Manual for card issuing.")
+				},
+				{
+					"label": _("I need support assistance"),
+					"type": "doctype",
+					"name": "Hotel Room",
+					"description": _("Directly contact support assistance / IT Department.")
+				},
+			]
 		}
 	]
 	return config
