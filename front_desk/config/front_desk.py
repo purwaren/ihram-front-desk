@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 from frappe import _
 
-
 def get_data():
 	config = [
 		{
@@ -68,6 +67,11 @@ def get_data():
 					"type": "doctype",
 					"name": "Room Photos",
 					"description": "Upload room photo"
+				},
+				{
+					"type": "doctype",
+					"name": "Room Rate",
+					"description": "Rate for room"
 				},
 				{
 					"type": "doctype",
