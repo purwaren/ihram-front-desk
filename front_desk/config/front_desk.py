@@ -45,7 +45,7 @@ def get_data():
 				{
 					"label": _("Reservation"),
 					"type": "doctype",
-					"name": "Hotel Room",
+					"name": "Reservation",
 					"description": _("List of reservation.")
 				},
 				{
