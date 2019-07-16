@@ -9,7 +9,7 @@ def get_data():
 				{
 					"label": _("Create Reservation"),
 					"type": "doctype",
-					"name": "Hotel Room",
+					"name": "Reservation",
 					"description": _("Create guest reservation.")
 				},
 				{
