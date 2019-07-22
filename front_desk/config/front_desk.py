@@ -65,8 +65,8 @@ def get_data():
 				},
 				{
 					"type": "doctype",
-					"name": "Room Photos",
-					"description": "Upload room photo"
+					"name": "Photos",
+					"description": "Upload photo"
 				},
 				{
 					"type": "doctype",
