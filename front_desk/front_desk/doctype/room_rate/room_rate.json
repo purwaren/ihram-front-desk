@@ -224,7 +224,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2019-07-17 17:52:14.406175", 
+ "modified": "2019-07-23 18:07:47.903379", 
  "modified_by": "Administrator", 
  "module": "Front Desk", 
  "name": "Room Rate", 
@@ -276,6 +276,7 @@
  "show_name_in_global_search": 0, 
  "sort_field": "modified", 
  "sort_order": "DESC", 
+ "title_field": "rate_name", 
  "track_changes": 1, 
  "track_seen": 0, 
  "track_views": 0
