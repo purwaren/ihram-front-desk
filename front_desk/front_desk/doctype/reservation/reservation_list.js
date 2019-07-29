@@ -2,7 +2,7 @@ frappe.listview_settings['Reservation'] = {
     onload: function(listview) {
         listview.page.add_action_item(__('Check In'), function() {
             frappe.call({
-                method: "front_desk.front_desk.doctype.room_stay.room_stay.create_room_stay",
+                method: "front_desk.front_desk.doctype.reservation.reservation.check_in",
                 args: {
                     reservation_id_list: listview.get_checked_items(true)
                 },

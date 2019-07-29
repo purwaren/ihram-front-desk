@@ -5,6 +5,13 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
+from front_desk.front_desk.doctype.room_stay.room_stay import create_room_stay
+from front_desk.front_desk.doctype.folio.folio import create_folio
 
 class Reservation(Document):
 	pass
+
+@frappe.whitelist()
+def check_in(reservation_id_list):
+	create_folio(reservation_id_list)
+	return create_room_stay(reservation_id_list)
