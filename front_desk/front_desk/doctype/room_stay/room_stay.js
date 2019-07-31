@@ -7,6 +7,22 @@ frappe.ui.form.on('Room Stay', {
 
 		var room_stay = frappe.get_doc(cdt, cdn);
 		if (room_stay.deposit.length <= 0){
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.folio.folio.get_folio_name',
+				args: {
+					reservation_id: room_stay.reservation_id
+				},
+				callback: (response) => {
+					frm.add_child('deposit', {
+						folio_id: response.message,
+						flag: 'Debit',
+						account_id: '1172.000 - Deposit Customer - IHRAM',
+						remark: 'Deposit'
+					});
+					frm.refresh_field('deposit');
+				}
+			});
+
 			var df = null;
 
 			df = frappe.meta.get_docfield('Folio Transaction', 'folio_id', room_stay.name);
@@ -20,25 +36,7 @@ frappe.ui.form.on('Room Stay', {
 
 			df = frappe.meta.get_docfield('Folio Transaction', 'remark', room_stay.name);
 			df.read_only = 1;
-
-			
 		}
-
-		frappe.call({
-			method: 'front_desk.front_desk.doctype.folio.folio.get_folio_name',
-			args: {
-				reservation_id: room_stay.reservation_id
-			},
-			callback: (response) => {
-				frm.add_child('deposit', {
-					folio_id: response.message,
-					flag: 'Debit',
-					account_id: '1172.000 - Deposit Customer - IHRAM',
-					remark: 'Deposit'
-				});
-				frm.refresh_field('deposit');
-			}
-		});
 
 		// frm.fields_dict['deposit'].grid.get_field('folio_id').get_query = function () {
 		// 	return {
