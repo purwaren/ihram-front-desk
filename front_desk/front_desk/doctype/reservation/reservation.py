@@ -19,16 +19,22 @@ def check_in(reservation_id_list):
 
 @frappe.whitelist()
 def check_out(reservation_id_list):
+	reservation_id_list = json.loads(reservation_id_list)
 	# TODO: Calculate trx and print receipt
 
-	# Update reservation status to "FINISH"
-	reservation_id_list = json.loads(reservation_id_list)
 
 	for reservation_id in reservation_id_list:
 		reservation = frappe.get_doc('Reservation', reservation_id)
+		# Update reservation status to "FINISH"
 		reservation.status = "Finish"
 		reservation.save()
 
-	# TODO: Update room_status dari hotel_room menjadi "Vacant Dirty"
-	
-	# TODO: Update status dari hotel_room menjadi "OO"
+		room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
+		hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
+		# Update room_status dari hotel_room menjadi "Vacant Dirty"
+		hotel_room.room_status = "Vacant Dirty"
+		# Update status dari hotel_room menjadi "OO"
+		hotel_room.status = "OO"
+		hotel_room.save()
+
+
