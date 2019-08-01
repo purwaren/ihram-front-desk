@@ -6,3 +6,4 @@ tags
 front_desk/docs/current
 .idea
 .idea/.gitignore
+venv

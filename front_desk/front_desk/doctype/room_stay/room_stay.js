@@ -80,3 +80,11 @@ frappe.ui.form.on('Room Stay', {
 		}
 	}
 });
+
+cur_frm.fields_dict['room_id'].get_query = function(doc) {
+	return {
+		filters: {
+			"status": 'AV'
+		}
+	}
+}
