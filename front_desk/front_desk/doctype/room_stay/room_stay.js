@@ -4,6 +4,8 @@
 var wrapper = null;
 var room_stay = null;
 var has_deposit = false;
+var credit_account_name = '';
+var debit_account_name_list = '';
 
 frappe.ui.form.on('Room Stay', {
 	setup: function(frm, cdt, cdn){
@@ -20,18 +22,28 @@ frappe.ui.form.on('Room Stay', {
 	onload: function(frm, cdt, cdn) {
 		if (!has_deposit) {
 			frappe.call({
-				method: 'front_desk.front_desk.doctype.folio.folio.get_folio_name',
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.get_credit_account_name',
 				args: {
-					reservation_id: room_stay.reservation_id
+					
 				},
 				callback: (response) => {
-					frm.add_child('deposit', {
-						folio_id: response.message,
-						flag: 'Debit',
-						account_id: '1172.000 - Deposit Customer - IHRAM',
-						remark: 'Deposit'
+					credit_account_name = response.message;
+
+					frappe.call({
+						method: 'front_desk.front_desk.doctype.folio.folio.get_folio_name',
+						args: {
+							reservation_id: room_stay.reservation_id
+						},
+						callback: (response) => {
+							frm.add_child('deposit', {
+								folio_id: response.message,
+								flag: 'Debit',
+								account_id: credit_account_name,
+								remark: 'Deposit'
+							});
+							frm.refresh_field('deposit');
+						}
 					});
-					frm.refresh_field('deposit');
 				}
 			});
 		}
@@ -60,8 +72,25 @@ frappe.ui.form.on('Room Stay', {
 			df = frappe.meta.get_docfield('Folio Transaction', 'remark', room_stay.name);
 			df.read_only = 1;
 
-			var html = '<select id="payment_method"><option value="Cash">Cash</option><option value="Debit">Debit</option></select>';
+			var html = '<select id="payment_method"></select>';
 			wrapper.html(html);
+
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.get_debit_account_name_list',
+				args: {
+
+				},
+				callback: (response) => {
+					console.log(response.message);
+					for (var i = 0; i < response.message.length; i++) {
+						var z = document.createElement('option');
+						z.setAttribute('value', response.message[i]);
+						var t = document.createTextNode(response.message[i]);
+						z.appendChild(t);
+						document.getElementById('payment_method').appendChild(z);
+					}
+				}
+			});
 		}
 	},
 	onload_post_render: function(frm, cdt, cdn) {
@@ -71,12 +100,24 @@ frappe.ui.form.on('Room Stay', {
 		
 	},
 	after_save: function(frm, cdt, cdn) {
-		if (!has_deposit){
-			var e = document.getElementById("payment_method");
+		if (!has_deposit) {
+			var e = document.getElementById('payment_method');
 			var v = e.options[e.selectedIndex].value;
 
-			wrapper.html(null);
-			has_deposit = true;
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.create_deposit_journal_entry',
+				args: {
+					reservation_id: room_stay.reservation_id,
+					amount: room_stay.deposit[0].amount,
+					debit_account_name: v,
+					credit_account_name: credit_account_name
+				},
+				callback: (response) => {
+					wrapper.html(null);
+					has_deposit = true;
+					console.log("SUCCESS");
+				}
+			});
 		}
 	}
 });
