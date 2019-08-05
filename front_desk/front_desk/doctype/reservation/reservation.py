@@ -14,6 +14,11 @@ class Reservation(Document):
 
 @frappe.whitelist()
 def check_in(reservation_id_list):
+	reservation_id_list = json.loads(reservation_id_list)
+
+	for reservation_id in reservation_id_list:
+		frappe.db.set_value('Reservation', reservation_id, 'status', 'Confirmed')
+
 	create_folio(reservation_id_list)
 	return create_room_stay(reservation_id_list)
 

@@ -12,8 +12,6 @@ class RoomStay(Document):
 	pass
 
 def create_room_stay(reservation_id_list):
-	reservation_id_list = json.loads(reservation_id_list)
-
 	url_list = []
 	for reservation_id in reservation_id_list:
 		nama = 'RS-' + reservation_id
@@ -58,18 +56,36 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name, cre
 
 @frappe.whitelist()
 def get_credit_account_name():
-	return frappe.db.get_list('Account',
+	temp = frappe.db.get_list('Account',
 		filters={
 			'account_number': '1172.000'
 		}
-	)[0].name
+	)
+
+	if len(temp) > 0:
+		return temp[0].name
+	else:
+		return ''
 
 @frappe.whitelist()
 def get_debit_account_name_list():
 	debit_account_name_list = []
-	debit_account_name_list.append(frappe.db.get_list('Account', filters={'account_number': '1111.00211'})[0].name)
+
+	temp = frappe.db.get_list('Account',
+		filters={
+			'account_number': '1111.00211'
+		}
+	)
+
+	if len(temp) > 0:
+		debit_account_name_list.append(temp[0].name)
 	
-	temp = frappe.db.get_list('Account', filters={'account_number': ['like', '1121.%'], 'account_type': 'Bank'})
+	temp = frappe.db.get_list('Account',
+		filters={
+			'account_number': ['like', '1121.%'], 'account_type': 'Bank'
+		}
+	)
+
 	for t in temp:
 		debit_account_name_list.append(t.name)
 	

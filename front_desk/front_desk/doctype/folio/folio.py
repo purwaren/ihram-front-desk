@@ -11,8 +11,6 @@ class Folio(Document):
 	pass
 
 def create_folio(reservation_id_list):
-	reservation_id_list = json.loads(reservation_id_list)
-
 	for reservation_id in reservation_id_list:
 		if not frappe.db.exists({'doctype': 'Folio', 'reservation_id': reservation_id}):
 			reservation = frappe.get_doc('Reservation', reservation_id)
