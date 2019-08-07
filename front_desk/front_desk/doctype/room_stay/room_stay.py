@@ -32,7 +32,7 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name, cre
 	doc.voucher_type = 'Journal Entry'
 	doc.naming_series = 'ACC-JV-.YYYY.-'
 	doc.posting_date = datetime.date.today()
-	doc.company = 'IHRAM'
+	doc.company = frappe.get_doc("Global Defaults").default_company
 	doc.remark = 'Deposit ' + reservation_id
 	doc.user_remark = 'Deposit ' + reservation_id
 
