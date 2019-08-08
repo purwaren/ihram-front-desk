@@ -78,6 +78,34 @@ frappe.ui.form.on('Reservation', {
 		}
 	},
 	refresh: function(frm, cdt, cdn) {
+		if (reservation.status != 'Created') {
+			var df = null;
+			df = frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name);
+			df.read_only = 1;
+
+			df = frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name);
+			df.read_only = 1;
+
+			df = frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name);
+			df.read_only = 1;
+
+			df = frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name);
+			df.read_only = 1;
+
+			df = frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name);
+			df.read_only = 1;
+
+			df = frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name);
+			df.read_only = 1;
+
+			df = frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name);
+			df.read_only = 1;
+
+			df = frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name);
+			df.read_only = 1;
+			
+		}
+
 		if (reservation.status == 'Confirmed') {
 			var df = null;
 			df = frappe.meta.get_docfield('Room Stay', 'reservation_id', reservation.name);
