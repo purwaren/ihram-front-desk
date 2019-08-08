@@ -17,11 +17,12 @@ def check_in(reservation_id_list):
 	reservation_id_list = json.loads(reservation_id_list)
 
 	for reservation_id in reservation_id_list:
-		doc = frappe.get_doc('Reservation', reservation_id)
-		doc.status = 'Confirmed'
-		doc.save()
+		if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Created':
+			doc = frappe.get_doc('Reservation', reservation_id)
+			doc.status = 'Confirmed'
+			doc.save()
 
-	create_folio(reservation_id_list)
+			create_folio(reservation_id_list)
 
 	url_list = []
 	for reservation_id in reservation_id_list:
