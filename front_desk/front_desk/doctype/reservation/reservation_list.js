@@ -24,5 +24,19 @@ frappe.listview_settings['Reservation'] = {
                 }
             });
         });
+
+        listview.page.add_action_item( ('Cancel'), function () {
+            frappe.confirm(
+                ("You are about to cancel this Reservation, are you sure?"),
+                () => {
+                    frappe.call({
+                        method: "front_desk.front_desk.doctype.reservation.reservation.cancel",
+                        args: {
+                            reservation_id_list: listview.get_checked_items(true)
+                        }
+                    });
+                }
+            );
+        });
     }
 }

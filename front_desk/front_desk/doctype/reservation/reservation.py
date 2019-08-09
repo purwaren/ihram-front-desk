@@ -118,4 +118,11 @@ def check_out(reservation_id_list):
 		hotel_room.status = "OO"
 		hotel_room.save()
 
+@frappe.whitelist()
+def cancel(reservation_id_list):
+	reservation_id_list = json.loads(reservation_id_list)
 
+	for reservation_id in reservation_id_list:
+		reservation = frappe.get_doc('Reservation', reservation_id)
+		reservation.status = "Cancel"
+		reservation.save()
