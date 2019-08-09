@@ -108,6 +108,9 @@ def check_out(reservation_id_list):
 		reservation.save()
 
 		room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
+		# Update departure time in room stay
+		room_stay.departure = frappe.utils.now()
+		room_stay.save()
 		hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
 		# Update room_status dari hotel_room menjadi "Vacant Dirty"
 		hotel_room.room_status = "Vacant Dirty"

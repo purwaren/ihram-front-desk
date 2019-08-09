@@ -27,3 +27,20 @@ def get_folio_name(reservation_id):
 			'reservation_id': reservation_id
 		}
 	)[0].name
+
+@frappe.whitelist()
+def get_total_folio_transaction(reservation_id):
+	folio = frappe.get_doc('Folio', {"reservation_id": reservation_id})
+	folio_id = folio.name
+	folio_transaction_list = frappe.get_all('Folio Transaction',
+											filters={
+												"folio_id": folio_id,
+												"flag": "Credit"
+											},
+											fields=["amount"]
+											)
+	total = 0
+	for item in folio_transaction_list:
+		total = total + item.amount
+
+	return total
