@@ -16,7 +16,6 @@ frappe.listview_settings['Reservation'] = {
         });
 
         listview.page.add_action_item( ('Check Out'), function () {
-            const docnames = listview.get_checked_items(true).map(docname => docname.toString());
             frappe.call({
                 method: "front_desk.front_desk.doctype.reservation.reservation.check_out",
                 args: {

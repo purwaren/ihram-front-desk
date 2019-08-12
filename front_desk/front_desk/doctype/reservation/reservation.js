@@ -94,6 +94,30 @@ frappe.ui.form.on('Reservation', {
             );
 		});
 		}
+		if (reservation.status == 'In House') {
+			frm.page.add_menu_item(("Check Out"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",
+					args: {
+						reservation_id: reservation.name
+					}
+				});
+			});
+		}
+		if (reservation.status != 'Cancel' || reservation.status != 'Created') {
+			frm.page.add_menu_item(("Print Receipt"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.print_receipt_reservation",
+					args: {
+						reservation_id: reservation.name
+					},
+					callback: (response) => {
+						console.log(response)
+						window.open(response.message, "_blank")
+					}
+				});
+			});
+		}
 		if (reservation.status != 'Created') {
 			var df = null;
 			df = frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name);

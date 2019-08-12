@@ -102,21 +102,7 @@ def check_out(reservation_id_list):
 
 
 	for reservation_id in reservation_id_list:
-		reservation = frappe.get_doc('Reservation', reservation_id)
-		# Update reservation status to "FINISH"
-		reservation.status = "Finish"
-		reservation.save()
-
-		room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
-		# Update departure time in room stay
-		room_stay.departure = frappe.utils.now()
-		room_stay.save()
-		hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
-		# Update room_status dari hotel_room menjadi "Vacant Dirty"
-		hotel_room.room_status = "Vacant Dirty"
-		# Update status dari hotel_room menjadi "OO"
-		hotel_room.status = "OO"
-		hotel_room.save()
+		checkout_reservation(reservation_id)
 
 @frappe.whitelist()
 def cancel(reservation_id_list):
@@ -138,4 +124,28 @@ def cancel_reservation(reservation_id):
 		reservation = frappe.get_doc('Reservation', reservation_id)
 		reservation.status = "Cancel"
 		reservation.save()
+
+@frappe.whitelist()
+def checkout_reservation(reservation_id):
+	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'In House':
+		reservation = frappe.get_doc('Reservation', reservation_id)
+		# Update reservation status to "FINISH"
+		reservation.status = "Finish"
+		reservation.save()
+
+		room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
+		# Update departure time in room stay
+		room_stay.departure = frappe.utils.now()
+		room_stay.save()
+		hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
+		# Update room_status dari hotel_room menjadi "Vacant Dirty"
+		hotel_room.room_status = "Vacant Dirty"
+		# Update status dari hotel_room menjadi "OO"
+		hotel_room.status = "OO"
+		hotel_room.save()
+
+@frappe.whitelist()
+def print_receipt_reservation(reservation_id):
+	folio = frappe.db.get_value("Folio", filters={"reservation_id": reservation_id})
+	return frappe.utils.get_url_to_form('Folio', folio)
 
