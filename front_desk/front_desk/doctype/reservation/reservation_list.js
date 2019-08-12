@@ -38,5 +38,14 @@ frappe.listview_settings['Reservation'] = {
                 }
             );
         });
-    }
+    },
+    get_indicator: function(doc) {
+        return [__(doc.status), {
+            "Created": "orange",
+            "Confirmed": "green",
+            "In House": "green",
+            "Finish": "blue",
+            "Cancel": "red"
+        }[doc.status], "status,=," + doc.status];
+	}
 }

@@ -78,6 +78,22 @@ frappe.ui.form.on('Reservation', {
 		}
 	},
 	refresh: function(frm, cdt, cdn) {
+		if(reservation.status == 'Created') {
+			frm.page.add_menu_item(("Cancel Reservation"), function () {
+				frappe.confirm(
+                (("You are about to cancel Reservation ") + reservation.name + (", are you sure?")),
+                () => {
+                    frappe.call({
+                        method: "front_desk.front_desk.doctype.reservation.reservation.cancel_reservation",
+                        args: {
+                            reservation_id: reservation.name
+                        }
+                    });
+                    frappe.msgprint(("Reservation ") + reservation.name + (" Canceled"));
+                }
+            );
+		});
+		}
 		if (reservation.status != 'Created') {
 			var df = null;
 			df = frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name);

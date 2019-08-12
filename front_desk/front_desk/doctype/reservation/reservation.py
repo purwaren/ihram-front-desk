@@ -123,6 +123,18 @@ def cancel(reservation_id_list):
 	reservation_id_list = json.loads(reservation_id_list)
 
 	for reservation_id in reservation_id_list:
-		reservation = frappe.get_doc('Reservation', reservation_id)
-		reservation.status = "Cancel"
-		reservation.save()
+		cancel_reservation(reservation_id)
+
+@frappe.whitelist()
+def get_status(reservation_id_list):
+	reservation_id_list = json.loads(reservation_id_list)
+	for reservation_id in reservation_id_list:
+		reservation = frappe.get_doc('Reservation', reservation_id, fields=['status'])
+	return reservation.status
+
+@frappe.whitelist()
+def cancel_reservation(reservation_id):
+	reservation = frappe.get_doc('Reservation', reservation_id)
+	reservation.status = "Cancel"
+	reservation.save()
+
