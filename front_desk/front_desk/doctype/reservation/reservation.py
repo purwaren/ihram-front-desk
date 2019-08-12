@@ -134,7 +134,8 @@ def get_status(reservation_id_list):
 
 @frappe.whitelist()
 def cancel_reservation(reservation_id):
-	reservation = frappe.get_doc('Reservation', reservation_id)
-	reservation.status = "Cancel"
-	reservation.save()
+	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Created':
+		reservation = frappe.get_doc('Reservation', reservation_id)
+		reservation.status = "Cancel"
+		reservation.save()
 

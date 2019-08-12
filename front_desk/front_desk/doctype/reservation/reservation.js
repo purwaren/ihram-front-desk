@@ -79,7 +79,7 @@ frappe.ui.form.on('Reservation', {
 	},
 	refresh: function(frm, cdt, cdn) {
 		if(reservation.status == 'Created') {
-			frm.page.add_menu_item(("Cancel Reservation"), function () {
+			frm.page.add_menu_item(("Cancel"), function () {
 				frappe.confirm(
                 (("You are about to cancel Reservation ") + reservation.name + (", are you sure?")),
                 () => {

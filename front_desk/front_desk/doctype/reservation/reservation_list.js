@@ -35,6 +35,7 @@ frappe.listview_settings['Reservation'] = {
                             reservation_id_list: listview.get_checked_items(true)
                         }
                     });
+                    frappe.msgprint("Reservation Canceled");
                 }
             );
         });
