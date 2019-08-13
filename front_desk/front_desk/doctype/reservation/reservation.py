@@ -105,6 +105,32 @@ def check_out(reservation_id_list):
 
 
 	for reservation_id in reservation_id_list:
+		checkout_reservation(reservation_id)
+
+@frappe.whitelist()
+def cancel(reservation_id_list):
+	reservation_id_list = json.loads(reservation_id_list)
+
+	for reservation_id in reservation_id_list:
+		cancel_reservation(reservation_id)
+
+@frappe.whitelist()
+def get_status(reservation_id_list):
+	reservation_id_list = json.loads(reservation_id_list)
+	for reservation_id in reservation_id_list:
+		reservation = frappe.get_doc('Reservation', reservation_id, fields=['status'])
+	return reservation.status
+
+@frappe.whitelist()
+def cancel_reservation(reservation_id):
+	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Created':
+		reservation = frappe.get_doc('Reservation', reservation_id)
+		reservation.status = "Cancel"
+		reservation.save()
+
+@frappe.whitelist()
+def checkout_reservation(reservation_id):
+	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'In House':
 		reservation = frappe.get_doc('Reservation', reservation_id)
 		# Update reservation status to "FINISH"
 		reservation.status = "Finish"
@@ -122,10 +148,7 @@ def check_out(reservation_id_list):
 		hotel_room.save()
 
 @frappe.whitelist()
-def cancel(reservation_id_list):
-	reservation_id_list = json.loads(reservation_id_list)
+def print_receipt_reservation(reservation_id):
+	folio = frappe.db.get_value("Folio", filters={"reservation_id": reservation_id})
+	return frappe.utils.get_url_to_form('Folio', folio)
 
-	for reservation_id in reservation_id_list:
-		reservation = frappe.get_doc('Reservation', reservation_id)
-		reservation.status = "Cancel"
-		reservation.save()

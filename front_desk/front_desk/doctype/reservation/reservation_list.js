@@ -16,7 +16,6 @@ frappe.listview_settings['Reservation'] = {
         });
 
         listview.page.add_action_item( ('Check Out'), function () {
-            const docnames = listview.get_checked_items(true).map(docname => docname.toString());
             frappe.call({
                 method: "front_desk.front_desk.doctype.reservation.reservation.check_out",
                 args: {
@@ -35,8 +34,18 @@ frappe.listview_settings['Reservation'] = {
                             reservation_id_list: listview.get_checked_items(true)
                         }
                     });
+                    frappe.msgprint("Reservation Canceled");
                 }
             );
         });
-    }
+    },
+    get_indicator: function(doc) {
+        return [__(doc.status), {
+            "Created": "orange",
+            "Confirmed": "green",
+            "In House": "green",
+            "Finish": "blue",
+            "Cancel": "red"
+        }[doc.status], "status,=," + doc.status];
+	}
 }

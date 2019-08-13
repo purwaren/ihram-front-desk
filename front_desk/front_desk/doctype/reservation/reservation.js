@@ -22,6 +22,46 @@ frappe.ui.form.on('Reservation', {
 		if (reservation.deposit > 0) {
 			has_deposit = true;
 		}
+		if(reservation.status == 'Created') {
+			frm.page.add_menu_item(("Cancel"), function () {
+				frappe.confirm(
+                (("You are about to cancel Reservation ") + reservation.name + (", are you sure?")),
+                () => {
+                    frappe.call({
+                        method: "front_desk.front_desk.doctype.reservation.reservation.cancel_reservation",
+                        args: {
+                            reservation_id: reservation.name
+                        }
+                    });
+                    frappe.msgprint(("Reservation ") + reservation.name + (" Canceled"));
+                }
+            );
+		});
+		}
+		if (reservation.status == 'In House') {
+			frm.page.add_menu_item(("Check Out"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",
+					args: {
+						reservation_id: reservation.name
+					}
+				});
+			});
+		}
+		if (reservation.status != 'Cancel' || reservation.status != 'Created') {
+			frm.page.add_menu_item(("Print Receipt"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.print_receipt_reservation",
+					args: {
+						reservation_id: reservation.name
+					},
+					callback: (response) => {
+						console.log(response)
+						window.open(response.message, "_blank")
+					}
+				});
+			});
+		}
 
 		if (reservation.__islocal == 1) {
 			frm.set_df_property('wifi_password', 'hidden', 1);
