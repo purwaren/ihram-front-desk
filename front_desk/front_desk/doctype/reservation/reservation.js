@@ -48,16 +48,28 @@ frappe.ui.form.on('Reservation', {
 				});
 			});
 		}
-		if (reservation.status != 'Cancel' || reservation.status != 'Created') {
+		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
 			frm.page.add_menu_item(("Print Receipt"), function () {
 				frappe.call({
-					method: "front_desk.front_desk.doctype.reservation.reservation.print_receipt_reservation",
+					method: "frappe.client.get_value",
 					args: {
-						reservation_id: reservation.name
+						doctype: "Folio",
+						filters: {"reservation_id": reservation.name},
+						fieldname: "name"
 					},
-					callback: (response) => {
-						console.log(response)
-						window.open(response.message, "_blank")
+					callback: (r) => {
+						if (r.message.name) {
+							var w = window.open(frappe.urllib.get_full_url("/printview?"
+									+"doctype="+encodeURIComponent("Folio")
+									+"&name="+encodeURIComponent(r.message.name)
+									+"&trigger_print=1"
+									+"&no_letterhead=0"
+									))
+
+							if (!w) {
+								frappe.msgprint(__("Please enable pop-ups")); return;
+							}
+						}
 					}
 				});
 			});
