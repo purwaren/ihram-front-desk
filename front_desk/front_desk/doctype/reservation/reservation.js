@@ -58,12 +58,18 @@ frappe.ui.form.on('Reservation', {
 						fieldname: "name"
 					},
 					callback: (r) => {
-						window.open(frappe.urllib.get_full_url("/printview?"
-						+"doctype="+encodeURIComponent("Folio")
-						+"&name="+encodeURIComponent(r.message.name)
-						+"&trigger_print=1"
-						+"&no_letterhead=0"
-						));
+						if (r.message.name) {
+							var w = window.open(frappe.urllib.get_full_url("/printview?"
+									+"doctype="+encodeURIComponent("Folio")
+									+"&name="+encodeURIComponent(r.message.name)
+									+"&trigger_print=1"
+									+"&no_letterhead=0"
+									))
+
+							if (!w) {
+								frappe.msgprint(__("Please enable pop-ups")); return;
+							}
+						}
 					}
 				});
 			});
