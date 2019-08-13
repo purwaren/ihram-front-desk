@@ -12,7 +12,7 @@ frappe.ui.form.on('Reservation', {
 		frm.fields_dict['room_stay'].grid.get_field('room_id').get_query = function () {
 			return {
 				filters: {
-					'status': 'AV'
+					'status': 'AV' 
 				}
 			}
 		}
@@ -127,10 +127,11 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('wifi_password', 'hidden', 0);
 		} else {
 			frappe.call({
-				method: 'front_desk.front_desk.doctype.hotel_room.hotel_room.set_availability',
+				method: 'front_desk.front_desk.doctype.hotel_room.hotel_room.set_availability_and_room_status',
 				args: {
 					room_name_list: room_list,
-					availability: 'AV'
+					availability: (reservation.status == 'Confirmed') ? 'AV' : 'OO',
+					room_status: (reservation.status == 'Confirmed') ? 'Vacant Ready' : 'Occupied Dirty'
 				},
 				callback: (response) => {
 					room_list = [];
@@ -139,10 +140,11 @@ frappe.ui.form.on('Reservation', {
 					});
 	
 					frappe.call({
-						method: 'front_desk.front_desk.doctype.hotel_room.hotel_room.set_availability',
+						method: 'front_desk.front_desk.doctype.hotel_room.hotel_room.set_availability_and_room_status',
 						args: {
 							room_name_list: room_list,
-							availability: 'RS'
+							availability: 'RS',
+							room_status: 'Occupied Clean'
 						},
 						callback: (response) => {
 	
