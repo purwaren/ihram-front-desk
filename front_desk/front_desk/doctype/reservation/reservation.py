@@ -147,8 +147,5 @@ def checkout_reservation(reservation_id):
 		hotel_room.status = "OO"
 		hotel_room.save()
 
-@frappe.whitelist()
-def print_receipt_reservation(reservation_id):
-	folio = frappe.db.get_value("Folio", filters={"reservation_id": reservation_id})
-	return frappe.utils.get_url_to_form('Folio', folio)
+
 
