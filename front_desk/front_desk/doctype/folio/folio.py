@@ -20,7 +20,6 @@ def create_folio(reservation_id_list):
 			doc.reservation_id = reservation_id
 			doc.insert()
 
-@frappe.whitelist()
 def get_folio_name(reservation_id):
 	return frappe.db.get_list('Folio',
 		filters={

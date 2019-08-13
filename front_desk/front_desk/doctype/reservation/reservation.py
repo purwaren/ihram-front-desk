@@ -8,6 +8,7 @@ import datetime
 import frappe
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
+from front_desk.front_desk.doctype.folio.folio import get_folio_name
 
 class Reservation(Document):
 	pass
@@ -31,7 +32,9 @@ def check_in(reservation_id_list):
 	return url_list
 
 @frappe.whitelist()
-def create_deposit_journal_entry(reservation_id, amount, debit_account_name, credit_account_name):
+def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
+	credit_account_name = get_credit_account_name()
+
 	doc = frappe.new_doc('Journal Entry')
 	doc.voucher_type = 'Journal Entry'
 	doc.naming_series = 'ACC-JV-.YYYY.-'
@@ -58,7 +61,7 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name, cre
 	doc.save()
 	doc.submit()
 
-@frappe.whitelist()
+
 def get_credit_account_name():
 	temp = frappe.db.get_list('Account',
 		filters={
