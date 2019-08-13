@@ -92,8 +92,11 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('room_stay', 'hidden', 1);
 		}
 
-		if (reservation.status != 'Confirmed') {
+		if (reservation.status != 'Confirmed' && reservation.status != 'In House') {
 			frm.set_df_property('room_stay', 'set_only_once', 1);
+
+			frappe.meta.get_docfield('Room Stay', 'room_id', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Room Stay', 'issue_card', reservation.name).hidden = 1;
 		}
 
 		if (reservation.status != 'Created') {
@@ -201,3 +204,9 @@ function make_pin(length) {
 	}
 	return result;
  }
+
+ frappe.ui.form.on('Room Stay', 'issue_card', function(frm) {
+	console.log(frm);
+	frm.set_value('status', 'In House');
+	frm.save();
+ });
