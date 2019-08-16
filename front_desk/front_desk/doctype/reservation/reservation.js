@@ -9,6 +9,7 @@ var room_list = [];
 
 frappe.ui.form.on('Reservation', {
 	onload: function(frm, cdt, cdn) {
+		console.log(frm);
 		frm.fields_dict['room_stay'].grid.get_field('room_id').get_query = function () {
 			return {
 				filters: {
@@ -210,3 +211,24 @@ function make_pin(length) {
 	frm.set_value('status', 'In House');
 	frm.save();
  });
+
+frappe.ui.form.on('Room Stay', {
+	room_id: function (frm, cdt, cdn) {
+		console.log(frm);
+		var child = locals[cdt][cdn];
+		frappe.db.get_value("Hotel Room", child.room_id, "room_type", (hotel_room) => {
+			frappe.db.get_value("Customer", frm.doc.customer_id, "customer_group", (customer) => {
+				var	grid_row = frm.fields_dict['room_stay'].grid.grid_rows_by_docname[child.name];
+				var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
+				field.get_query = function () {
+					return {
+						filters: {
+							'room_type': hotel_room.room_type,
+							'customer_group': customer.customer_group
+						}
+					}
+				}
+			});
+		});
+	}
+});
