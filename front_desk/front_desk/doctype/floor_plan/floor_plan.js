@@ -112,38 +112,38 @@ frappe.ui.form.on('Floor Plan', {
 		frappe.db.get_list('Hotel Room', {fields: ['name', 'status']}).then(function(resp){
 			resp.forEach(element => {
 				if (element.status == 'AV') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#4daf4a;');				
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#33a02c;');				
 				} else if (element.status == 'RS') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#984ea3;');				
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#1f78b4;');				
 				} else if (element.status == 'RC') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#f781bf;');				
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#a6cee3;');				
 				} else if (element.status == 'HU') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#ff7f00;');					
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#fdbf6f;');					
 				} else if (element.status == 'OO') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#a65628;');					
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#e31a1c;');					
 				} else if (element.status == 'OU') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#ffff33;');					
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#ff7f00;');					
 				} else if (element.status == 'UC') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#e41a1c;');					
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#fb9a99;');					
 				} 
 			});
 		});
 		
 		var information = '' +
 			'<svg id="information" width="250" height="350">\
-				<rect x="0" y="0" width="50" height="25" fill="#4daf4a" stroke="black" />\
+				<rect x="0" y="0" width="50" height="25" fill="#33a02c" stroke="black" />\
 				<text x="60" y="15" fill="black">AV (Available)</text>\
-				<rect x="0" y="50" width="50" height="25" fill="#984ea3" stroke="black" />\
+				<rect x="0" y="50" width="50" height="25" fill="#1f78b4" stroke="black" />\
 				<text x="60" y="65" fill="black">RS (Room Sold)</text>\
-				<rect x="0" y="100" width="50" height="25" fill="#f781bf" stroke="black" />\
+				<rect x="0" y="100" width="50" height="25" fill="#a6cee3" stroke="black" />\
 				<text x="60" y="115" fill="black">RC (Room Compliment)</text>\
-				<rect x="0" y="150" width="50" height="25" fill="#ff7f00" stroke="black" />\
+				<rect x="0" y="150" width="50" height="25" fill="#fdbf6f" stroke="black" />\
 				<text x="60" y="165" fill="black">HU (House Use)</text>\
-				<rect x="0" y="200" width="50" height="25" fill="#a65628" stroke="black" />\
+				<rect x="0" y="200" width="50" height="25" fill="#e31a1c" stroke="black" />\
 				<text x="60" y="215" fill="black">OO (Out of Order)</text>\
-				<rect x="0" y="250" width="50" height="25" fill="#ffff33" stroke="black" />\
+				<rect x="0" y="250" width="50" height="25" fill="#ff7f00" stroke="black" />\
 				<text x="60" y="265" fill="black">OU (Office Use)</text>\
-				<rect x="0" y="300" width="50" height="25" fill="#e41a1c" stroke="black" />\
+				<rect x="0" y="300" width="50" height="25" fill="#fb9a99" stroke="black" />\
 				<text x="60" y="315" fill="black">UC (Under Construction)</text>\
 			</svg>'
 
