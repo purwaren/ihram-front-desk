@@ -43,3 +43,15 @@ def get_total_folio_transaction(reservation_id):
 		total = total + item.amount
 
 	return total
+
+@frappe.whitelist()
+def copy_trx_from_sales_invoice(reservation_id):
+	folio_id = frappe.get_doc('Folio', {"reservation_id": reservation_id}).name
+	customer_id = frappe.get_doc('Reservation', reservation_id).customer_id
+	pos_profile_list = frappe.get_all('POS Profile', filters={"disabled": 0})
+
+	# TODO:
+	# for each sales_invoice in all_sales_invoice
+	# 	copy needed details from sales_invoice and create new folio transaction with folio_id = folio_id
+	# 	?? create new payment entry related to  sales_invoice
+	#
