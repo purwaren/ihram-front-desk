@@ -90,23 +90,23 @@ app_license = "MIT"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"front_desk.tasks.all"
-# 	],
-# 	"daily": [
-# 		"front_desk.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"front_desk.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"front_desk.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"front_desk.tasks.monthly"
-# 	]
-# }
+scheduler_events = {
+	# "all": [
+	# 	"front_desk.tasks.all"
+	# ],
+	"daily": [
+		"front_desk.front_desk.doctype.hotel_room.hotel_room.set_hotel_room_vacant_dirty"
+	],
+	# "hourly": [
+	# 	"front_desk.tasks.hourly"
+	# ],
+	# "weekly": [
+	# 	"front_desk.tasks.weekly"
+	# ]
+	# "monthly": [
+	# 	"front_desk.tasks.monthly"
+	# ]
+}
 
 # Testing
 # -------
