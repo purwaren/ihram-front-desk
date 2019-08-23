@@ -1,6 +1,5 @@
 frappe.listview_settings['Hotel Room'] = {
     onload: function(listview) {
-        console.log(frappe.user_roles);
         if (frappe.user.has_role('Housekeeping') || frappe.user.has_role('Housekeeping Supervisor')) {
             listview.page.add_action_item(__('Update Status'), function() {
                 frappe.call({
