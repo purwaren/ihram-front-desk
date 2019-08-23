@@ -11,6 +11,7 @@ frappe.listview_settings['Hotel Room'] = {
                                 room_name_list: listview.get_checked_items(true)
                             },
                             callback: (response) => {
+                                cur_list.refresh();
                                 frappe.msgprint(("Hotel Rooms ") + listview.get_checked_items(true) + (" status updated."));
                             }
                         });
