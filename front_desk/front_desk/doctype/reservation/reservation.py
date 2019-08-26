@@ -35,13 +35,13 @@ def check_in(reservation_id_list):
 def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 	credit_account_name = get_credit_account_name()
 
-	doc = frappe.new_doc('Journal Entry')
-	doc.voucher_type = 'Journal Entry'
-	doc.naming_series = 'ACC-JV-.YYYY.-'
-	doc.posting_date = datetime.date.today()
-	doc.company = frappe.get_doc("Global Defaults").default_company
-	doc.remark = 'Deposit ' + reservation_id
-	doc.user_remark = 'Deposit ' + reservation_id
+	doc_journal_entry = frappe.new_doc('Journal Entry')
+	doc_journal_entry.voucher_type = 'Journal Entry'
+	doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+	doc_journal_entry.posting_date = datetime.date.today()
+	doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+	doc_journal_entry.remark = 'Deposit ' + reservation_id
+	doc_journal_entry.user_remark = 'Deposit ' + reservation_id
 
 	doc_debit = frappe.new_doc('Journal Entry Account')
 	doc_debit.account = debit_account_name
@@ -53,13 +53,28 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 	doc_credit.account = credit_account_name
 	doc_credit.credit = amount
 	doc_credit.credit_in_account_currency = amount
-	doc_credit.user_remark = 'Deposit ' + reservation_id 
+	doc_credit.user_remark = 'Deposit ' + reservation_id
 	
-	doc.append('accounts', doc_debit)
-	doc.append('accounts', doc_credit)
+	doc_journal_entry.append('accounts', doc_debit)
+	doc_journal_entry.append('accounts', doc_credit)
 
-	doc.save()
-	doc.submit()
+	doc_journal_entry.save()
+	doc_journal_entry.submit()
+
+	folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+	doc_folio = frappe.get_doc('Folio', folio_name)
+
+	doc_folio_transaction = frappe.new_doc('Folio Transaction')
+	doc_folio_transaction.folio_id = doc_folio.name
+	doc_folio_transaction.amount = amount
+	doc_folio_transaction.flag = 'Credit'
+	doc_folio_transaction.account_id = credit_account_name
+	doc_folio_transaction.against_account_id = debit_account_name
+	doc_folio_transaction.remark = 'Deposit ' + reservation_id
+	doc_folio_transaction.is_void = 0
+
+	doc_folio.append('transaction_detail', doc_folio_transaction)
+	doc_folio.save()
 
 
 def get_credit_account_name():
@@ -80,7 +95,7 @@ def get_debit_account_name_list():
 
 	temp = frappe.db.get_list('Account',
 		filters={
-			'account_number': '1111.00211'
+			'account_number': '1111.003'
 		}
 	)
 
