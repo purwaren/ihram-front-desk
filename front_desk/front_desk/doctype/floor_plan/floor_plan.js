@@ -117,12 +117,12 @@ frappe.ui.form.on('Floor Plan', {
 					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#1f78b4;');				
 				} else if (element.status == 'RC') {
 					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#a6cee3;');				
+				} else if (element.status == 'OU') {
+					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#ff7f00;');					
 				} else if (element.status == 'HU') {
 					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#fdbf6f;');					
 				} else if (element.status == 'OO') {
 					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#e31a1c;');					
-				} else if (element.status == 'OU') {
-					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#ff7f00;');					
 				} else if (element.status == 'UC') {
 					document.getElementById('room-' + element.name).setAttribute('style', 'fill:#fb9a99;');					
 				} 
@@ -137,12 +137,12 @@ frappe.ui.form.on('Floor Plan', {
 				<text x="60" y="65" fill="black">RS (Room Sold)</text>\
 				<rect x="0" y="100" width="50" height="25" fill="#a6cee3" stroke="black" />\
 				<text x="60" y="115" fill="black">RC (Room Compliment)</text>\
-				<rect x="0" y="150" width="50" height="25" fill="#fdbf6f" stroke="black" />\
-				<text x="60" y="165" fill="black">HU (House Use)</text>\
-				<rect x="0" y="200" width="50" height="25" fill="#e31a1c" stroke="black" />\
-				<text x="60" y="215" fill="black">OO (Out of Order)</text>\
-				<rect x="0" y="250" width="50" height="25" fill="#ff7f00" stroke="black" />\
-				<text x="60" y="265" fill="black">OU (Office Use)</text>\
+				<rect x="0" y="150" width="50" height="25" fill="#ff7f00" stroke="black" />\
+				<text x="60" y="165" fill="black">OU (Office Use)</text>\
+				<rect x="0" y="200" width="50" height="25" fill="#fdbf6f" stroke="black" />\
+				<text x="60" y="215" fill="black">HU (House Use)</text>\
+				<rect x="0" y="250" width="50" height="25" fill="#e31a1c" stroke="black" />\
+				<text x="60" y="265" fill="black">OO (Out of Order)</text>\
 				<rect x="0" y="300" width="50" height="25" fill="#fb9a99" stroke="black" />\
 				<text x="60" y="315" fill="black">UC (Under Construction)</text>\
 			</svg>'
