@@ -111,7 +111,7 @@
    "report_hide": 0,
    "reqd": 0,
    "search_index": 0,
-   "set_only_once": 0,
+   "set_only_once": 1,
    "translatable": 0,
    "unique": 0
   },
@@ -122,6 +122,7 @@
    "bold": 0,
    "collapsible": 0,
    "columns": 0,
+   "default": "1",
    "fetch_if_empty": 0,
    "fieldname": "total_qty",
    "fieldtype": "Float",
@@ -144,7 +145,7 @@
    "report_hide": 0,
    "reqd": 0,
    "search_index": 0,
-   "set_only_once": 0,
+   "set_only_once": 1,
    "translatable": 0,
    "unique": 0
   },
@@ -178,7 +179,7 @@
    "report_hide": 0,
    "reqd": 0,
    "search_index": 0,
-   "set_only_once": 0,
+   "set_only_once": 1,
    "translatable": 0,
    "unique": 0
   },
@@ -211,7 +212,7 @@
    "report_hide": 0,
    "reqd": 0,
    "search_index": 0,
-   "set_only_once": 0,
+   "set_only_once": 1,
    "translatable": 0,
    "unique": 0
   },
@@ -313,7 +314,7 @@
    "report_hide": 0,
    "reqd": 1,
    "search_index": 0,
-   "set_only_once": 0,
+   "set_only_once": 1,
    "translatable": 0,
    "unique": 0
   },
@@ -395,7 +396,7 @@
  "issingle": 0,
  "istable": 1,
  "max_attachments": 0,
- "modified": "2019-08-26 16:38:37.687846",
+ "modified": "2019-08-29 13:44:55.681221",
  "modified_by": "Administrator",
  "module": "Front Desk",
  "name": "Folio Transaction",

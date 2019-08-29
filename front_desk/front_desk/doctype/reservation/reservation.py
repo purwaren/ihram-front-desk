@@ -8,7 +8,6 @@ import datetime
 import frappe
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
-from front_desk.front_desk.doctype.folio.folio import get_folio_name
 
 class Reservation(Document):
 	pass
@@ -162,5 +161,59 @@ def checkout_reservation(reservation_id):
 		hotel_room.status = "OO"
 		hotel_room.save()
 
+
+def auto_room_charge():
+	reservation_list = frappe.get_all('Reservation', {'status': 'In House'})
+	for reservation in reservation_list:
+		create_room_charge(reservation.name)
+
+def create_room_charge(reservation_id):
+	room_stay_list = frappe.get_all('Room Stay', {"reservation_id": reservation_id}, fields=["*"])
+	for room_stay in room_stay_list:
+		room_rate = frappe.get_doc('Room Rate', room_stay.room_rate, fields=['*'])
+		je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+		je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+
+		doc_journal_entry = frappe.new_doc('Journal Entry')
+		doc_journal_entry.voucher_type = 'Journal Entry'
+		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+		doc_journal_entry.posting_date = datetime.date.today()
+		doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+		doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+		doc_journal_entry.remark = 'Auto Room Charge ' + reservation_id
+		doc_journal_entry.user_remark = 'Auto Room Charge ' + reservation_id
+
+		doc_debit = frappe.new_doc('Journal Entry Account')
+		doc_debit.account = je_debit_account
+		doc_debit.debit = room_rate.rate
+		doc_debit.debit_in_account_currency = room_rate.rate
+		doc_debit.user_remark = 'Auto Room Charge ' + reservation_id
+
+		doc_credit = frappe.new_doc('Journal Entry Account')
+		doc_credit.account = je_credit_account
+		doc_credit.credit = room_rate.rate
+		doc_credit.credit_in_account_currency = room_rate.rate
+		doc_credit.user_remark = 'Auto Room Charge ' + reservation_id
+
+		doc_journal_entry.append('accounts', doc_debit)
+		doc_journal_entry.append('accounts', doc_credit)
+
+		doc_journal_entry.save()
+		doc_journal_entry.submit()
+
+		folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+		doc_folio = frappe.get_doc('Folio', folio_name)
+
+		doc_folio_transaction = frappe.new_doc('Folio Transaction')
+		doc_folio_transaction.folio_id = doc_folio.name
+		doc_folio_transaction.amount = room_rate.rate
+		doc_folio_transaction.flag = 'Debit'
+		doc_folio_transaction.account_id = je_credit_account
+		doc_folio_transaction.against_account_id = je_debit_account
+		doc_folio_transaction.remark = 'Auto Room Charge ' + reservation_id
+		doc_folio_transaction.is_void = 0
+
+		doc_folio.append('transaction_detail', doc_folio_transaction)
+		doc_folio.save()
 
 

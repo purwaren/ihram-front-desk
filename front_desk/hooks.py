@@ -97,6 +97,7 @@ scheduler_events = {
 	"daily": [
 		"front_desk.front_desk.doctype.hotel_room.hotel_room.set_hotel_room_vacant_dirty",
 		"front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio"
+		"front_desk.front_desk.doctype.reservation.reservation.auto_room_charge"
 	],
 	# "hourly": [
 	# 	"front_desk.tasks.hourly"
