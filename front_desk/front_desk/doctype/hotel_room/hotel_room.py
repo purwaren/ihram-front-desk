@@ -23,10 +23,9 @@ def set_availability_and_room_status(room_name_list, availability, room_status):
 
 @frappe.whitelist()
 def set_hotel_room_vacant_dirty():
-	hotel_room_list = frappe.get_all('Hotel Room', filters={'room_status': 'Occupied Clean'}, fields=['room_status'])
+	hotel_room_list = frappe.get_all('Hotel Room', filters={'room_status': 'Occupied Clean'}, fields=['room_status', 'name'])
 	for room in hotel_room_list:
-		room.room_status = "Occupied Dirty"
-		room.save()
+		frappe.db.set_value('Hotel Room', room.name, 'room_status', 'Occupied Dirty')
 
 @frappe.whitelist()
 def upgrade_status(room_name_list):
