@@ -9,7 +9,10 @@ frappe.listview_settings['Reservation'] = {
                 callback: (response) => {
                     console.log(response)
                     for (let i = 0; i < response.message.length; i++){
-                        window.open(response.message[i], "_blank")
+                        var w = window.open(response.message[i], "_blank");
+                        if (!w) {
+                            frappe.msgprint(__("Please enable pop-ups")); return;
+                        }
                     }
                 }
             });
