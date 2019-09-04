@@ -1,0 +1,22 @@
+{
+ "align_labels_right": 0,
+ "creation": "2019-09-02 17:03:14.145010",
+ "custom_format": 1,
+ "default_print_language": "en",
+ "disabled": 0,
+ "doc_type": "Folio",
+ "docstatus": 0,
+ "doctype": "Print Format",
+ "font": "Default",
+ "idx": 0,
+ "line_breaks": 0,
+ "modified": "2019-09-02 17:03:14.145010",
+ "modified_by": "Administrator",
+ "module": "Front Desk",
+ "name": "Checkout Receipt",
+ "owner": "Administrator",
+ "print_format_builder": 0,
+ "print_format_type": "Server",
+ "show_section_headings": 0,
+ "standard": "Yes"
+}
