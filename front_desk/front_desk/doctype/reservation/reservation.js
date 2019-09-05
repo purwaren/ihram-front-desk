@@ -108,6 +108,7 @@ frappe.ui.form.on('Reservation', {
 			frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 1;
 			frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 1;
 			frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'is_smoking', reservation.name).read_only = 1;
 			frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 1;
 			frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 1;
 		}
@@ -116,7 +117,7 @@ frappe.ui.form.on('Reservation', {
 			wrapper = frm.get_field("payment_method").$wrapper;
 			var html = '<select id="payment_method"></select>';
 			wrapper.html(html);
-
+			
 			frappe.call({
 				method: 'front_desk.front_desk.doctype.reservation.reservation.get_debit_account_name_list',
 				args: {

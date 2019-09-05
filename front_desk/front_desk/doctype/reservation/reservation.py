@@ -103,7 +103,7 @@ def get_debit_account_name_list():
 	
 	temp = frappe.db.get_list('Account',
 		filters={
-			'account_number': ['like', '1121.%'], 'account_type': 'Bank'
+			'account_number': ['like', '1121.0%'], 'account_type': 'Bank'
 		}
 	)
 
