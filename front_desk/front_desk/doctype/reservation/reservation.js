@@ -214,9 +214,8 @@ function make_pin(length) {
 	var w = window.open(frappe.urllib.get_full_url("/printview?"
 			+"doctype="+encodeURIComponent("Room Stay")
 			+"&name="+encodeURIComponent(frappe.get_doc(cdt, cdn).name)
-			+"&trigger_print=1"
 			+"&no_letterhead=0"
-			))
+			));
 
 	if (!w) {
 		frappe.msgprint(__("Please enable pop-ups")); return;
