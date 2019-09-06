@@ -115,23 +115,38 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 												fields=["*"]
 												)
 			for sales_invoice in sales_invoice_list:
-				found_folio = frappe.get_doc('Folio Transaction', {'sales_invoice_id': sales_invoice.name})
-				if not found_folio:
-					doc_folio = frappe.get_doc('Folio', {'folio_id': folio_id})
+				if not frappe.db.exists('Folio Transaction', {'sales_invoice_id': sales_invoice.name}):
+					doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 					doc = frappe.new_doc('Folio Transaction')
 					doc.folio_id = folio_id
 					doc.amount = sales_invoice.total
 					doc.sales_invoice_id = sales_invoice.name
 					doc.total_qty = sales_invoice.total_qty
-					doc.pos_profile = pos_profile
+					doc.pos_profile = pos_profile.name
 					doc.flag = 'Debit'
 					doc.account_id = sales_invoice.against_income_account
 					doc.against_account_id = sales_invoice.debit_to
-					doc.remark = 'Sales Invoice POS ' + pos_profile + ' ID: ' + sales_invoice.name + '  ' + sales_invoice.posting_date
+					doc.remark = 'Sales Invoice POS ' + pos_profile.name + ' ID: ' + sales_invoice.name
 					doc.is_void = 0
 
 					doc_folio.append('transaction_detail', doc)
-					doc.save()
+					doc_folio.save()
+				else:
+					doc_folio = frappe.get_doc('Folio', {'name': folio_id})
+					doc = frappe.new_doc('Folio Transaction')
+					doc.folio_id = folio_id
+					doc.amount = sales_invoice.total
+					doc.sales_invoice_id = sales_invoice.name
+					doc.total_qty = sales_invoice.total_qty
+					doc.pos_profile = pos_profile.name
+					doc.flag = 'Debit'
+					doc.account_id = sales_invoice.against_income_account
+					doc.against_account_id = sales_invoice.debit_to
+					doc.remark = 'Sales Invoice POS ' + pos_profile.name + ' ID: ' + sales_invoice.name
+					doc.is_void = 0
+
+					doc_folio.append('transaction_detail', doc)
+					doc_folio.save()
 
 def copy_trx_from_folio_transaction_to_journal_entry(reservation_id):
 	# copy the folio transactions which not have entry yet in General Ledger. i.e: Room charge transactions
