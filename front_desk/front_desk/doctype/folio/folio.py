@@ -110,8 +110,11 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 												filters={
 													'customer_name': customer_id,
 													'pos_profile': pos_profile,
-													'status': 'Unpaid',
 												},
+												or_filters=[
+													{'status': 'Unpaid'},
+													{'status': 'Overdue'}
+												],
 												fields=["*"]
 												)
 			for sales_invoice in sales_invoice_list:
