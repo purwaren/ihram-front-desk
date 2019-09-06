@@ -55,7 +55,7 @@ app_license = "MIT"
 # ------------
 
 # before_install = "front_desk.install.before_install"
-# after_install = "front_desk.install.after_install"
+after_install = "front_desk.config.setup.after_install"
 
 # Desk Notifications
 # ------------------
