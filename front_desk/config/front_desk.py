@@ -1,43 +1,9 @@
 from __future__ import unicode_literals
 from frappe import _
 
+
 def get_data():
 	config = [
-		{
-			"label": _("Transaction"),
-			"items": [
-				{
-					"label": _("Create Reservation"),
-					"type": "doctype",
-					"name": "Reservation",
-					"description": _("Create guest reservation.")
-				},
-				{
-					"label": _("Check In"),
-					"type": "doctype",
-					"name": "Hotel Room",
-					"description": _("Guest check in.")
-				},
-				{
-					"label": _("Check Out"),
-					"type": "doctype",
-					"name": "Hotel Room",
-					"description": _("Guest Checkout")
-				},
-				{
-					"label": _("Issue Card"),
-					"type": "doctype",
-					"name": "Hotel Room",
-					"description": _("Issue access card.")
-				},
-				{
-					"label": _("Create Desk Folio"),
-					"type": "doctype",
-					"name": "Hotel Room",
-					"description": _("Desk folio for event / banquet order.")
-				},
-			]
-		},
 		{
 			"label": _("Report"),
 			"items": [
