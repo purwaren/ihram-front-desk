@@ -35,21 +35,21 @@ def after_install():
 		ha_entry.hotel_tax_value = 0
 		ha_entry.save()
 
-	# setup Chart of Accounts
-	parent_account = frappe.db.get_list('Account', filters={'account_number': '1111.000'})
-	account_list = [
-		['Kas Front Office', '1111.003'],
-		['Kas Kitchen', '1111.004'],
-		['Kas F&B', '1111.005'],
-		['Kas Housekeeping', '1111.006'],
-	]
-
-	for ac in account_list:
-		ac_entry = frappe.new_doc('Account')
-		ac_entry.account_name = ac[0]
-		ac_entry.account_number = ac[1]
-		ac_entry.parent = parent_account.name
-		ac_entry.parent_account = parent_account.name
-		ac_entry.account_currency = 'IDR'
-		ac_entry.account_type = 'Cash'
-		ac_entry.save()
+	# # setup Chart of Accounts
+	# parent_account = frappe.db.get_list('Account', filters={'account_number': '1111.000'})[0].name
+	# account_list = [
+	# 	['Kas Front Office', '1111.003'],
+	# 	['Kas Kitchen', '1111.004'],
+	# 	['Kas F&B', '1111.005'],
+	# 	['Kas Housekeeping', '1111.006'],
+	# ]
+	#
+	# for ac in account_list:
+	# 	ac_entry = frappe.new_doc('Account')
+	# 	ac_entry.account_name = ac[0]
+	# 	ac_entry.account_number = ac[1]
+	# 	ac_entry.parent = parent_account
+	# 	ac_entry.parent_account = parent_account
+	# 	ac_entry.account_currency = 'IDR'
+	# 	ac_entry.account_type = 'Cash'
+	# 	ac_entry.save()
