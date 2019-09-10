@@ -55,7 +55,7 @@ app_license = "MIT"
 # ------------
 
 # before_install = "front_desk.install.before_install"
-# after_install = "front_desk.install.after_install"
+after_install = "front_desk.config.setup.after_install"
 
 # Desk Notifications
 # ------------------
@@ -79,13 +79,16 @@ app_license = "MIT"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	# "*": {
+	# 	"on_update": "method",
+	# 	"on_cancel": "method",
+	# 	"on_trash": "method"
+	# }
+	"Room Rate": {
+		"validate": "front_desk.front_desk.doctype.room_rate.room_rate.calculate_total_amount"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
@@ -96,7 +99,7 @@ scheduler_events = {
 	# ],
 	"daily": [
 		"front_desk.front_desk.doctype.hotel_room.hotel_room.set_hotel_room_vacant_dirty",
-		"front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio"
+		"front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
 		"front_desk.front_desk.doctype.reservation.reservation.auto_room_charge"
 	],
 	# "hourly": [
