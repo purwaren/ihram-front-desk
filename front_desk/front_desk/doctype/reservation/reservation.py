@@ -216,4 +216,92 @@ def create_room_charge(reservation_id):
 		doc_folio.append('transaction_detail', doc_folio_transaction)
 		doc_folio.save()
 
+@frappe.whitelist()
+def get_empty_array(doctype, txt, searchfield, start, page_len, filters):
+	return []
 
+@frappe.whitelist()
+def get_room_available(doctype, txt, searchfield, start, page_len, filters):
+	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s", (filters.get('allow_smoke'))))
+	room_book_list = frappe.db.sql("select room_id from `tabReservation Detail` where (expected_arrival >= %s and expected_arrival < %s) or (expected_departure > %s and expected_departure <= %s) or (expected_arrival <= %s and expected_departure >= %s)", (filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))
+	
+	for room_book in room_book_list:
+		for i in range(len(room_list)):
+			if room_list[i][0] == room_book[0]:
+				del room_list[i]
+				break
+
+	return room_list
+
+@frappe.whitelist()
+def get_room_available_by_room_type(doctype, txt, searchfield, start, page_len, filters):
+	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s", (filters.get('allow_smoke'), filters.get('room_type'))))
+	room_book_list = frappe.db.sql("select room_id from `tabReservation Detail` where (expected_arrival >= %s and expected_arrival < %s) or (expected_departure > %s and expected_departure <= %s) or (expected_arrival <= %s and expected_departure >= %s)", (filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))
+	
+	for room_book in room_book_list:
+		for i in range(len(room_list)):
+			if room_list[i][0] == room_book[0]:
+				del room_list[i]
+				break
+
+	return room_list
+
+@frappe.whitelist()
+def get_room_available_by_room_type_bed_type(doctype, txt, searchfield, start, page_len, filters):
+	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s and bed_type = %s", (filters.get('allow_smoke'), filters.get('room_type'), filters.get('bed_type'))))
+	room_book_list = frappe.db.sql("select room_id from `tabReservation Detail` where (expected_arrival >= %s and expected_arrival < %s) or (expected_departure > %s and expected_departure <= %s) or (expected_arrival <= %s and expected_departure >= %s)", (filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))
+	
+	for room_book in room_book_list:
+		for i in range(len(room_list)):
+			if room_list[i][0] == room_book[0]:
+				del room_list[i]
+				break
+
+	return room_list
+
+@frappe.whitelist()
+def get_room_type_available(doctype, txt, searchfield, start, page_len, filters):
+	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s", (filters.get('allow_smoke'))))
+	room_book_list = frappe.db.sql("select room_id from `tabReservation Detail` where (expected_arrival >= %s and expected_arrival < %s) or (expected_departure > %s and expected_departure <= %s) or (expected_arrival <= %s and expected_departure >= %s)", (filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))
+	
+	for room_book in room_book_list:
+		for i in range(len(room_list)):
+			if room_list[i][0] == room_book[0]:
+				del room_list[i]
+				break
+
+	tmp = []
+	for room in room_list:
+		tmp.append(room[1])
+	
+	tmp = list(set(tmp))
+
+	room_type_list = []
+	for t in tmp:
+		room_type_list.append([t])
+
+	return room_type_list
+
+@frappe.whitelist()
+def get_bed_type_available(doctype, txt, searchfield, start, page_len, filters):
+	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s", (filters.get('allow_smoke'))))
+	room_book_list = frappe.db.sql("select room_id from `tabReservation Detail` where (expected_arrival >= %s and expected_arrival < %s) or (expected_departure > %s and expected_departure <= %s) or (expected_arrival <= %s and expected_departure >= %s)", (filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))
+	
+	for room_book in room_book_list:
+		for i in range(len(room_list)):
+			if room_list[i][0] == room_book[0]:
+				del room_list[i]
+				break
+
+	tmp = []
+	for room in room_list:
+		if room[1] == filters.get('room_type'):
+			tmp.append(room[2])
+	
+	tmp = list(set(tmp))
+
+	bed_type_list = []
+	for t in tmp:
+		bed_type_list.append([t])
+
+	return bed_type_list

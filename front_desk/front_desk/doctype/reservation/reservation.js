@@ -242,3 +242,184 @@ frappe.ui.form.on('Room Stay', {
 		});
 	}
 });
+
+frappe.ui.form.on('Reservation Detail',{
+	form_render: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
+		get_room_available(frm, child);
+		get_room_type_available(frm, child);
+		get_bed_type_available(frm, child);
+	},
+	expected_arrival: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
+		child.room_id = undefined;
+		child.room_type = undefined;
+		child.bed_type = undefined;
+		frm.refresh_field('reservation_detail');
+
+		get_room_available(frm, child);
+		get_room_type_available(frm, child);
+		get_bed_type_available(frm, child);
+	},
+	expected_departure: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
+		child.room_id = undefined;
+		child.room_type = undefined;
+		child.bed_type = undefined;
+		frm.refresh_field('reservation_detail');
+
+		get_room_available(frm, child);
+		get_room_type_available(frm, child);
+		get_bed_type_available(frm, child);
+	},
+	room_id: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
+		if (child.room_id != undefined) {
+			frappe.db.get_value('Hotel Room', {'name': child.room_id}, ['room_type', 'bed_type', 'allow_smoke'], function(response) {
+				child.room_type = response.room_type;
+				child.bed_type = response.bed_type;
+				child.allow_smoke = response.allow_smoke
+				frm.refresh_field('reservation_detail');	
+			});
+		}
+	},
+	room_type: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
+		child.room_id = undefined;
+		child.bed_type = undefined;
+		frm.refresh_field('reservation_detail');
+
+		get_room_available(frm, child);
+		get_bed_type_available(frm, child);
+	},
+	bed_type: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
+		child.room_id = undefined;
+		frm.refresh_field('reservation_detail');
+
+		get_room_available(frm, child);
+	},
+	allow_smoke: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
+		child.room_id = undefined;
+		child.room_type = undefined;
+		child.bed_type = undefined;
+		frm.refresh_field('reservation_detail');
+
+		get_room_available(frm, child);
+		get_room_type_available(frm, child);
+		get_bed_type_available(frm, child);
+	}
+});
+
+function get_room_available(frm, child) {
+	if (child.bed_type != undefined) {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_id"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_room_available_by_room_type_bed_type',
+				filters: {
+					'expected_arrival': child.expected_arrival,
+					'expected_departure': child.expected_departure,
+					'allow_smoke': child.allow_smoke,
+					'room_type': child.room_type,
+					'bed_type': child.bed_type
+				}
+			}
+		}
+	} else if (child.room_type != undefined) {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_id"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_room_available_by_room_type',
+				filters: {
+					'expected_arrival': child.expected_arrival,
+					'expected_departure': child.expected_departure,
+					'allow_smoke': child.allow_smoke,
+					'room_type': child.room_type
+				}
+			}
+		}
+	} else if (child.expected_arrival != undefined && child.expected_departure != undefined) {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_id"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_room_available',
+				filters: {
+					'expected_arrival': child.expected_arrival,
+					'expected_departure': child.expected_departure,
+					'allow_smoke': child.allow_smoke
+				}
+			}
+		}
+	} else {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_id"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_empty_array'
+			}
+		}
+	}
+}
+
+function get_room_type_available(frm, child) {
+	if (child.expected_arrival != undefined && child.expected_departure != undefined) {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_type"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_room_type_available',
+				filters: {
+					'expected_arrival': child.expected_arrival,
+					'expected_departure': child.expected_departure,
+					'allow_smoke': child.allow_smoke
+				}
+			}
+		}
+	} else {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_type"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_empty_array'
+			}
+		}
+	}
+}
+
+function get_bed_type_available(frm, child) {
+	if (child.room_type != undefined) {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "bed_type"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_bed_type_available',
+				filters: {
+					'expected_arrival': child.expected_arrival,
+					'expected_departure': child.expected_departure,
+					'allow_smoke': child.allow_smoke,
+					'room_type': child.room_type
+				}
+			}
+		}
+	} else {
+		var	grid_row = frm.fields_dict['reservation_detail'].grid.grid_rows_by_docname[child.name];
+		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "bed_type"})[0];
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_empty_array'
+			}
+		}
+	}
+}
