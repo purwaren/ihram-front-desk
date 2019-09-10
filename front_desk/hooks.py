@@ -87,7 +87,10 @@ doc_events = {
 	# }
 	"Room Rate": {
 		"validate": "front_desk.front_desk.doctype.room_rate.room_rate.calculate_total_amount"
-	}
+	},
+	"Room Stay": {
+		"validate": "front_desk.front_desk.doctype.room_stay_room_stay.validate_special_charge"
+	},
 }
 
 # Scheduled Tasks
