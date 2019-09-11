@@ -260,11 +260,13 @@ frappe.ui.form.on('Reservation Detail',{
 		child.room_id = undefined;
 		child.room_type = undefined;
 		child.bed_type = undefined;
+		child.room_rate = undefined;
 		frm.refresh_field('reservation_detail');
 
 		get_room_available(frm, child);
 		get_room_type_available(frm, child);
 		get_bed_type_available(frm, child);
+		get_room_rate(frm, child);
 	},
 	expected_departure: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
@@ -272,11 +274,13 @@ frappe.ui.form.on('Reservation Detail',{
 		child.room_id = undefined;
 		child.room_type = undefined;
 		child.bed_type = undefined;
+		child.room_rate = undefined;
 		frm.refresh_field('reservation_detail');
 
 		get_room_available(frm, child);
 		get_room_type_available(frm, child);
 		get_bed_type_available(frm, child);
+		get_room_rate(frm, child);
 	},
 	room_id: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
@@ -297,6 +301,7 @@ frappe.ui.form.on('Reservation Detail',{
 
 		child.room_id = undefined;
 		child.bed_type = undefined;
+		child.room_rate = undefined;
 		frm.refresh_field('reservation_detail');
 
 		get_room_available(frm, child);
@@ -317,11 +322,13 @@ frappe.ui.form.on('Reservation Detail',{
 		child.room_id = undefined;
 		child.room_type = undefined;
 		child.bed_type = undefined;
+		child.room_rate = undefined;
 		frm.refresh_field('reservation_detail');
 
 		get_room_available(frm, child);
 		get_room_type_available(frm, child);
 		get_bed_type_available(frm, child);
+		get_room_rate(frm, child);
 	}
 });
 
