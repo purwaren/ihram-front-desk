@@ -12,6 +12,14 @@ from front_desk.front_desk.doctype.folio.folio import create_folio
 class Reservation(Document):
 	pass
 
+def is_weekday():
+	weekno = datetime.datetime.today().weekday()
+
+	if weekno<5:
+		return True
+	else:
+		return False
+
 @frappe.whitelist()
 def check_in(reservation_id_list):
 	reservation_id_list = json.loads(reservation_id_list)
@@ -173,6 +181,10 @@ def create_room_charge(reservation_id):
 		room_rate = frappe.get_doc('Room Rate', room_stay.room_rate, fields=['*'])
 		je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 		je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+		if is_weekday():
+			today_rate = room_rate.rate_weekday
+		else:
+			today_rate = room_rate.rate_weekend
 
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.voucher_type = 'Journal Entry'
@@ -185,14 +197,14 @@ def create_room_charge(reservation_id):
 
 		doc_debit = frappe.new_doc('Journal Entry Account')
 		doc_debit.account = je_debit_account
-		doc_debit.debit = room_rate.rate
-		doc_debit.debit_in_account_currency = room_rate.rate
+		doc_debit.debit = today_rate
+		doc_debit.debit_in_account_currency = today_rate
 		doc_debit.user_remark = 'Auto Room Charge ' + reservation_id
 
 		doc_credit = frappe.new_doc('Journal Entry Account')
 		doc_credit.account = je_credit_account
-		doc_credit.credit = room_rate.rate
-		doc_credit.credit_in_account_currency = room_rate.rate
+		doc_credit.credit = today_rate
+		doc_credit.credit_in_account_currency = today_rate
 		doc_credit.user_remark = 'Auto Room Charge ' + reservation_id
 
 		doc_journal_entry.append('accounts', doc_debit)
@@ -206,7 +218,7 @@ def create_room_charge(reservation_id):
 
 		doc_folio_transaction = frappe.new_doc('Folio Transaction')
 		doc_folio_transaction.folio_id = doc_folio.name
-		doc_folio_transaction.amount = room_rate.rate
+		doc_folio_transaction.amount = today_rate
 		doc_folio_transaction.flag = 'Debit'
 		doc_folio_transaction.account_id = je_credit_account
 		doc_folio_transaction.against_account_id = je_debit_account

@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import datetime
 import frappe
 from frappe.model.document import Document
+from front_desk.front_desk.doctype.reservation.reservation import is_weekday
 
 class RoomStay(Document):
 	pass
@@ -16,7 +17,10 @@ def validate_special_charge(doc, method):
 
 	if (doc.is_early_checkin == 1):
 		percentage = frappe.db.get_value('Early Check In Percentage', {'early_checkin_name': doc.early_checkin_rate}, ['early_checkin_percentage'])
-		special_charge_amount = doc.rate * percentage
+		if is_weekday():
+			special_charge_amount = doc.rate_weekday * percentage
+		else:
+			special_charge_amount = doc.rate_weekend * percentage
 		remark = 'Early Check In Room: ' + doc.room_id
 
 		doc_journal_entry = frappe.new_doc('Journal Entry')
