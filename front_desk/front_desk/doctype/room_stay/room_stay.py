@@ -14,6 +14,7 @@ class RoomStay(Document):
 def validate_special_charge(doc, method):
 	je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 	je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+	cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', doc.reservation_id).customer_id).name
 
 	if (doc.is_early_checkin == 1):
 		percentage = frappe.db.get_value('Early Check In Percentage', {'early_checkin_name': doc.early_checkin_rate}, ['early_checkin_percentage'])
@@ -24,6 +25,7 @@ def validate_special_charge(doc, method):
 		remark = 'Early Check In Room: ' + doc.room_id
 
 		doc_journal_entry = frappe.new_doc('Journal Entry')
+		doc_journal_entry.title = remark
 		doc_journal_entry.voucher_type = 'Journal Entry'
 		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
 		doc_journal_entry.posting_date = datetime.date.today()
@@ -35,12 +37,16 @@ def validate_special_charge(doc, method):
 		doc_debit = frappe.new_doc('Journal Entry Account')
 		doc_debit.account = je_debit_account
 		doc_debit.debit = special_charge_amount
+		doc_debit.party_type = 'Customer'
+		doc_debit.party = cust_name
 		doc_debit.debit_in_account_currency = special_charge_amount
 		doc_debit.user_remark = remark
 
 		doc_credit = frappe.new_doc('Journal Entry Account')
 		doc_credit.account = je_credit_account
 		doc_credit.credit = special_charge_amount
+		doc_credit.party_type = 'Customer'
+		doc_credit.party = cust_name
 		doc_credit.credit_in_account_currency = special_charge_amount
 		doc_credit.user_remark = remark
 
@@ -71,6 +77,7 @@ def validate_special_charge(doc, method):
 		remark = 'Late Check Out Room: ' + doc.room_id
 
 		doc_journal_entry = frappe.new_doc('Journal Entry')
+		doc_journal_entry.title = remark
 		doc_journal_entry.voucher_type = 'Journal Entry'
 		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
 		doc_journal_entry.posting_date = datetime.date.today()
@@ -82,12 +89,16 @@ def validate_special_charge(doc, method):
 		doc_debit = frappe.new_doc('Journal Entry Account')
 		doc_debit.account = je_debit_account
 		doc_debit.debit = special_charge_amount
+		doc_debit.party_type = 'Customer'
+		doc_debit.party = cust_name
 		doc_debit.debit_in_account_currency = special_charge_amount
 		doc_debit.user_remark = remark
 
 		doc_credit = frappe.new_doc('Journal Entry Account')
 		doc_credit.account = je_credit_account
 		doc_credit.credit = special_charge_amount
+		doc_credit.party_type = 'Customer'
+		doc_credit.party = cust_name
 		doc_credit.credit_in_account_currency = special_charge_amount
 		doc_credit.user_remark = remark
 
