@@ -248,6 +248,7 @@ frappe.ui.form.on('Room Stay', {
 frappe.ui.form.on('Reservation Detail',{
 	form_render: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
+		console.log(child);
 
 		get_room_available(frm, child);
 		get_room_type_available(frm, child);
@@ -343,6 +344,7 @@ function get_room_available(frm, child) {
 				filters: {
 					'expected_arrival': child.expected_arrival,
 					'expected_departure': child.expected_departure,
+					'parent': frm.doc.name,
 					'allow_smoke': child.allow_smoke,
 					'room_type': child.room_type,
 					'bed_type': child.bed_type
@@ -356,6 +358,7 @@ function get_room_available(frm, child) {
 				filters: {
 					'expected_arrival': child.expected_arrival,
 					'expected_departure': child.expected_departure,
+					'parent': frm.doc.name,
 					'allow_smoke': child.allow_smoke,
 					'room_type': child.room_type
 				}
@@ -368,6 +371,7 @@ function get_room_available(frm, child) {
 				filters: {
 					'expected_arrival': child.expected_arrival,
 					'expected_departure': child.expected_departure,
+					'parent': frm.doc.name,
 					'allow_smoke': child.allow_smoke
 				}
 			}
@@ -392,6 +396,7 @@ function get_room_type_available(frm, child) {
 				filters: {
 					'expected_arrival': child.expected_arrival,
 					'expected_departure': child.expected_departure,
+					'parent': frm.doc.name,
 					'allow_smoke': child.allow_smoke
 				}
 			}
@@ -416,6 +421,7 @@ function get_bed_type_available(frm, child) {
 				filters: {
 					'expected_arrival': child.expected_arrival,
 					'expected_departure': child.expected_departure,
+					'parent': frm.doc.name,
 					'allow_smoke': child.allow_smoke,
 					'room_type': child.room_type
 				}
