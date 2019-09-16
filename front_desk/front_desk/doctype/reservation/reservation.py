@@ -165,9 +165,8 @@ def checkout_reservation(reservation_id):
 		hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
 		# Update room_status dari hotel_room menjadi "Vacant Dirty"
 		hotel_room.room_status = "Vacant Dirty"
-		# Update status dari hotel_room menjadi "OO"
-		hotel_room.status = "OO"
-		hotel_room.save()
+		# TODO: Update Status Availability dari Hotem Room pada hari itu saja.
+
 
 def auto_release_reservation_at_six_pm():
 	reservation_list = frappe.get_all('Reservation', {'status': 'Created', 'is_guaranteed': 0})
