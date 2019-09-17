@@ -10,26 +10,41 @@ frappe.ui.form.on('Hotel Tax', {
 frappe.ui.form.on('Hotel Tax Breakdown', {
 	breakdown_type: function (frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
-		var type = child.breakdown_type;
-		var account = " - " + child.breakdown_account;
-		if (child.breakdown_account == undefined) {
-			var desc = type;
+		var br_desc = child.breakdown_description;
+		var br_type = child.breakdown_type;
+		if (child.breakdown_rate != undefined) {
+			br_desc = child.breakdown_rate + "% " + br_type;
+		}
+		else if (child.breakdown_actual_amount != undefined) {
+			br_desc = format_currency(child.breakdown_actual_amount, 'IDR') + " " + br_type;
 		}
 		else {
-			var desc = type.concat(account);
+			br_desc = br_type;
 		}
-		frappe.model.set_value("Hotel Tax Breakdown", child.name, "breakdown_description", desc);
+		frappe.model.set_value("Hotel Tax Breakdown", child.name, "breakdown_description", br_desc);
 	},
-	breakdown_account: function (frm, cdt, cdn) {
+	breakdown_rate: function (frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
-		var type = child.breakdown_type;
-		var account = " - " + child.breakdown_account;
-		if (child.breakdown_type == '') {
-			var desc = child.breakdown_account;
+		var br_desc = child.breakdown_description;
+		var br_type = child.breakdown_type;
+		if (child.breakdown_rate != undefined) {
+			br_desc = child.breakdown_rate + "% " + br_type;
 		}
 		else {
-			var desc = type.concat(account);
+			br_desc = br_type;
 		}
-		frappe.model.set_value("Hotel Tax Breakdown", child.name, "breakdown_description", desc);
+		frappe.model.set_value("Hotel Tax Breakdown", child.name, "breakdown_description", br_desc);
+	},
+	breakdown_actual_amount: function (frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		var br_desc = child.breakdown_description;
+		var br_type = child.breakdown_type;
+		if (child.breakdown_actual_amount != undefined) {
+			br_desc = format_currency(child.breakdown_actual_amount, 'IDR') + " " + br_type;
+		}
+		else {
+			br_desc = br_type;
+		}
+		frappe.model.set_value("Hotel Tax Breakdown", child.name, "breakdown_description", br_desc);
 	}
 });
