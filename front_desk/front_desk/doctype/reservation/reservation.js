@@ -17,7 +17,7 @@ frappe.ui.form.on('Reservation', {
 			}
 		}
 	},
-	refresh: function(frm, cdt, cdn) {
+	onload_post_render: function(frm, cdt, cdn) {
 		reservation = frappe.get_doc(cdt, cdn);
 		if (reservation.deposit > 0) {
 			has_deposit = true;
@@ -189,6 +189,18 @@ frappe.ui.form.on('Reservation', {
 				});
 			}
 		}
+	},
+	after_save: function(frm) {
+		frm.reload_doc();
+		frappe.call({
+			method: "front_desk.front_desk.doctype.room_booking.room_booking.manage_by_reservation",
+			args: {
+				reservation_name: reservation.name
+			},
+			callback: (r) => {
+				console.log('DONE');
+			}
+		});
 	}
 });
 
@@ -248,7 +260,6 @@ frappe.ui.form.on('Room Stay', {
 frappe.ui.form.on('Reservation Detail',{
 	form_render: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
-		console.log(child);
 
 		get_room_available(frm, child);
 		get_room_type_available(frm, child);
