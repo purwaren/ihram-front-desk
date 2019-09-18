@@ -55,10 +55,5 @@ def after_install():
 		{'doctype': 'Room Availability', 'name':_('OO'), 'description': _('Out of Order')},
 		{'doctype': 'Room Availability', 'name':_('OU'), 'description': _('Office Use')},
 		{'doctype': 'Room Availability', 'name':_('UC'), 'description': _('Under Construction')},
-
-	# 	Hotel Tax
-		{'doctype': 'Hotel Tax', 'hotel_tax_description': _('None'), 'hotel_tex_value': 0},
-		{'doctype': 'Hotel Tax', 'hotel_tax_description': _('Tax & Service Include(21%)'), 'hotel_tex_value': 0},
-		{'doctype': 'Hotel Tax', 'hotel_tax_description': _('Tax Only(10%)'), 'hotel_tex_value': 0},
 	]
 	make_records(records, True)
