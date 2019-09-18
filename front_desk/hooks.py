@@ -86,7 +86,8 @@ doc_events = {
 	# 	"on_trash": "method"
 	# }
 	"Room Rate": {
-		"validate": "front_desk.front_desk.doctype.room_rate.room_rate.calculate_total_amount"
+		"validate": ["front_desk.front_desk.doctype.room_rate.room_rate.calculate_total_amount",
+					 "front_desk.front_desk.doctype.room_rate.room_rate.populate_breakdown_summary"],
 	},
 	"Room Stay": {
 		"validate": "front_desk.front_desk.doctype.room_stay_room_stay.validate_special_charge"
