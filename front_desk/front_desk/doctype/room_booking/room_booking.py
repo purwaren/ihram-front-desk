@@ -16,14 +16,14 @@ class RoomBooking(Document):
 def update_by_reservation(reservation_name):
 	status = frappe.db.get_value('Reservation', reservation_name, 'status')
 
-	reservation_detail_list = frappe.db.get_list('Reservation Detail', 
+	reservation_detail_list = frappe.db.get_all('Reservation Detail', 
 		filters={
 			'parent': reservation_name
 		},
 		fields=['name', 'expected_arrival', 'expected_departure', 'room_id']
 	)
 
-	room_stay_list = frappe.db.get_list('Room Stay', 
+	room_stay_list = frappe.db.get_all('Room Stay', 
 		filters={
 			'parent': reservation_name
 		},

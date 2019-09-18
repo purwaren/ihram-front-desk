@@ -263,11 +263,23 @@ def create_room_charge(reservation_id):
 def get_empty_array(doctype, txt, searchfield, start, page_len, filters):
 	return []
 
+# @frappe.whitelist()
+# def test(parent, expected_arrival, expected_departure):
+# 	room_book_list = list(frappe.db.sql("SELECT rb.room_id FROM `tabRoom Booking` AS rb LEFT JOIN `tabReservation Detail` AS rd ON rb.reference_name = rd.name WHERE (rd.parent != %s) AND (rb.status =	 'Booked') AND ((%s >= rb.start AND %s < rb.end) OR (%s > rb.start AND %s <= rb.end) OR (%s <= rb.start AND %s >= rb.end))", (parent, expected_arrival, expected_arrival, expected_departure, expected_departure, expected_arrival, expected_departure)))
+# 	room_book_list.extend(list(frappe.db.sql("SELECT rs.room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name WHERE (rs.parent != %s) AND (r.status = 'Confirmed' OR r.status = 'In House') AND ((%s >= CONVERT(rs.arrival, DATE) AND %s < CONVERT(rs.departure, DATE)) OR (%s > CONVERT(rs.arrival, DATE) AND %s <= CONVERT(rs.departure, DATE)) OR (%s <= CONVERT(rs.arrival, DATE) AND %s >= CONVERT(rs.departure, DATE)))", (parent, expected_arrival, expected_arrival, expected_departure, expected_departure, expected_arrival, expected_departure))))
+	
+# 	return room_book_list
+
+def get_room_book_list(filters):
+	room_book_list = list(frappe.db.sql("SELECT rb.room_id FROM `tabRoom Booking` AS rb LEFT JOIN `tabReservation Detail` AS rd ON rb.reference_name = rd.name WHERE (rd.parent != %s) AND (rb.status =	 'Booked') AND ((%s >= rb.start AND %s < rb.end) OR (%s > rb.start AND %s <= rb.end) OR (%s <= rb.start AND %s >= rb.end))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'))))
+	room_book_list.extend(list(frappe.db.sql("SELECT rs.room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name WHERE (rs.parent != %s) AND (r.status = 'Confirmed' OR r.status = 'In House') AND ((%s >= CONVERT(rs.arrival, DATE) AND %s < CONVERT(rs.departure, DATE)) OR (%s > CONVERT(rs.arrival, DATE) AND %s <= CONVERT(rs.departure, DATE)) OR (%s <= CONVERT(rs.arrival, DATE) AND %s >= CONVERT(rs.departure, DATE)))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))))
+	
+	return room_book_list
+
 @frappe.whitelist()
 def get_room_available(doctype, txt, searchfield, start, page_len, filters):
 	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s", (filters.get('allow_smoke'))))
-	room_book_list = list(frappe.db.sql("SELECT room_id FROM `tabReservation Detail` AS rd LEFT JOIN `tabReservation` AS r ON rd.parent = r.name where (rd.parent != %s) and (r.status = 'Created') and ((rd.expected_arrival >= %s and rd.expected_arrival < %s) or (rd.expected_departure > %s and rd.expected_departure <= %s) or (rd.expected_arrival <= %s and rd.expected_departure >= %s))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'))))
-	room_book_list.extend(list(frappe.db.sql("SELECT room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name where (rs.parent != %s) and (r.status = 'Confirmed' or r.status = 'In House') and ((CONVERT(rs.arrival, DATE) >= %s and CONVERT(rs.arrival, DATE) < %s) or (CONVERT(rs.departure, DATE) > %s and CONVERT(rs.departure, DATE) <= %s) or (CONVERT(rs.arrival, DATE) <= %s and CONVERT(rs.departure, DATE) >= %s))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))))
+	room_book_list = get_room_book_list(filters)
 
 	for room_book in room_book_list:
 		for i in range(len(room_list)):
@@ -280,8 +292,7 @@ def get_room_available(doctype, txt, searchfield, start, page_len, filters):
 @frappe.whitelist()
 def get_room_available_by_room_type(doctype, txt, searchfield, start, page_len, filters):
 	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s", (filters.get('allow_smoke'), filters.get('room_type'))))
-	room_book_list = list(frappe.db.sql("SELECT room_id FROM `tabReservation Detail` AS rd LEFT JOIN `tabReservation` AS r ON rd.parent = r.name where (rd.parent != %s) and (r.status = 'Created') and ((rd.expected_arrival >= %s and rd.expected_arrival < %s) or (rd.expected_departure > %s and rd.expected_departure <= %s) or (rd.expected_arrival <= %s and rd.expected_departure >= %s))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'))))
-	room_book_list.extend(list(frappe.db.sql("SELECT room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name where (rs.parent != %s) and (r.status = 'Confirmed' or r.status = 'In House') and ((CONVERT(rs.arrival, DATE) >= %s and CONVERT(rs.arrival, DATE) < %s) or (CONVERT(rs.departure, DATE) > %s and CONVERT(rs.departure, DATE) <= %s) or (CONVERT(rs.arrival, DATE) <= %s and CONVERT(rs.departure, DATE) >= %s))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))))
+	room_book_list = get_room_book_list(filters)
 	
 	for room_book in room_book_list:
 		for i in range(len(room_list)):
@@ -294,8 +305,7 @@ def get_room_available_by_room_type(doctype, txt, searchfield, start, page_len, 
 @frappe.whitelist()
 def get_room_available_by_room_type_bed_type(doctype, txt, searchfield, start, page_len, filters):
 	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s and bed_type = %s", (filters.get('allow_smoke'), filters.get('room_type'), filters.get('bed_type'))))
-	room_book_list = list(frappe.db.sql("SELECT room_id FROM `tabReservation Detail` AS rd LEFT JOIN `tabReservation` AS r ON rd.parent = r.name where (rd.parent != %s) and (r.status = 'Created') and ((rd.expected_arrival >= %s and rd.expected_arrival < %s) or (rd.expected_departure > %s and rd.expected_departure <= %s) or (rd.expected_arrival <= %s and rd.expected_departure >= %s))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'))))
-	room_book_list.extend(list(frappe.db.sql("SELECT room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name where (rs.parent != %s) and (r.status = 'Confirmed' or r.status = 'In House') and ((CONVERT(rs.arrival, DATE) >= %s and CONVERT(rs.arrival, DATE) < %s) or (CONVERT(rs.departure, DATE) > %s and CONVERT(rs.departure, DATE) <= %s) or (CONVERT(rs.arrival, DATE) <= %s and CONVERT(rs.departure, DATE) >= %s))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))))
+	room_book_list = get_room_book_list(filters)
 	
 	for room_book in room_book_list:
 		for i in range(len(room_list)):
