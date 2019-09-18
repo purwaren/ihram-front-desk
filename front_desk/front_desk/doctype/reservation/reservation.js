@@ -6,6 +6,7 @@ var has_deposit = false;
 var wrapper = null;
 var debit_account_name_list = '';
 var room_list = [];
+var reservation_detail_remove_list = [];
 
 frappe.ui.form.on('Reservation', {
 	onload: function(frm, cdt, cdn) {
@@ -100,19 +101,19 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (reservation.status != 'Created') {
-			frm.set_df_property('reservation_detail', 'set_only_once', 1);
+			// frm.set_df_property('reservation_detail', 'set_only_once', 1);
 
-			frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'allow_smoke', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'room_id', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 1;
-			frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'allow_smoke', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'room_id', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 1;
+			// frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 1;
 		}
 
 		if (!has_deposit) {
@@ -190,10 +191,20 @@ frappe.ui.form.on('Reservation', {
 			}
 		}
 	},
-	after_save: function(frm) {
-		frm.reload_doc();
+	after_save: function(frm, cdt, cdn) {
+		// console.log(reservation = frappe.get_doc(cdt, cdn));
 		frappe.call({
-			method: "front_desk.front_desk.doctype.room_booking.room_booking.manage_by_reservation",
+			method: "front_desk.front_desk.doctype.room_booking.room_booking.cancel_by_reservation",
+			args: {
+				reservation_detail_list: reservation_detail_remove_list 
+			},
+			callback: (r) => {
+				console.log('DONE');
+			}
+		});
+
+		frappe.call({
+			method: "front_desk.front_desk.doctype.room_booking.room_booking.update_by_reservation",
 			args: {
 				reservation_name: reservation.name
 			},
@@ -201,6 +212,8 @@ frappe.ui.form.on('Reservation', {
 				console.log('DONE');
 			}
 		});
+
+		frm.reload_doc();
 	}
 });
 
@@ -341,6 +354,12 @@ frappe.ui.form.on('Reservation Detail',{
 		get_room_type_available(frm, child);
 		get_bed_type_available(frm, child);
 		get_room_rate(frm, child);
+	},
+	before_reservation_detail_remove: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		if (child.__islocal != 1) {
+			reservation_detail_remove_list.push(child);
+		}
 	}
 });
 

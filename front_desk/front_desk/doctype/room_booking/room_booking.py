@@ -5,41 +5,62 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
+from datetime import datetime
 from datetime import timedelta
+import json
 
 class RoomBooking(Document):
 	pass
 
 @frappe.whitelist()
-def manage_by_reservation(reservation_name):
-	frappe.db.sql("UPDATE `tabRoom Booking` SET is_cancel=1 WHERE reference_type='Reservation' AND reference_name=%s", (reservation_name))
-
+def update_by_reservation(reservation_name):
 	reservation_detail_list = frappe.db.get_list('Reservation Detail', 
 		filters={
 			'parent': reservation_name
 		},
 		fields=['name', 'expected_arrival', 'expected_departure', 'room_id']
 	)
+
+	room_stay_list = frappe.db.get_list('Room Stay', 
+		filters={
+			'parent': reservation_name
+		},
+		fields=['name', 'arrival', 'departure', 'room_id']
+	)
+
 	for reservation_detail in reservation_detail_list:
-		while reservation_detail.expected_arrival < reservation_detail.expected_departure:
-			room_booking_name = frappe.db.get_value('Room Booking', 
-				{'reference_type':'Reservation', 'reference_name':reservation_name, 'date':reservation_detail.expected_arrival, 'room_id':reservation_detail.room_id}, 
-				['name']
-			)
+		room_booking_name = frappe.db.get_value('Room Booking', 
+			{'reference_type':'Reservation Detail', 'reference_name':reservation_detail.name}, 
+			['name']
+		)
 
-			if room_booking_name is None:
-				doc = frappe.new_doc('Room Booking')
+		if room_booking_name is None:
+			doc = frappe.new_doc('Room Booking')
 
-				doc.date = reservation_detail.expected_arrival
-				doc.room_id = reservation_detail.room_id
-				doc.availability = 'RS'
-				doc.reference_type = 'Reservation'
-				doc.reference_name = reservation_name
-				doc.note = ''
-				doc.is_cancel = 0
-				
-				doc.insert()
-			else:
-				frappe.db.set_value('Room Booking', room_booking_name, 'is_cancel', 0)
+			doc.start = reservation_detail.expected_arrival
+			doc.end = reservation_detail.expected_departure
+			doc.room_id = reservation_detail.room_id
+			doc.room_availability = 'RS'
+			doc.note = ''
+			doc.reference_type = 'Reservation Detail'
+			doc.reference_name = reservation_detail.name
+			doc.status = 'Booked'
 			
-			reservation_detail.expected_arrival = reservation_detail.expected_arrival + timedelta(days=1)
+			doc.insert()
+		else:
+			stayed = False
+
+			for room_stay in room_stay_list:
+				if reservation_detail.room_id == room_stay.room_id and reservation_detail.expected_arrival < room_stay.departure.date():
+					frappe.db.update('Room Booking', room_booking_name, 'status', 'Stayed')
+					stayed = True
+					break
+			
+			if not stayed:
+				frappe.db.sql('UPDATE `tabRoom Booking` SET start=%s, end=%s, room_id=%s, room_availability="RS", note="", status="Booked" WHERE name=%s', (reservation_detail.expected_arrival, reservation_detail.expected_departure, reservation_detail.room_id, room_booking_name))
+
+@frappe.whitelist()
+def cancel_by_reservation(reservation_detail_list):
+	reservation_detail_list = json.loads(reservation_detail_list)
+	for reservation_detail in reservation_detail_list:
+		frappe.db.sql('UPDATE `tabRoom Booking` SET status="Canceled" WHERE reference_type="Reservation Detail" AND reference_name=%s', (reservation_detail['name']))
