@@ -195,7 +195,7 @@ frappe.ui.form.on('Reservation', {
 		frappe.call({
 			method: "front_desk.front_desk.doctype.room_booking.room_booking.update_by_reservation",
 			args: {
-				reservation_name: reservation.name
+				reservation_name: frappe.get_doc(cdt, cdn).name
 			},
 			callback: (r) => {
 				console.log('DONE');
@@ -272,33 +272,49 @@ frappe.ui.form.on('Reservation Detail',{
 		get_bed_type_available(frm, child);
 		get_room_rate(frm, child);
 
-		frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'allow_smoke', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'room_id', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 0;
-		frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 0;
-		
-		for (var i = 0; i < reservation.room_stay.length; i++) {
-			if (child.room_id == reservation.room_stay[i].room_id && child.expected_arrival < reservation.room_stay[i].departure) {
-				$(".grid-delete-row").hide()
+		if (reservation.status == 'Cancel' || reservation.status == 'Finish') {
+			$(".grid-delete-row").hide()
 
-				frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'allow_smoke', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'room_id', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 1;
-				frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'allow_smoke', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'room_id', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 1;
+			frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 1;
+		} else {
+			frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'allow_smoke', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'room_id', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 0;
+			frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 0;
+			
+			for (var i = 0; i < reservation.room_stay.length; i++) {
+				if (child.room_id == reservation.room_stay[i].room_id && child.expected_arrival < reservation.room_stay[i].departure) {
+					$(".grid-delete-row").hide()
+
+					frappe.meta.get_docfield('Reservation Detail', 'expected_arrival', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'expected_departure', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'adult', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'child', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'allow_smoke', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'room_type', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'bed_type', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'room_id', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = 1;
+					frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = 1;
+				}
 			}
 		}
 
