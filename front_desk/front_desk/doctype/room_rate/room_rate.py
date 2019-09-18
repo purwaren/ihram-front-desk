@@ -33,8 +33,8 @@ def populate_breakdown_summary(doc,method):
 	breakdown_list = doc.get('room_rate_breakdown')
 	for index, item in enumerate(breakdown_list):
 		if item.breakdown_name == 'Weekend Rate' or item.breakdown_name == 'Weekday Rate':
-			summary = summary + str(index+1) + ". " + item.breakdown_name + ' : Rp.' + item.get_formatted("breakdown_amount") + " per Night\n"
+			summary = summary + str(index+1) + ". " + item.breakdown_name + ' : Rp.' + item.get_formatted("breakdown_amount") + " per night\n"
 		else:
-			summary = summary + str(index+1) + ". " + item.breakdown_qty + " " + item.breakdown_name + ' : Rp. ' + item.get_formatted("breakdown_amount") + "\n"
+			summary = summary + str(index+1) + ". " + item.breakdown_qty + " " + item.breakdown_name + ' : Rp. ' + item.get_formatted("breakdown_amount") + " per pax\n"
 
 	doc.breakdown_summary = summary

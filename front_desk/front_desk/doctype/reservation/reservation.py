@@ -254,6 +254,7 @@ def create_room_charge(reservation_id):
 				doc_folio_transaction.against_account_id = je_debit_account
 				doc_folio_transaction.remark = remark
 				doc_folio_transaction.is_void = 0
+				doc_folio_transaction.transaction_detail = room_rate.breakdown_summary
 
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
