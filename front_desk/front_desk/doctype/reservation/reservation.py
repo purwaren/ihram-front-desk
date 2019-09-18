@@ -8,6 +8,7 @@ import datetime
 import frappe
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
+from front_desk.front_desk.doctype.room_booking.room_booking import update_by_reservation
 
 class Reservation(Document):
 	pass
@@ -150,23 +151,30 @@ def cancel_reservation(reservation_id):
 		reservation.status = "Cancel"
 		reservation.save()
 
+		#update room booking status
+		update_by_reservation(reservation_id)
+
 @frappe.whitelist()
 def checkout_reservation(reservation_id):
 	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'In House':
 		reservation = frappe.get_doc('Reservation', reservation_id)
 		# Update reservation status to "FINISH"
 		reservation.status = "Finish"
-		reservation.save()
 
 		room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
 		# Update departure time in room stay
 		room_stay.departure = frappe.utils.now()
-		room_stay.save()
+		# room_stay.save()
+
+		reservation.save()
+
 		hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
 		# Update room_status dari hotel_room menjadi "Vacant Dirty"
 		hotel_room.room_status = "Vacant Dirty"
 		# TODO: Update Status Availability dari Hotem Room pada hari itu saja.
 
+		## Update room booking status
+		update_by_reservation(reservation_id)
 
 def auto_release_reservation_at_six_pm():
 	reservation_list = frappe.get_all('Reservation', {'status': 'Created', 'is_guaranteed': 0})
