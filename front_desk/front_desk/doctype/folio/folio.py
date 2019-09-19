@@ -88,17 +88,14 @@ def copy_all_trx_from_sales_invoice_to_folio():
 	for reservation in reservation_list:
 		copy_trx_from_sales_invoice_to_folio_transaction(reservation.name)
 
+# This method copied the total of sales invoice exclude the tax
+# because sales_invoice.total that got copied to folio_transaction.amount.
+# If we want the sales invoice after tax total, copy sales_invoice.grand_total instead.
 def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 	folio_id = frappe.get_doc('Folio', {"reservation_id": reservation_id}).name
 	customer_id = frappe.get_doc('Reservation', reservation_id).customer_id
 	pos_profile_list = frappe.get_all('POS Profile', filters={"disabled": 0})
 	restaurant_list = frappe.get_all('Restaurant')
-
-	# TODO:
-	# for each sales_invoice in all_sales_invoice
-	# 	copy needed details from sales_invoice and create new folio transaction with folio_id = folio_id
-	# 	?? create new payment entry related to  sales_invoice
-	#
 
 	for pos_profile in pos_profile_list:
 		if pos_profile:
@@ -118,7 +115,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 					doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 					doc = frappe.new_doc('Folio Transaction')
 					doc.folio_id = folio_id
-					doc.amount = sales_invoice.total
+					doc.amount = sales_invoice.total #total before tax. use sales_invoice .grand_total for after tax
 					doc.sales_invoice_id = sales_invoice.name
 					doc.total_qty = sales_invoice.total_qty
 					doc.pos_profile = pos_profile.name
@@ -148,7 +145,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 				doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 				doc = frappe.new_doc('Folio Transaction')
 				doc.folio_id = folio_id
-				doc.amount = sales_invoice.total
+				doc.amount = sales_invoice.total #total before tax. use sales_invoice .grand_total for after tax
 				doc.sales_invoice_id = sales_invoice.name
 				doc.total_qty = sales_invoice.total_qty
 				doc.flag = 'Debit'

@@ -260,6 +260,7 @@ def create_room_charge(reservation_id):
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
 				doc_folio_transaction.folio_id = doc_folio.name
 				doc_folio_transaction.amount = today_rate
+				doc_folio_transaction.room_rate = room_stay.room_rate
 				doc_folio_transaction.flag = 'Debit'
 				doc_folio_transaction.account_id = je_credit_account
 				doc_folio_transaction.against_account_id = je_debit_account
