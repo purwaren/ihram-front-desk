@@ -84,12 +84,7 @@ def get_total_folio_transaction(reservation_id):
 
 @frappe.whitelist()
 def copy_all_trx_from_sales_invoice_to_folio():
-	reservation_list = frappe.get_all('Reservation',
-									  filters={
-										'status': 'In House'
-									},
-									fields=["*"]
-									)
+	reservation_list = frappe.get_all('Reservation',filters={'status': 'In House'},fields=["name"])
 	for reservation in reservation_list:
 		copy_trx_from_sales_invoice_to_folio_transaction(reservation.name)
 
@@ -97,6 +92,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 	folio_id = frappe.get_doc('Folio', {"reservation_id": reservation_id}).name
 	customer_id = frappe.get_doc('Reservation', reservation_id).customer_id
 	pos_profile_list = frappe.get_all('POS Profile', filters={"disabled": 0})
+	restaurant_list = frappe.get_all('Restaurant')
 
 	# TODO:
 	# for each sales_invoice in all_sales_invoice
@@ -109,7 +105,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 			sales_invoice_list = frappe.get_all('Sales Invoice',
 												filters={
 													'customer_name': customer_id,
-													'pos_profile': pos_profile,
+													'pos_profile': pos_profile.name,
 												},
 												or_filters=[
 													{'status': 'Unpaid'},
@@ -134,6 +130,36 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 
 					doc_folio.append('transaction_detail', doc)
 					doc_folio.save()
+
+	for restaurant in restaurant_list:
+		sales_invoice_list = frappe.get_all('Sales Invoice',
+											filters={
+												'customer_name': customer_id,
+												'restaurant': restaurant.name,
+											},
+											or_filters=[
+												{'status': 'Unpaid'},
+												{'status': 'Overdue'}
+											],
+											fields=["*"]
+											)
+		for sales_invoice in sales_invoice_list:
+			if not frappe.db.exists('Folio Transaction', {'sales_invoice_id': sales_invoice.name}):
+				doc_folio = frappe.get_doc('Folio', {'name': folio_id})
+				doc = frappe.new_doc('Folio Transaction')
+				doc.folio_id = folio_id
+				doc.amount = sales_invoice.total
+				doc.sales_invoice_id = sales_invoice.name
+				doc.total_qty = sales_invoice.total_qty
+				doc.flag = 'Debit'
+				doc.account_id = sales_invoice.against_income_account
+				doc.against_account_id = sales_invoice.debit_to
+				doc.remark = 'Sales Invoice Restaurant ' + sales_invoice.restaurant + ' ID: ' + sales_invoice.name
+				doc.is_void = 0
+
+				doc_folio.append('transaction_detail', doc)
+				doc_folio.save()
+
 
 def copy_trx_from_folio_transaction_to_journal_entry(reservation_id):
 	# copy the folio transactions which not have entry yet in General Ledger. i.e: Room charge transactions
