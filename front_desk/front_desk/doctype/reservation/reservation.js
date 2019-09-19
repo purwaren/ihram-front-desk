@@ -81,6 +81,18 @@ frappe.ui.form.on('Reservation', {
 		}
 		
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
+			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
+			// 	frappe.call({
+			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
+			// 		args: {
+			// 			reservation_id: reservation.name
+			// 		}
+			// 	});
+			// 	frappe.call({
+			// 		method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
+			// 	});
+			// });
+
 			frm.add_custom_button(__("Print Receipt"), function() {
     			frappe.call({
 					method: "frappe.client.get_value",
