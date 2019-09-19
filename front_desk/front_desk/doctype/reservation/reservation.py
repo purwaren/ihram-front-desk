@@ -36,8 +36,15 @@ def check_in(reservation_id_list):
 	url_list = []
 	for reservation_id in reservation_id_list:
 		url_list.append(frappe.utils.get_url_to_form('Reservation', reservation_id))
-	
+
 	return url_list
+
+@frappe.whitelist()
+def get_folio_url(reservation_id):
+	return frappe.utils.get_url_to_form('Folio', frappe.db.get_value('Folio',
+															{'reservation_id': reservation_id},
+															['name'])
+										)
 
 @frappe.whitelist()
 def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
@@ -62,7 +69,7 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 	doc_credit.credit = amount
 	doc_credit.credit_in_account_currency = amount
 	doc_credit.user_remark = 'Deposit ' + reservation_id
-	
+
 	doc_journal_entry.append('accounts', doc_debit)
 	doc_journal_entry.append('accounts', doc_credit)
 
@@ -109,7 +116,7 @@ def get_debit_account_name_list():
 
 	if len(temp) > 0:
 		debit_account_name_list.append(temp[0].name)
-	
+
 	temp = frappe.db.get_list('Account',
 		filters={
 			'account_number': ['like', '1121.0%'], 'account_type': 'Bank'
@@ -118,7 +125,7 @@ def get_debit_account_name_list():
 
 	for t in temp:
 		debit_account_name_list.append(t.name)
-	
+
 	return debit_account_name_list
 
 @frappe.whitelist()
@@ -182,7 +189,7 @@ def auto_release_reservation_at_six_pm():
 		reservation_detail_list = frappe.get_all('Reservation Detail', {'parent': reservation.name})
 		arrival_expired = False
 		for rd in reservation_detail_list:
-			if (rd.expected_arrival < frappe.utils.now()):
+			if rd.expected_arrival < datetime.datetime.today():
 				arrival_expired = True
 
 		if arrival_expired:
@@ -194,16 +201,20 @@ def auto_room_charge():
 	for reservation in reservation_list:
 		create_room_charge(reservation.name)
 
+@frappe.whitelist()
 def create_room_charge(reservation_id):
-	room_stay_list = frappe.get_all('Room Stay', filters={"reservation_id": reservation_id}, fields=["name","room_rate", "room_id"])
+	room_stay_list = frappe.get_all('Room Stay',
+									filters={"reservation_id": reservation_id},
+									fields=["name","room_rate", "room_id", "departure"]
+									)
 	cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
 
 	if len(room_stay_list) > 0:
 		for room_stay in room_stay_list:
-			if (room_stay.departure <= frappe.utils.now()):
+			if room_stay.departure >= datetime.datetime.today():
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
 				room_name = room_stay.room_id
-				remark = 'Auto Room Charge Room:' + room_name
+				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 				if is_weekday():
@@ -212,7 +223,7 @@ def create_room_charge(reservation_id):
 					today_rate = room_rate.rate_weekend
 
 				doc_journal_entry = frappe.new_doc('Journal Entry')
-				doc_journal_entry.title = 'Auto Room Charge ' + reservation_id + ' Room: ' + room_name
+				doc_journal_entry.title = 'Auto Room Charge:' + reservation_id + ': ' + room_name
 				doc_journal_entry.voucher_type = 'Journal Entry'
 				doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
 				doc_journal_entry.posting_date = datetime.date.today()
@@ -268,13 +279,13 @@ def get_empty_array(doctype, txt, searchfield, start, page_len, filters):
 # def test(parent, expected_arrival, expected_departure):
 # 	room_book_list = list(frappe.db.sql("SELECT rb.room_id FROM `tabRoom Booking` AS rb LEFT JOIN `tabReservation Detail` AS rd ON rb.reference_name = rd.name WHERE (rd.parent != %s) AND (rb.status =	 'Booked') AND ((%s >= rb.start AND %s < rb.end) OR (%s > rb.start AND %s <= rb.end) OR (%s <= rb.start AND %s >= rb.end))", (parent, expected_arrival, expected_arrival, expected_departure, expected_departure, expected_arrival, expected_departure)))
 # 	room_book_list.extend(list(frappe.db.sql("SELECT rs.room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name WHERE (rs.parent != %s) AND (r.status = 'Confirmed' OR r.status = 'In House') AND ((%s >= CONVERT(rs.arrival, DATE) AND %s < CONVERT(rs.departure, DATE)) OR (%s > CONVERT(rs.arrival, DATE) AND %s <= CONVERT(rs.departure, DATE)) OR (%s <= CONVERT(rs.arrival, DATE) AND %s >= CONVERT(rs.departure, DATE)))", (parent, expected_arrival, expected_arrival, expected_departure, expected_departure, expected_arrival, expected_departure))))
-	
+
 # 	return room_book_list
 
 def get_room_book_list(filters):
 	room_book_list = list(frappe.db.sql("SELECT rb.room_id FROM `tabRoom Booking` AS rb LEFT JOIN `tabReservation Detail` AS rd ON rb.reference_name = rd.name WHERE (rd.parent != %s) AND (rb.status =	 'Booked') AND ((%s >= rb.start AND %s < rb.end) OR (%s > rb.start AND %s <= rb.end) OR (%s <= rb.start AND %s >= rb.end))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure'))))
 	room_book_list.extend(list(frappe.db.sql("SELECT rs.room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name WHERE (rs.parent != %s) AND (r.status = 'Confirmed' OR r.status = 'In House') AND ((%s >= CONVERT(rs.arrival, DATE) AND %s < CONVERT(rs.departure, DATE)) OR (%s > CONVERT(rs.arrival, DATE) AND %s <= CONVERT(rs.departure, DATE)) OR (%s <= CONVERT(rs.arrival, DATE) AND %s >= CONVERT(rs.departure, DATE)))", (filters.get('parent'), filters.get('expected_arrival'), filters.get('expected_arrival'), filters.get('expected_departure'), filters.get('expected_departure'), filters.get('expected_arrival'), filters.get('expected_departure')))))
-	
+
 	return room_book_list
 
 @frappe.whitelist()
@@ -294,7 +305,7 @@ def get_room_available(doctype, txt, searchfield, start, page_len, filters):
 def get_room_available_by_room_type(doctype, txt, searchfield, start, page_len, filters):
 	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s", (filters.get('allow_smoke'), filters.get('room_type'))))
 	room_book_list = get_room_book_list(filters)
-	
+
 	for room_book in room_book_list:
 		for i in range(len(room_list)):
 			if room_list[i][0] == room_book[0]:
@@ -307,7 +318,7 @@ def get_room_available_by_room_type(doctype, txt, searchfield, start, page_len, 
 def get_room_available_by_room_type_bed_type(doctype, txt, searchfield, start, page_len, filters):
 	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s and bed_type = %s", (filters.get('allow_smoke'), filters.get('room_type'), filters.get('bed_type'))))
 	room_book_list = get_room_book_list(filters)
-	
+
 	for room_book in room_book_list:
 		for i in range(len(room_list)):
 			if room_list[i][0] == room_book[0]:
@@ -323,7 +334,7 @@ def get_room_type_available(doctype, txt, searchfield, start, page_len, filters)
 	tmp = []
 	for room in room_list:
 		tmp.append(room[1])
-	
+
 	tmp = list(set(tmp))
 
 	room_type_list = []
@@ -340,7 +351,7 @@ def get_bed_type_available(doctype, txt, searchfield, start, page_len, filters):
 	for room in room_list:
 		if room[1] == filters.get('room_type'):
 			tmp.append(room[2])
-	
+
 	tmp = list(set(tmp))
 
 	bed_type_list = []

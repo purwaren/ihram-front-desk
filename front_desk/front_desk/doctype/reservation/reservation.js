@@ -16,6 +16,16 @@ frappe.ui.form.on('Reservation', {
 		if (reservation.deposit > 0) {
 			has_deposit = true;
 		}
+
+		// frm.add_custom_button(("Trigger Room Charge"), function () {
+		// 		frappe.call({
+		// 			method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
+		// 			args: {
+		// 				reservation_id: reservation.name
+		// 			}
+		// 		});
+		// });
+
 		if(reservation.status == 'Created') {
 			frm.page.add_menu_item(("Cancel"), function () {
 				frappe.confirm(
@@ -43,8 +53,8 @@ frappe.ui.form.on('Reservation', {
 			});
 		}
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
-			frm.page.add_menu_item(("Print Receipt"), function () {
-				frappe.call({
+			frm.add_custom_button(__("Print Receipt"), function() {
+    			frappe.call({
 					method: "frappe.client.get_value",
 					args: {
 						doctype: "Folio",
@@ -63,6 +73,24 @@ frappe.ui.form.on('Reservation', {
 							if (!w) {
 								frappe.msgprint(__("Please enable pop-ups")); return;
 							}
+						}
+					}
+				});
+			});
+
+			frm.add_custom_button(__("Show Folio"), function() {
+    			frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.get_folio_url",
+					args: {
+						reservation_id: reservation.name
+					},
+					callback: (r) => {
+						if (r.message) {
+							console.log(r.message)
+							var w = window.open(r.message, "_blank");
+                        if (!w) {
+                            frappe.msgprint(__("Please enable pop-ups")); return;
+                        }
 						}
 					}
 				});
