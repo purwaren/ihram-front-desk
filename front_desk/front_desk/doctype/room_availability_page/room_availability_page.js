@@ -22,8 +22,8 @@ frappe.ui.form.on('Room Availability Page', {
 
 		if (doc.start != undefined && doc.end != undefined) {
 			var wrapper = frm.get_field('html').$wrapper;
-			var html = '<div id="room-calendar"><table class="table table-bordered" id="table-calendar"><tr id="table-calendar-title"><th width="100px">Room Number</th><th width="100px">Room Type</th><th width="100px">Bed Type</th><th width="100px">Smoking</th><th width="100px">Room View</th><th width="100px">Room Status</th></tr></table></div>';
-			var css = '<style>#room-calendar {font-size:12px; height:500px; overflow-y:scroll;}</style>';
+			var html = '<div id="room-calendar"><table id="table-calendar"><tr id="table-calendar-title"><th width="100px">Room Number</th><th width="100px">Room Type</th><th width="100px">Bed Type</th><th width="100px">Smoking</th><th width="100px">Room View</th><th width="100px">Room Status</th></tr></table></div>';
+			var css = '<style>table, th, td {border:1px solid black;} th, td {padding:5px;} #room-calendar {font-size:12px; height:500px; overflow-y:scroll;}</style>';
 
 			wrapper.html(html+css);
 			
