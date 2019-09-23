@@ -225,6 +225,7 @@ frappe.ui.form.on('Reservation', {
 frappe.ui.form.on('Reservation Detail', {
 	form_render: function(frm, cdt, cdn) {
 		is_remove_reservation_detail = false;
+		var child = locals[cdt][cdn];
 
 		if (reservation.status == 'Cancel' || reservation.status == 'Finish') {
 			$(".grid-delete-row").hide()
@@ -239,8 +240,6 @@ frappe.ui.form.on('Reservation Detail', {
 		} else {
 			set_all_field_reservation_detail_read_only(false);
 		}
-
-		var child = locals[cdt][cdn];
 
 		get_room_available_in_reservation_detail(frm, child);
 		get_room_type_available_in_reservation_detail(frm, child);
@@ -357,14 +356,14 @@ frappe.ui.form.on('Room Stay', {
 		frm.refresh_field('room_stay');
 	},
 	form_render: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+
 		if (reservation.status == 'Cancel' || reservation.status == 'Finish') {
 			$(".grid-delete-row").hide()
 			set_all_field_room_stay_read_only(true);
 		} else {
 			set_all_field_room_stay_read_only(false);
 		}
-
-		var child = locals[cdt][cdn];
 		
 		get_room_available_in_room_stay(frm, child);
 		get_room_rate_in_room_stay(frm, child);
