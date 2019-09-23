@@ -292,7 +292,7 @@ frappe.ui.form.on('Reservation Detail', {
 					child.allow_smoke = response.allow_smoke
 					frm.refresh_field('reservation_detail');
 
-					get_room_rate(frm, child);
+					get_room_rate_in_reservation_detail(frm, child);
 				});
 			}
 		}

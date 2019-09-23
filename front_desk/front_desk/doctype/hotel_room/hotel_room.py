@@ -49,3 +49,10 @@ def upgrade_status(room_name_list):
 		elif status == 'Vacant Clean' and is_housekeeping_supervisor:
 			frappe.db.set_value('Hotel Room', room_name, 'room_status', 'Vacant Ready')
 			frappe.db.set_value('Hotel Room', room_name, 'status', 'AV')
+
+@frappe.whitelist()
+def get_all_hotel_room():
+	return frappe.db.get_all('Hotel Room',
+				fields=['name', 'room_type', 'bed_type', 'allow_smoke', 'view', 'room_status'],
+				order_by='name asc'
+			)
