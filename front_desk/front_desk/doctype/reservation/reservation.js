@@ -93,6 +93,23 @@ frappe.ui.form.on('Reservation', {
 			// 	});
 			// });
 
+			frm.add_custom_button(__("Billing"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.get_hotel_bill_url",
+					args: {
+						reservation_id: reservation.name
+					},
+					callback: (r) => {
+						if (r.message) {
+							var w = window.open(r.message, "_blank");
+                        	if (!w) {
+                            	frappe.msgprint(__("Please enable pop-ups")); return;
+                        	}
+						}
+					}
+				});
+			});
+
 			frm.add_custom_button(__("Print Receipt"), function() {
     			frappe.call({
 					method: "frappe.client.get_value",
@@ -126,11 +143,10 @@ frappe.ui.form.on('Reservation', {
 					},
 					callback: (r) => {
 						if (r.message) {
-							console.log(r.message)
 							var w = window.open(r.message, "_blank");
-                        if (!w) {
-                            frappe.msgprint(__("Please enable pop-ups")); return;
-                        }
+                        	if (!w) {
+                            	frappe.msgprint(__("Please enable pop-ups")); return;
+                        	}
 						}
 					}
 				});

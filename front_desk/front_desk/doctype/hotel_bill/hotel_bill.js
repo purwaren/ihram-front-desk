@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Hotel Bill', {
-	refresh: function(frm) {
-
+	onload: function(frm) {
+		frm.get_field("bill_breakdown").grid.only_sortable();
 	}
 });

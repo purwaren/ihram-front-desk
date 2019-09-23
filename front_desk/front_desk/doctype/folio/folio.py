@@ -122,7 +122,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 					doc.flag = 'Debit'
 					doc.account_id = sales_invoice.against_income_account
 					doc.against_account_id = sales_invoice.debit_to
-					doc.remark = 'Sales Invoice POS ' + pos_profile.name + ' ID: ' + sales_invoice.name
+					doc.remark = 'Invoice POS ' + pos_profile.name + ' - ' + sales_invoice.posting_date.strftime("%d/%m/%Y")
 					doc.is_void = 0
 
 					doc_folio.append('transaction_detail', doc)
@@ -151,7 +151,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 				doc.flag = 'Debit'
 				doc.account_id = sales_invoice.against_income_account
 				doc.against_account_id = sales_invoice.debit_to
-				doc.remark = 'Sales Invoice Restaurant ' + sales_invoice.restaurant + ' ID: ' + sales_invoice.name
+				doc.remark = 'Invoice Restaurant ' + sales_invoice.restaurant + ' ID: ' + sales_invoice.posting_date.strftime("%d/%m/%Y")
 				doc.is_void = 0
 
 				doc_folio.append('transaction_detail', doc)

@@ -9,6 +9,7 @@ import frappe
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
 from front_desk.front_desk.doctype.room_booking.room_booking import update_by_reservation
+from front_desk.front_desk.doctype.hotel_bill.hotel_bill import create_hotel_bill
 
 class Reservation(Document):
 	pass
@@ -45,6 +46,11 @@ def get_folio_url(reservation_id):
 															{'reservation_id': reservation_id},
 															['name'])
 										)
+
+@frappe.whitelist()
+def get_hotel_bill_url(reservation_id):
+	create_hotel_bill(reservation_id)
+	return frappe.utils.get_url_to_form('Hotel Bill', frappe.db.get_value('Hotel Bill',{'reservation_id': reservation_id},['name']))
 
 @frappe.whitelist()
 def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
