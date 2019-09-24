@@ -31,6 +31,7 @@ def calculate_bill_total(doc, method):
 			hotel_bill_net_total = hotel_bill_net_total + bb_item.breakdown_net_total
 			hotel_bill_tax_amount = hotel_bill_tax_amount + bb_item.breakdown_tax_amount
 			hotel_bill_grand_total = hotel_bill_grand_total + bb_item.breakdown_grand_total
+			
 	doc.bill_net_total = hotel_bill_net_total
 	doc.bill_tax_amount = hotel_bill_tax_amount
 	doc.bill_grand_total = hotel_bill_grand_total
@@ -51,8 +52,6 @@ def create_hotel_bill(reservation_id):
 		new_doc_hotel_bill.bill_deposit_amount = get_deposit_amount(reservation_id)
 		new_doc_hotel_bill.save()
 		exist_bill = new_doc_hotel_bill.name
-
-	frappe.msgprint(exist_bill)
 
 	for item in folio_trx_list:
 		doc_hotel_bill = frappe.get_doc("Hotel Bill", {'name': exist_bill})
@@ -76,10 +75,6 @@ def create_hotel_bill(reservation_id):
 				si_doc_item.breakdown_account_against = item.account_id
 				doc_hotel_bill.append('bill_breakdown', si_doc_item)
 
-				# hotel_bill_net_total = hotel_bill_net_total + item.amount
-				# hotel_bill_tax_amount = hotel_bill_tax_amount + sales_invoice.total_taxes_and_charges
-				# hotel_bill_grand_total = hotel_bill_grand_total + sales_invoice.grand_total
-
 				# Input the tax item
 				si_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
 				si_doc_tax_item.is_tax_item = 1
@@ -100,15 +95,14 @@ def create_hotel_bill(reservation_id):
 				if is_this_weekday(item.creation):
 					rate_breakdown = frappe.get_doc('Room Rate Breakdown',
 													{'parent': item.room_rate, 'breakdown_name': 'Weekday Rate'})
-					base_amount = rate_breakdown.breakdown_amount
-					breakdown_tax = rate_breakdown.breakdown_tax
 					description = "Weekday Rate of " + item.room_rate + ' + ' + rate_breakdown.breakdown_tax
 				else:
 					rate_breakdown = frappe.get_doc('Room Rate Breakdown',
 													{'parent': item.room_rate, 'breakdown_name': 'Weekend Rate'})
-					base_amount = rate_breakdown.breakdown_amount
-					breakdown_tax = rate_breakdown.breakdown_tax
 					description = "Weekend Rate of " + item.room_rate + ' + ' + rate_breakdown.breakdown_tax
+
+				base_amount = rate_breakdown.breakdown_amount
+				breakdown_tax = rate_breakdown.breakdown_tax
 
 				room_tb_id, room_tb_amount, room_tb_total = calculate_hotel_tax_and_charges(base_amount, breakdown_tax)
 
@@ -127,8 +121,8 @@ def create_hotel_bill(reservation_id):
 				rr_bundle_item.breakdown_net_total = item.amount
 				rr_bundle_item.breakdown_tax_amount = bundle_tax_amount
 				rr_bundle_item.breakdown_grand_total = rr_bundle_item.breakdown_net_total + rr_bundle_item.breakdown_tax_amount
-				rr_bundle_item.account = item.against_account_id
-				rr_bundle_item.account_against = item.account_id
+				rr_bundle_item.breakdown_account = item.against_account_id
+				rr_bundle_item.breakdown_account_against = item.account_id
 				doc_hotel_bill.append('bill_breakdown', rr_bundle_item)
 
 				# Input the item room charge
@@ -139,7 +133,10 @@ def create_hotel_bill(reservation_id):
 				rr_doc_item.breakdown_net_total = base_amount
 				rr_doc_item.breakdown_tax_amount = sum(room_tb_amount)
 				rr_doc_item.breakdown_grand_total = room_tb_total[-1]
+				rr_doc_item.breakdown_tax_id = breakdown_tax
 				# TODO: account and against account
+				rr_doc_item.breakdown_account = ''
+				rr_doc_item.breakdown_account_against = ''
 				doc_hotel_bill.append('bill_breakdown', rr_doc_item)
 
 				# input the tax item of room charge
@@ -150,6 +147,8 @@ def create_hotel_bill(reservation_id):
 					rr_doc_tax_item.breakdown_description = hotel_tax_breakdown.breakdown_description
 					rr_doc_tax_item.breakdown_grand_total = room_tb_amount[index]
 					# TODO: account and against account
+					rr_doc_item.breakdown_account = ''
+					rr_doc_item.breakdown_account_against = ''
 					doc_hotel_bill.append('bill_breakdown', rr_doc_tax_item)
 
 				# input the other room rate charge besides room rate: e.g: breakfast, coffee break, etc
@@ -167,7 +166,10 @@ def create_hotel_bill(reservation_id):
 						orr_doc_item.breakdown_net_total = rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty)
 						orr_doc_item.breakdown_tax_amount = sum(rrbd_tb_amount)
 						orr_doc_item.breakdown_grand_total = rrbd_tb_total[-1]
+						orr_doc_item.breakdown_tax_id = rrbd_item.breakdown_tax
 						# TODO: account and against account
+						rr_doc_item.breakdown_account = ''
+						rr_doc_item.breakdown_account_against = ''
 						doc_hotel_bill.append('bill_breakdown', orr_doc_item)
 
 						# input the other charge tax item
@@ -178,6 +180,8 @@ def create_hotel_bill(reservation_id):
 							orr_doc_tax_item.breakdown_description = orr_hotel_tax_breakdown.breakdown_description
 							orr_doc_tax_item.breakdown_grand_total = rrbd_tb_amount[index]
 							# TODO: account and against account
+							rr_doc_item.breakdown_account = ''
+							rr_doc_item.breakdown_account_against = ''
 							doc_hotel_bill.append('bill_breakdown', orr_doc_tax_item)
 
 			# TODO: ada else condition lain? seperti early check-in dan late check-out
