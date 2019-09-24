@@ -95,6 +95,9 @@ doc_events = {
 	"Hotel Tax": {
 		"validate": "front_desk.front_desk.doctype.hotel_tax.hotel_tax.autofill_hotel_tax_value"
 	},
+	"Hotel Bill": {
+		"validate": "front_desk.front_desk.doctype.hotel_bill.hotel_bill.calculate_bill_total"
+	},
 }
 
 # Scheduled Tasks

@@ -229,3 +229,14 @@ def finalize_sales_invoice_from_folio(reservation_id):
 
 			sales_invoice_found.status = 'Paid'
 			sales_invoice_found.save()
+
+
+def get_deposit_amount(reservation_id):
+	deposit = 0
+	remark = 'Deposit ' + reservation_id
+	folio_id = frappe.get_doc('Folio', {"reservation_id": reservation_id}).name
+	folio_trx_list = frappe.get_all('Folio Transaction', filters={'folio_id': folio_id, 'remark': remark}, fields=["*"])
+	for item in folio_trx_list:
+		deposit = deposit + item.amount
+
+	return deposit
