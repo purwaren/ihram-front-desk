@@ -3,13 +3,19 @@
 
 var reservation = null;
 var has_deposit = false;
-var wrapper = null;
-var debit_account_name_list = '';
 var room_list = [];
 var reservation_detail_remove_list = [];
 var is_remove_reservation_detail = false;
+var is_remove_room_stay = false;
 
 frappe.ui.form.on('Reservation', {
+	onload: function(frm, cdt, cdn) {
+		frm.set_query('payment_method', () => {
+			return {
+				query: 'front_desk.front_desk.doctype.reservation.reservation.get_debit_account'
+			}
+		});
+	},
 	onload_post_render: function(frm, cdt, cdn) {
 		$('*[data-fieldname="reservation_detail"]').find('.grid-remove-rows').hide();
 		$('*[data-fieldname="room_stay"]').find('.grid-remove-rows').hide();
@@ -28,28 +34,9 @@ frappe.ui.form.on('Reservation', {
 			has_deposit = true;
 		}
 
-		if (!has_deposit) {
-			wrapper = frm.get_field("payment_method").$wrapper;
-			var html = '<select id="payment_method"></select>';
-			wrapper.html(html);
-			
-			frappe.call({
-				method: 'front_desk.front_desk.doctype.reservation.reservation.get_debit_account_name_list',
-				args: {
-
-				},
-				callback: (response) => {
-					for (var i = 0; i < response.message.length; i++) {
-						var z = document.createElement('option');
-						z.setAttribute('value', response.message[i]);
-						var t = document.createTextNode(response.message[i]);
-						z.appendChild(t);
-						document.getElementById('payment_method').appendChild(z);
-					}
-				}
-			});
-		} else {
+		if (has_deposit) {
 			frm.set_df_property('deposit', 'set_only_once', 1);
+			frm.set_df_property('payment_method', 'set_only_once', 1);
 		}
 
 		if(reservation.status == 'Created') {
@@ -201,19 +188,12 @@ frappe.ui.form.on('Reservation', {
 			});
 
 			if (!has_deposit && reservation.deposit > 0) {
-				var e = document.getElementById('payment_method');
-				var v = e.options[e.selectedIndex].value;
-	
 				frappe.call({
 					method: 'front_desk.front_desk.doctype.reservation.reservation.create_deposit_journal_entry',
 					args: {
 						reservation_id: reservation.name,
 						amount: reservation.deposit,
-						debit_account_name: v
-					},
-					callback: (response) => {
-						wrapper.html(null);
-						has_deposit = true;
+						debit_account_name: reservation.payment_method
 					}
 				});
 			}
@@ -372,8 +352,16 @@ frappe.ui.form.on('Room Stay', {
 		frm.refresh_field('room_stay');
 	},
 	form_render: function(frm, cdt, cdn) {
+		is_remove_room_stay = false;
 		var child = locals[cdt][cdn];
 
+		if (child.__islocal == 1) {
+			frappe.meta.get_docfield('Room Stay', 'section_break_1', reservation.name).hidden = true;
+		} else {
+			frappe.meta.get_docfield('Room Stay', 'section_break_1', reservation.name).hidden = false;
+		}
+
+		frappe.meta.get_docfield('Room Stay', 'reservation_id', reservation.name).hidden = true;
 		if (reservation.status == 'Cancel' || reservation.status == 'Finish') {
 			$(".grid-delete-row").hide()
 			set_all_field_room_stay_read_only(true);
@@ -387,30 +375,36 @@ frappe.ui.form.on('Room Stay', {
 		frm.refresh_field('room_stay');
 	},
 	arrival: function (frm, cdt, cdn) {
-		var child = locals[cdt][cdn];
-		child.room_id = undefined;
-		child.room_rate = undefined;
-		
-		get_room_available_in_room_stay(frm, child);
-		
-		frm.refresh_field('room_stay');
+		if (!is_remove_room_stay) {
+			var child = locals[cdt][cdn];
+			child.room_id = undefined;
+			child.room_rate = undefined;
+			
+			get_room_available_in_room_stay(frm, child);
+			
+			frm.refresh_field('room_stay');
+		}
 	},
 	departure: function (frm, cdt, cdn) {
-		var child = locals[cdt][cdn];
-		child.room_id = undefined;
-		child.room_rate = undefined;
-		
-		get_room_available_in_room_stay(frm, child);
-
-		frm.refresh_field('room_stay');
+		if (!is_remove_room_stay) {
+			var child = locals[cdt][cdn];
+			child.room_id = undefined;
+			child.room_rate = undefined;
+			
+			get_room_available_in_room_stay(frm, child);
+	
+			frm.refresh_field('room_stay');
+		}
 	},
 	room_id: function (frm, cdt, cdn) {
-		var child = locals[cdt][cdn];
-		child.room_rate = undefined;
-
-		get_room_rate_in_room_stay(frm, child);
-
-		frm.refresh_field('room_stay');
+		if (!is_remove_room_stay) {
+			var child = locals[cdt][cdn];
+			child.room_rate = undefined;
+	
+			get_room_rate_in_room_stay(frm, child);
+	
+			frm.refresh_field('room_stay');
+		}
 	},
 	issue_card: function(frm, cdt, cdn) {
 		frm.set_value('status', 'In House');
@@ -426,6 +420,9 @@ frappe.ui.form.on('Room Stay', {
 		if (!w) {
 			frappe.msgprint(__("Please enable pop-ups")); return;
 		}
+	},
+	room_stay_remove: function(frm, cdt, cdn) {
+		is_remove_room_stay = true;
 	}
 });
 
@@ -478,7 +475,7 @@ function set_all_field_room_stay_read_only(flag) {
 	frappe.meta.get_docfield('Room Stay', 'room_id', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Room Stay', 'room_rate', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Room Stay', 'issue_card', reservation.name).read_only = flag;
-	frappe.meta.get_docfield('Room Stay', 'print', reservation.name).read_only = flag;
+	frappe.meta.get_docfield('Room Stay', 'print_check_in_receipt', reservation.name).read_only = flag;
 }
 
 function get_room_available_in_reservation_detail(frm, child) {

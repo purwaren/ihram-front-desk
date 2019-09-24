@@ -135,6 +135,30 @@ def get_debit_account_name_list():
 	return debit_account_name_list
 
 @frappe.whitelist()
+def get_debit_account(doctype, txt, searchfield, start, page_len, filters):
+	debit_account = []
+
+	temp = frappe.db.get_list('Account',
+		filters={
+			'account_number': '1111.003'
+		}
+	)
+
+	if len(temp) > 0:
+		debit_account.append([temp[0].name])
+	
+	temp = frappe.db.get_list('Account',
+		filters={
+			'account_number': ['like', '1121.0%'], 'account_type': 'Bank'
+		}
+	)
+
+	for t in temp:
+		debit_account.append([t.name])
+
+	return debit_account
+
+@frappe.whitelist()
 def check_out(reservation_id_list):
 	reservation_id_list = json.loads(reservation_id_list)
 	# TODO: Calculate trx and print receipt
