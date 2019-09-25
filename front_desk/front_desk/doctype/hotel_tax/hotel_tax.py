@@ -32,7 +32,7 @@ def autofill_hotel_tax_value(doc, method):
 	doc.hotel_tax_value = value
 
 def calculate_hotel_tax_and_charges(base_total, hotel_tax_id):
-	tax_breakdown_list = frappe.get_all('Hotel Tax Breakdown', filters={'parent': hotel_tax_id}, order_by="idx desc", fields=['*'])
+	tax_breakdown_list = frappe.get_all('Hotel Tax Breakdown', filters={'parent': hotel_tax_id}, order_by="idx asc", fields=['*'])
 
 	if len(tax_breakdown_list) > 0:
 		tb_id = [""] * len(tax_breakdown_list)
@@ -52,7 +52,7 @@ def calculate_hotel_tax_and_charges(base_total, hotel_tax_id):
 				else:
 					# this row total is previous row total plus fixed amount
 					tb_total[index] = tb_total[index-1] + tb_amount[index]
-			if item.breakdown_type == 'On Net Total':
+			elif item.breakdown_type == 'On Net Total':
 				if index == 0:
 					# this row amount is it's rate multiplied with base_total
 					tb_amount[index] = item.breakdown_rate/100.0 * tb_total[index]
@@ -60,26 +60,25 @@ def calculate_hotel_tax_and_charges(base_total, hotel_tax_id):
 					tb_total[index] = tb_total[index] + tb_amount[index]
 				else:
 					# this row amount is it's rate multiplied with previous total
-					tb_amount[index] = item.breakdown_rate/100.0 * tb_total[index-1]
+					tb_amount[index] = item.breakdown_rate/100.0 * base_total
 					# this row total is previous row total plus this row amount
-					tb_total[index] = base_total + tb_amount[index]
+					tb_total[index] = tb_total[index-1] + tb_amount[index]
 
-			if item.breakdown_type == 'On Previous Row Amount':
+			elif item.breakdown_type == 'On Previous Row Amount':
 				#  this type of tax breakdown must not be the first row
 				if index > 0:
 					# this row amount is it's rate multiplied with another row's amount, referenced by row_id
-					tb_amount[index] = item.breakdown_rate/100.0 * tb_amount[item.breakdown_row_id-1]
+					tb_amount[index] = item.breakdown_rate/100.0 * tb_amount[int(item.breakdown_row_id)-1]
 					# this row total is previous row total plus this row amount
 					tb_total[index] = tb_total[index-1] + tb_amount[index]
 
-			if item.breakdown_type == 'On Previous Row Total':
+			elif item.breakdown_type == 'On Previous Row Total':
 				#  this type of tax breakdown must not be the first row
 				if index > 0:
 					# this row amount is it's rate multiplied with another row's total, referenced by row_id
-					tb_amount[index] = item.breakdown_rate/100.0 * tb_total[item.breakdown_row_id-1]
+					tb_amount[index] = item.breakdown_rate/100.0 * tb_total[int(item.breakdown_row_id)-1]
 					# this row total is previous row total plus this row amount
 					tb_total[index] = tb_total[index-1] + tb_amount[index]
-
 	# This condition means that no tax or charges added
 	else:
 		tb_id = None

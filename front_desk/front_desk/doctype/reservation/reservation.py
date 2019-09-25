@@ -243,6 +243,7 @@ def create_room_charge(reservation_id):
 	if len(room_stay_list) > 0:
 		for room_stay in room_stay_list:
 			if room_stay.departure >= datetime.datetime.today():
+				# TODO: masuk jurnal entry bukan sebagai bundle auto room charge, tetapi sebagai breakdown item room charge
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
 				room_name = room_stay.room_id
 				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
