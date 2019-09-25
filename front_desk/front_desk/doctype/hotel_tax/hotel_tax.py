@@ -62,7 +62,7 @@ def calculate_hotel_tax_and_charges(base_total, hotel_tax_id):
 					# this row amount is it's rate multiplied with previous total
 					tb_amount[index] = item.breakdown_rate/100.0 * tb_total[index-1]
 					# this row total is previous row total plus this row amount
-					tb_total[index] = tb_total[index-1] + tb_amount[index]
+					tb_total[index] = base_total + tb_amount[index]
 
 			if item.breakdown_type == 'On Previous Row Amount':
 				#  this type of tax breakdown must not be the first row
