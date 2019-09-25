@@ -76,15 +76,16 @@ def create_hotel_bill(reservation_id):
 				doc_hotel_bill.append('bill_breakdown', si_doc_item)
 
 				# Input the tax item
-				si_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
-				si_doc_tax_item.is_tax_item = 1
-				si_doc_tax_item.billing_folio_trx_id = item.name
-				si_doc_tax_item.breakdown_grand_total = sales_invoice.total_taxes_and_charges
 				sales_tax_charges = frappe.get_doc('Sales Taxes and Charges', {'parent': item.sales_invoice_id})
-				si_doc_tax_item.breakdown_account = sales_tax_charges.account_head
-				# si_doc_tax_item.breakdown_account_against = doc_hotel_bill.customer_id
-				si_doc_tax_item.breakdown_description = sales_tax_charges.description + ' of ' + item.sales_invoice_id
-				doc_hotel_bill.append('bill_breakdown', si_doc_tax_item)
+				if sales_tax_charges:
+					si_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
+					si_doc_tax_item.is_tax_item = 1
+					si_doc_tax_item.billing_folio_trx_id = item.name
+					si_doc_tax_item.breakdown_grand_total = sales_invoice.total_taxes_and_charges
+					si_doc_tax_item.breakdown_account = sales_tax_charges.account_head
+					# si_doc_tax_item.breakdown_account_against = doc_hotel_bill.customer_id
+					si_doc_tax_item.breakdown_description = sales_tax_charges.description + ' of ' + item.sales_invoice_id
+					doc_hotel_bill.append('bill_breakdown', si_doc_tax_item)
 
 			# Input the folio trx with type of auto room charge
 			elif item.room_rate:
@@ -184,6 +185,18 @@ def create_hotel_bill(reservation_id):
 							rr_doc_item.breakdown_account_against = ''
 							doc_hotel_bill.append('bill_breakdown', orr_doc_tax_item)
 
-			# TODO: ada else condition lain? seperti early check-in dan late check-out
+			# Special charge are early check-in and late check-out fee
+			elif item.is_special_charge:
+				sp_doc_item = frappe.new_doc("Hotel Bill Breakdown")
+				sp_doc_item.is_folio_trx_pairing = 1
+				sp_doc_item.billing_folio_trx_id = item.name
+				sp_doc_item.breakdown_description = item.remark
+				sp_doc_item.breakdown_net_total = item.amount
+				sp_doc_item.breakdown_tax_amount = 0
+				sp_doc_item.breakdown_grand_total = item.amount
+				sp_doc_item.breakdown_acocunt = item.against_account_id
+				sp_doc_item.breakdown_acocunt_against = item.account_id
+				doc_hotel_bill.append('bill_breakdown', sp_doc_item)
+
 		# save all hotel bill breakdown to the hotel bill
 		doc_hotel_bill.save()

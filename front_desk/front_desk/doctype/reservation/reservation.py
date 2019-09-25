@@ -10,6 +10,7 @@ from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
 from front_desk.front_desk.doctype.room_booking.room_booking import update_by_reservation
 from front_desk.front_desk.doctype.hotel_bill.hotel_bill import create_hotel_bill
+from front_desk.front_desk.doctype.room_stay.room_stay import validate_special_charge
 
 class Reservation(Document):
 	pass
@@ -292,8 +293,8 @@ def create_room_charge(reservation_id):
 				doc_folio_transaction.amount = today_rate
 				doc_folio_transaction.room_rate = room_stay.room_rate
 				doc_folio_transaction.flag = 'Debit'
-				doc_folio_transaction.account_id = je_credit_account
-				doc_folio_transaction.against_account_id = je_debit_account
+				doc_folio_transaction.account_id = je_debit_account
+				doc_folio_transaction.against_account_id = je_credit_account
 				doc_folio_transaction.remark = remark
 				doc_folio_transaction.is_void = 0
 				doc_folio_transaction.transaction_detail = room_rate.breakdown_summary
@@ -390,3 +391,11 @@ def get_bed_type_available(doctype, txt, searchfield, start, page_len, filters):
 		bed_type_list.append([t])
 
 	return bed_type_list
+
+def add_special_charge(doc, method):
+	room_stay_list = doc.get('room_stay')
+
+	if len(room_stay_list) > 0:
+		for item in room_stay_list:
+			if item.is_early_checkin == 1 or item.is_late_checkout == 1:
+				validate_special_charge(item.name)
