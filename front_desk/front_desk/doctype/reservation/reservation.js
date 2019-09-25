@@ -410,13 +410,21 @@ frappe.ui.form.on('Room Stay', {
 		frm.set_value('status', 'In House');
 		frm.save();
 	},
-	print: function(frm, cdt, cdn) {
+	print_check_in_receipt: function(frm, cdt, cdn) {
 		var w = window.open(frappe.urllib.get_full_url("/printview?"
 			+"doctype="+encodeURIComponent("Room Stay")
 			+"&name="+encodeURIComponent(frappe.get_doc(cdt, cdn).name)
 			+"&no_letterhead=0"
 			));
 
+		if (!w) {
+			frappe.msgprint(__("Please enable pop-ups")); return;
+		}
+	},
+	move_room: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		var w = window.open(frappe.urllib.get_full_url('/desk#Form/Move%20Room/New%20Move%20Room%201?initial_room_stay=' + child.name));
+		
 		if (!w) {
 			frappe.msgprint(__("Please enable pop-ups")); return;
 		}

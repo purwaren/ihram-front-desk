@@ -141,3 +141,14 @@ def get_room_available(doctype, txt, searchfield, start, page_len, filters):
 				break
 
 	return room_list
+
+@frappe.whitelist()
+def get_room_stay_by_name(name):
+	return frappe.get_doc('Room Stay', name)
+
+def get_room_stay_name_by_parent(parent, parentfield, parenttype):
+	return frappe.db.get_value('Room Stay', {'parent':parent, 'parentfield':parentfield, 'parenttype':parenttype}, ['name'])
+
+@frappe.whitelist()
+def change_parent(parent_now, parentfield_now, parenttype_now, parent_new, parentfield_new, parenttype_new):
+	frappe.db.sql('UPDATE `tabRoom Stay` SET parent=%s, parentfield=%s, parenttype=%s WHERE parent=%s AND parentfield=%s AND parenttype=%s', (parent_new, parentfield_new, parenttype_new, parent_now, parentfield_now, parenttype_now))
