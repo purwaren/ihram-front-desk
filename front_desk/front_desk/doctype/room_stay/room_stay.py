@@ -25,7 +25,7 @@ def validate_special_charge(docname):
 									 ['late_checkout_percentage'])
 	ec_remark = 'Early Check In Room ' + doc.room_id + ": " + doc.early_checkin_rate + " ( " + str(
 		ec_percentage) + "% of Room Rate)"
-	lc_remark = 'Late Check Out Room ' + doc.room_id + ": " + doc.early_checkin_rate + " ( " + str(
+	lc_remark = 'Late Check Out Room ' + doc.room_id + ": " + doc.late_checkout_rate + " ( " + str(
 		lc_percentage) + "% of Room Rate)"
 	exist_folio_trx_ec = frappe.db.exists('Folio Transaction', {'remark': ec_remark})
 	exist_folio_trx_lc = frappe.db.exists('Folio Transaction', {'remark': lc_remark})
