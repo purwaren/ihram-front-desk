@@ -194,6 +194,12 @@ frappe.ui.form.on('Reservation', {
 			});
 
 			if (!has_deposit && reservation.deposit > 0) {
+				if (reservation.payment_method == undefined) {
+					frappe.validated = false;
+					frappe.msgprint('Please choose your deposit payment method');
+					return false;
+				}
+
 				frappe.call({
 					method: 'front_desk.front_desk.doctype.reservation.reservation.create_deposit_journal_entry',
 					args: {
@@ -597,6 +603,7 @@ function set_all_field_room_stay_read_only(flag) {
 	frappe.meta.get_docfield('Room Stay', 'room_rate', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Room Stay', 'issue_card', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Room Stay', 'print_check_in_receipt', reservation.name).read_only = flag;
+	frappe.meta.get_docfield('Room Stay', 'move_room', reservation.name).read_only = flag;
 
 	cur_frm.refresh_field('room_stay');
 }
