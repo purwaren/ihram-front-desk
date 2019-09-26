@@ -2,6 +2,7 @@
 // For license information, please see license.txt
 
 var initial_room_stay = null;
+var guest_request = 0;
 
 frappe.ui.form.on('Move Room', {
 	refresh: function(frm, cdt, cdn) {
@@ -22,6 +23,9 @@ frappe.ui.form.on('Move Room', {
 			frm.disable_save();
 			frm.set_df_property('room_stay', 'hidden', 1);
 		}
+	},
+	guest_request: function(frm, cdt, cdn) {
+		guest_request = locals[cdt][cdn].guest_request;
 	},
 	after_save: function(frm) {
 		var move_room_name = '';
@@ -72,61 +76,103 @@ frappe.ui.form.on('Room Stay', {
 		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "section_break_1"})[0];
 		field.hidden = 1;
 
+		if (guest_request == 0) {
+			child.room_rate = initial_room_stay.room_rate;
+			var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
+			field.read_only = 1;
+		} else {
+			child.room_rate = undefined;
+			var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
+			field.read_only = 0;
+		}
+
 		frm.refresh_field('room_stay');
 
 		get_room_type_available(child);
 		get_bed_type_available(child);
 		get_room_available(child);
+
+		if (guest_request == 1) {
+			get_room_rate(child);
+		}
 	},
 	arrival: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
 		child.room_type = undefined;
 		child.bed_type = undefined;
 		child.room_id = undefined;
-		child.room_rate = undefined;
+		
+		if (guest_request == 1) {
+			child.room_rate = undefined;
+		}
 
 		frm.refresh_field('room_stay');
 
 		get_room_type_available(child);
 		get_bed_type_available(child);
 		get_room_available(child);
+
+		if (guest_request == 1) {
+			get_room_rate(child);
+		}
 	},
 	departure: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
 		child.room_type = undefined;
 		child.bed_type = undefined;
 		child.room_id = undefined;
-		child.room_rate = undefined;
+		
+		if (guest_request == 1) {
+			child.room_rate = undefined;
+		}
 
 		frm.refresh_field('room_stay');
 
 		get_room_type_available(child);
 		get_bed_type_available(child);
 		get_room_available(child);
+
+		if (guest_request == 1) {
+			get_room_rate(child);
+		}
 	},
 	allow_smoke: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
 		child.room_type = undefined;
 		child.bed_type = undefined;
 		child.room_id = undefined;
-		child.room_rate = undefined;
+		
+		if (guest_request == 1) {
+			child.room_rate = undefined;
+		}
 
 		frm.refresh_field('room_stay');
 
 		get_room_type_available(child);
 		get_bed_type_available(child);
 		get_room_available(child);
+
+		if (guest_request == 1) {
+			get_room_rate(child);
+		}
 	},
 	room_type: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
 		child.bed_type = undefined;
 		child.room_id = undefined;
-		child.room_rate = undefined;
+		
+		if (guest_request == 1) {
+			child.room_rate = undefined;
+		}
 
 		frm.refresh_field('room_stay');
 
 		get_bed_type_available(child);
 		get_room_available(child);
+
+		if (guest_request == 1) {
+			get_room_rate(child);
+		}
 	},
 	bed_type: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
@@ -138,7 +184,9 @@ frappe.ui.form.on('Room Stay', {
 	},
 	room_id: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
-		child.room_rate = undefined;
+		if (guest_request == 1) {
+			child.room_rate = undefined;
+		}
 		frm.refresh_field('room_stay');
 		
 		if (child.room_id != undefined) {
@@ -151,6 +199,10 @@ frappe.ui.form.on('Room Stay', {
 
 				get_bed_type_available(child);
 				get_room_available(child);
+
+				if (guest_request == 1) {
+					get_room_rate(child);
+				}
 			});
 		}
 	}
@@ -264,6 +316,37 @@ function get_bed_type_available(child) {
 				}
 			}
 		}
+	} else {
+		field.get_query = function () {
+			return {
+				query: 'front_desk.front_desk.doctype.room_booking.room_booking.get_empty_array'
+			}
+		}
+	}
+}
+
+function get_room_rate(child) {
+	var	grid_row = cur_frm.fields_dict['room_stay'].grid.grid_rows_by_docname[child.name];
+	var field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
+
+	if (child.room_id != undefined) {
+		frappe.db.get_value('Hotel Room', child.room_id, 'room_type', (hotel_room) => {
+			frappe.db.get_value('Reservation', initial_room_stay.reservation_id, 'customer_id', (reservation) => {
+				frappe.db.get_value("Customer", reservation.customer_id, "customer_group", (customer) => {
+					field.get_query = function () {
+						return {
+							filters: {
+								'room_type': hotel_room.room_type
+							},
+							or_filters: [
+								{'customer_group': 'All Customer Groups'},
+								{'customer_group': customer.customer_group}
+							]
+						}
+					}
+				});
+			});
+		});
 	} else {
 		field.get_query = function () {
 			return {
