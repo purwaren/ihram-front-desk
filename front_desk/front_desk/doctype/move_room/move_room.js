@@ -28,15 +28,13 @@ frappe.ui.form.on('Move Room', {
 		guest_request = locals[cdt][cdn].guest_request;
 	},
 	after_save: function(frm) {
-		var move_room_name = '';
-
 		frappe.call({
 			method: 'front_desk.front_desk.doctype.move_room.move_room.get_move_room_name_by_initial_room_stay',
 			args: {
 				initial_room_stay: initial_room_stay.name 
 			},
 			callback: (r) => {
-				move_room_name = r.message;
+				var move_room_name = r.message;
 
 				frappe.call({
 					method: 'front_desk.front_desk.doctype.move_room.move_room.set_replacement_room_stay_by_name',
