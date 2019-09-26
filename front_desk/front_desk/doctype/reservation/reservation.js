@@ -705,21 +705,19 @@ function get_room_rate(child_field, child) {
 	var	grid_row = cur_frm.fields_dict[child_field].grid.grid_rows_by_docname[child.name];
 	var field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
 
-	if (child.room_id != undefined) {
-		frappe.db.get_value("Hotel Room", child.room_id, "room_type", (hotel_room) => {
-			frappe.db.get_value("Customer", cur_frm.doc.customer_id, "customer_group", (customer) => {
-				field.get_query = function () {
-					return {
-						filters: {
-							'room_type': hotel_room.room_type
-						},
-						or_filters: [
-							{'customer_group': 'All Customer Groups'},
-							{'customer_group': customer.customer_group}
-						]
-					}
+	if (child.room_type != undefined) {
+		frappe.db.get_value("Customer", cur_frm.doc.customer_id, "customer_group", (customer) => {
+			field.get_query = function () {
+				return {
+					filters: {
+						'room_type': child.room_type
+					},
+					or_filters: [
+						{'customer_group': 'All Customer Groups'},
+						{'customer_group': customer.customer_group}
+					]
 				}
-			});
+			}
 		});
 	} else {
 		field.get_query = function () {
