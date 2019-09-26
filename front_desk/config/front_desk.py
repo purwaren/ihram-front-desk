@@ -14,10 +14,16 @@ def get_data():
 					"description": _("List of reservation.")
 				},
 				{
-					"label": _("Folio Transaction"),
+					"label": _("Folio"),
 					"type": "doctype",
-					"name": "Hotel Room",
-					"description": _("List guest transaction.")
+					"name": "Folio",
+					"description": _("List of Guest Folio.")
+				},
+				{
+					"label": _("Lost and Found"),
+					"type": "doctype",
+					"name": "Lost and Found",
+					"description": _("List of Lost and Found.")
 				},
 			]
 		},
@@ -53,6 +59,11 @@ def get_data():
 					"type": "doctype",
 					"name": "Room Availability",
 					"description": _("Room availability configuration")
+				},
+				{
+					"type": "doctype",
+					"name": "Hotel Tax",
+					"description": _("Hotel Tax configuration")
 				},
 			]
 		},

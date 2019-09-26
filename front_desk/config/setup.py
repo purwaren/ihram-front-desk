@@ -39,6 +39,11 @@ def get_data():
 					"name": "Room Availability",
 					"description": _("Room availability configuration")
 				},
+				{
+					"type": "doctype",
+					"name": "Hotel Tax",
+					"description": _("Hotel Tax configuration")
+				},
 			]
 		}
 	]
