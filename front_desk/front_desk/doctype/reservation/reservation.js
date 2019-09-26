@@ -241,8 +241,6 @@ frappe.ui.form.on('Reservation Detail', {
 			set_all_field_reservation_detail_read_only(false);
 		}
 
-		frm.refresh_field('reservation_detail');
-
 		get_room_type_available('reservation_detail', child);
 		get_bed_type_available('reservation_detail', child);
 		get_room_available('reservation_detail', child);
@@ -374,20 +372,17 @@ frappe.ui.form.on('Room Stay', {
 
 		if (reservation.status == 'Cancel' || reservation.status == 'Finish') {
 			set_all_field_room_stay_read_only(true);
-			frm.refresh_field('room_stay');
 		} else {
 			frappe.db.get_value('Move Room', {'initial_room_stay':child.name}, 'replacement_room_stay', (move_room) => {
 				if (move_room != undefined) {
 					set_all_field_room_stay_read_only(true);
-					frm.refresh_field('room_stay');
 				} else {
 					set_all_field_room_stay_read_only(false);
-					frm.refresh_field('room_stay');
 
 					frappe.db.get_value('Move Room', {'replacement_room_stay':child.name}, 'guest_request', (move_room) => {
 						if (move_room != undefined) {
 							$(".grid-delete-row").hide();
-							
+
 							guest_request = move_room.guest_request;
 							if (guest_request == 0) {
 								frappe.meta.get_docfield('Room Stay', 'room_rate', reservation.name).read_only = true;
@@ -579,6 +574,8 @@ function set_all_field_reservation_detail_read_only(flag) {
 	frappe.meta.get_docfield('Reservation Detail', 'extra_bed', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Reservation Detail', 'payment_type', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Reservation Detail', 'room_rate', reservation.name).read_only = flag;
+
+	cur_frm.refresh_field('reservation_detail');
 }
 
 function set_all_field_room_stay_read_only(flag) {
@@ -600,6 +597,8 @@ function set_all_field_room_stay_read_only(flag) {
 	frappe.meta.get_docfield('Room Stay', 'room_rate', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Room Stay', 'issue_card', reservation.name).read_only = flag;
 	frappe.meta.get_docfield('Room Stay', 'print_check_in_receipt', reservation.name).read_only = flag;
+
+	cur_frm.refresh_field('room_stay');
 }
 
 function get_room_available(child_field, child) {

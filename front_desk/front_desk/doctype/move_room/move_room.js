@@ -29,31 +29,9 @@ frappe.ui.form.on('Move Room', {
 	},
 	after_save: function(frm) {
 		frappe.call({
-			method: 'front_desk.front_desk.doctype.move_room.move_room.get_move_room_name_by_initial_room_stay',
+			method: 'front_desk.front_desk.doctype.move_room.move_room.process_move_room',
 			args: {
-				initial_room_stay: initial_room_stay.name 
-			},
-			callback: (r) => {
-				var move_room_name = r.message;
-
-				frappe.call({
-					method: 'front_desk.front_desk.doctype.move_room.move_room.set_replacement_room_stay_by_name',
-					args: {
-						name: move_room_name
-					}
-				});	
-
-				frappe.call({
-					method: 'front_desk.front_desk.doctype.room_stay.room_stay.change_parent',
-					args: {
-						parent_now: move_room_name,
-						parentfield_now: 'room_stay',
-						parenttype_now: 'Move Room',
-						parent_new: initial_room_stay.reservation_id,
-						parentfield_new: 'room_stay',
-						parenttype_new: 'Reservation'
-					}
-				});	
+				initial_room_stay_name: initial_room_stay.name
 			}
 		});
 	}
