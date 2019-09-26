@@ -463,7 +463,7 @@
  "issingle": 0,
  "istable": 0,
  "max_attachments": 0,
- "modified": "2019-09-24 12:41:56.976037",
+ "modified": "2019-09-26 18:48:20.624487",
  "modified_by": "Administrator",
  "module": "Front Desk",
  "name": "Reservation",
@@ -515,6 +515,7 @@
  "show_name_in_global_search": 0,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "title_field": "customer_id",
  "track_changes": 1,
  "track_seen": 0,
  "track_views": 0

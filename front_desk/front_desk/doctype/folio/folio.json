@@ -160,7 +160,7 @@
  "issingle": 0,
  "istable": 0,
  "max_attachments": 0,
- "modified": "2019-09-02 12:51:58.509607",
+ "modified": "2019-09-26 18:47:35.656746",
  "modified_by": "Administrator",
  "module": "Front Desk",
  "name": "Folio",
@@ -193,6 +193,7 @@
  "show_name_in_global_search": 0,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "title_field": "customer_id",
  "track_changes": 1,
  "track_seen": 0,
  "track_views": 0
