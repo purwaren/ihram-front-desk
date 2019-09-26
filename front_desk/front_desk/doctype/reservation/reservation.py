@@ -51,7 +51,7 @@ def get_folio_url(reservation_id):
 @frappe.whitelist()
 def get_hotel_bill_url(reservation_id):
 	create_hotel_bill(reservation_id)
-	return frappe.utils.get_url_to_form('Hotel Bill', frappe.db.get_value('Hotel Bill',{'reservation_id': reservation_id},['name']))
+	return frappe.utils.get_url_to_form('Hotel Bill', frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name']))
 
 @frappe.whitelist()
 def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
@@ -214,13 +214,14 @@ def checkout_reservation(reservation_id):
 		## Update room booking status
 		update_by_reservation(reservation_id)
 
+@frappe.whitelist()
 def auto_release_reservation_at_six_pm():
 	reservation_list = frappe.get_all('Reservation', {'status': 'Created', 'is_guaranteed': 0})
 	for reservation in reservation_list:
-		reservation_detail_list = frappe.get_all('Reservation Detail', {'parent': reservation.name})
+		reservation_detail_list = frappe.get_all('Reservation Detail', filters={'parent': reservation.name}, fields=['expected_arrival'])
 		arrival_expired = False
 		for rd in reservation_detail_list:
-			if rd.expected_arrival < datetime.datetime.today():
+			if rd.expected_arrival < datetime.datetime.today().date():
 				arrival_expired = True
 
 		if arrival_expired:
