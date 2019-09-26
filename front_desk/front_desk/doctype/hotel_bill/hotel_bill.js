@@ -25,27 +25,24 @@ frappe.ui.form.on('Hotel Bill', {
 		}
 	},
 	use_deposit: function(frm, cdt, cdn) {
-		outstanding_now = frm.doc.bill_outstanding_amount;
-		deposit = frm.doc.bill_deposit_amount;
-		if (frm.doc.use_deposit == 1) {
-			if (deposit <= frm.doc.bill_grand_total) {
-				frm.set_value('bill_outstanding_amount', frm.doc.bill_grand_total - deposit);
-				frm.set_value('bill_change_amount', 0);
-			}
-			else {
-				frm.set_value('bill_outstanding_amount', 0);
-				frm.set_value('bill_change_amount', deposit - frm.doc.bill_grand_total);
-
-			}
-		} else {
-			frm.set_value('bill_outstanding_amount', frm.doc.bill_grand_total);
-			frm.set_value('bill_change_amount', deposit);
-		}
+		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
+		calculatePayments(frm, bp_list);
 	},
-	after_save: function (frm) {
-		frm.reload_doc()
-	}
+	round_down_change: function(frm, cdt, cdn) {
+		var bp_list = frappe.get_doc( 'Hotel Bill', frm.doc.name ).bill_payments;
+		calculatePayments(frm, bp_list);
+	},
+});
 
+frappe.ui.form.on('Hotel Bill Payments', {
+	payment_amount: function (frm, cdt, cdn) {
+		var bp_list = frappe.get_doc( 'Hotel Bill', frm.doc.name ).bill_payments;
+		calculatePayments(frm, bp_list);
+	},
+	bill_payments_remove: function (frm, cdt, cdn) {
+		var bp_list = frappe.get_doc( 'Hotel Bill', frm.doc.name ).bill_payments;
+		calculatePayments(frm, bp_list);
+	}
 });
 
 function hideBreakdown(item, index) {
@@ -60,4 +57,37 @@ function showBreakdown(item, index) {
 	}
 }
 
+function calculatePayments(frm, bp_list) {
+	var total_payment = 0;
+	var current_change = frm.doc.bill_change_amount;
+	var i;
+	for (i = 0; i < bp_list.length; i++) {
+		total_payment += bp_list[i].payment_amount;
+	}
 
+	if (frm.doc.use_deposit == 1) {
+		total_payment += frm.doc.bill_deposit_amount;
+	}
+
+	var diff = total_payment - frm.doc.bill_grand_total;
+	if (diff < 0) {
+		frm.set_value('bill_outstanding_amount', diff*-1);
+		frm.set_value('bill_change_amount', 0);
+		frm.set_value('bill_change_round_amount', 0);
+		frm.set_value('bill_rounded_change_amount', 0);
+	}
+	else {
+		frm.set_value('bill_outstanding_amount', 0);
+		frm.set_value('bill_change_amount', diff);
+
+		var roundedChange = Math.floor(diff / 100) * 100;
+
+		if (frm.doc.round_down_change == 1) {
+			frm.set_value('bill_change_round_amount', diff - roundedChange);
+			frm.set_value('bill_rounded_change_amount', roundedChange);
+		} else {
+			frm.set_value('bill_change_round_amount', 0);
+			frm.set_value('bill_rounded_change_amount', diff);
+		}
+	}
+}
