@@ -11,10 +11,22 @@ class MoveRoom(Document):
 	pass
 
 @frappe.whitelist()
-def get_move_room_name_by_initial_room_stay(initial_room_stay):
-	return frappe.db.get_value('Move Room', {'initial_room_stay':initial_room_stay}, ['name'])
+def process_move_room(initial_room_stay_name):
+	move_room_name = frappe.db.get_value('Move Room', {'initial_room_stay':initial_room_stay_name}, ['name'])
+	replacement_room_stay_name = room_stay.get_room_stay_name_by_parent(move_room_name, 'room_stay', 'Move Room')
 
-@frappe.whitelist()
-def set_replacement_room_stay_by_name(name):
-	replacement_room_stay = room_stay.get_room_stay_name_by_parent(name, 'room_stay', 'Move Room')
-	frappe.db.set_value('Move Room', name, 'replacement_room_stay', replacement_room_stay)
+	initial_room_stay = frappe.get_doc('Room Stay', initial_room_stay_name)
+	replacement_room_stay = frappe.get_doc('Room Stay', replacement_room_stay_name)
+
+	frappe.db.set_value('Hotel Room', initial_room_stay.room_id, 'room_status', 'Vacant Dirty')
+	frappe.db.set_value('Hotel Room', replacement_room_stay.room_id, 'room_status', 'Occupied Clean')
+
+	initial_room_stay.departure = replacement_room_stay.arrival
+	initial_room_stay.save()
+
+	replacement_room_stay.parent = replacement_room_stay.reservation_id
+	replacement_room_stay.parenttype = 'Reservation'
+	replacement_room_stay.idx = initial_room_stay.idx
+	replacement_room_stay.save()
+
+	frappe.db.sql('UPDATE `tabMove Room` SET replacement_room_stay=%s WHERE name=%s', (replacement_room_stay_name, move_room_name))
