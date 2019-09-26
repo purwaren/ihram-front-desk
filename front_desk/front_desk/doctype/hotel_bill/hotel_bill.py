@@ -24,6 +24,8 @@ def calculate_bill_total(doc, method):
 	hotel_bill_net_total = 0
 	hotel_bill_tax_amount = 0
 	hotel_bill_grand_total = 0
+	hotel_bill_deposit_amount = get_deposit_amount(doc.reservation_id)
+	hotel_bill_change_amount = 0
 
 	bill_breakdown_list = doc.get('bill_breakdown')
 	for bb_item in bill_breakdown_list:
@@ -31,11 +33,22 @@ def calculate_bill_total(doc, method):
 			hotel_bill_net_total = hotel_bill_net_total + bb_item.breakdown_net_total
 			hotel_bill_tax_amount = hotel_bill_tax_amount + bb_item.breakdown_tax_amount
 			hotel_bill_grand_total = hotel_bill_grand_total + bb_item.breakdown_grand_total
-			
+
+	if doc.use_deposit == 1:
+		if hotel_bill_deposit_amount <= hotel_bill_grand_total:
+			hotel_bill_outstanding_amount = hotel_bill_grand_total - hotel_bill_deposit_amount
+		else:
+			hotel_bill_outstanding_amount = 0
+			hotel_bill_change_amount = hotel_bill_deposit_amount - hotel_bill_grand_total
+	else:
+		hotel_bill_outstanding_amount = hotel_bill_grand_total
+		hotel_bill_change_amount = hotel_bill_deposit_amount
+
 	doc.bill_net_total = hotel_bill_net_total
 	doc.bill_tax_amount = hotel_bill_tax_amount
 	doc.bill_grand_total = hotel_bill_grand_total
-
+	doc.bill_outstanding_amount = hotel_bill_outstanding_amount
+	doc.bill_change_amount = hotel_bill_change_amount
 
 def create_hotel_bill(reservation_id):
 	exist_bill = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
