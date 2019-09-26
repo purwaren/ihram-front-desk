@@ -139,25 +139,6 @@ def validate_special_charge(docname):
 		doc_folio.append('transaction_detail', doc_folio_transaction)
 		doc_folio.save()
 
-def get_room_book_list(filters):
-	room_book_list = list(frappe.db.sql("SELECT rb.room_id FROM `tabRoom Booking` AS rb LEFT JOIN `tabReservation Detail` AS rd ON rb.reference_name = rd.name WHERE (rd.parent != %s) AND (rb.status =	 'Booked') AND ((%s >= rb.start AND %s < rb.end) OR (%s > rb.start AND %s <= rb.end) OR (%s <= rb.start AND %s >= rb.end))", (filters.get('parent'), filters.get('arrival'), filters.get('arrival'), filters.get('departure'), filters.get('departure'), filters.get('arrival'), filters.get('departure'))))
-	room_book_list.extend(list(frappe.db.sql("SELECT rs.room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name WHERE (rs.parent != %s) AND (r.status = 'Confirmed' OR r.status = 'In House') AND ((%s >= CONVERT(rs.arrival, DATE) AND %s < CONVERT(rs.departure, DATE)) OR (%s > CONVERT(rs.arrival, DATE) AND %s <= CONVERT(rs.departure, DATE)) OR (%s <= CONVERT(rs.arrival, DATE) AND %s >= CONVERT(rs.departure, DATE)))", (filters.get('parent'), filters.get('arrival'), filters.get('arrival'), filters.get('departure'), filters.get('departure'), filters.get('arrival'), filters.get('departure')))))
-	
-	return room_book_list
-
-@frappe.whitelist()
-def get_room_available(doctype, txt, searchfield, start, page_len, filters):
-	room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room`"))
-	room_book_list = get_room_book_list(filters)
-
-	for room_book in room_book_list:
-		for i in range(len(room_list)):
-			if room_list[i][0] == room_book[0]:
-				del room_list[i]
-				break
-
-	return room_list
-
 @frappe.whitelist()
 def get_room_stay_by_name(name):
 	return frappe.get_doc('Room Stay', name)
