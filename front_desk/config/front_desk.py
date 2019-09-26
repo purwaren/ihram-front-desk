@@ -25,6 +25,18 @@ def get_data():
 					"name": "Lost and Found",
 					"description": _("List of Lost and Found.")
 				},
+				{
+					"label": _("Room Availability Page"),
+					"type": "doctype",
+					"name": "Room Availability Page",
+					"description": _("Checking Room Availability.")
+				},
+				{
+					"label": _("Floor Plan"),
+					"type": "doctype",
+					"name": "Floor Plan",
+					"description": _("View Hotel Floor Plan.")
+				},
 			]
 		},
 		{
