@@ -335,7 +335,7 @@ function get_room_rate(child) {
 				field.get_query = function () {
 					return {
 						filters: {
-							'room_type': room_type
+							'room_type': child.room_type
 						},
 						or_filters: [
 							{'customer_group': 'All Customer Groups'},
