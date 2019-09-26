@@ -67,7 +67,12 @@ frappe.ui.form.on('Reservation', {
 				});
 			});
 		}
-		
+		//enable for manual trigger scheduler release room
+		// frm.add_custom_button(__("Trigger Release Room Scheduler"), function () {
+		// 	frappe.call({
+		// 		method: "front_desk.front_desk.doctype.reservation.reservation.auto_release_reservation_at_six_pm",
+		// 	});
+		// });
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
 			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
 			// 	frappe.call({

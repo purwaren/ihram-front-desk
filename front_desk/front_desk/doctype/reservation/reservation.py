@@ -247,6 +247,7 @@ def create_room_charge(reservation_id):
 				# TODO: masuk jurnal entry bukan sebagai bundle auto room charge, tetapi sebagai breakdown item room charge
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
 				room_name = room_stay.room_id
+				room_rate_breakdown = frappe.get_all('Room Rate Breakdown', filters={'parent':room_stay.room_rate}, fields=['*'])
 				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
@@ -254,38 +255,78 @@ def create_room_charge(reservation_id):
 					today_rate = room_rate.rate_weekday
 				else:
 					today_rate = room_rate.rate_weekend
+				for rrbd_item in room_rate_breakdown:
+					rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
+					if is_weekday():
+						if rrbd_item.breakdown_name != 'Weekend Rate':
+							rrbd_rate_amount = float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
 
-				doc_journal_entry = frappe.new_doc('Journal Entry')
-				doc_journal_entry.title = 'Auto Room Charge:' + reservation_id + ': ' + room_name
-				doc_journal_entry.voucher_type = 'Journal Entry'
-				doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-				doc_journal_entry.posting_date = datetime.date.today()
-				doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-				doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-				doc_journal_entry.remark = remark
-				doc_journal_entry.user_remark = remark
+							doc_journal_entry = frappe.new_doc('Journal Entry')
+							doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
+							doc_journal_entry.voucher_type = 'Journal Entry'
+							doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+							doc_journal_entry.posting_date = datetime.date.today()
+							doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+							doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+							doc_journal_entry.remark = rrbd_remark
+							doc_journal_entry.user_remark = rrbd_remark
 
-				doc_debit = frappe.new_doc('Journal Entry Account')
-				doc_debit.account = je_debit_account
-				doc_debit.debit = today_rate
-				doc_debit.debit_in_account_currency = today_rate
-				doc_debit.party_type = 'Customer'
-				doc_debit.party = cust_name
-				doc_debit.user_remark = remark
+							doc_debit = frappe.new_doc('Journal Entry Account')
+							doc_debit.account = rrbd_item.breakdown_account
+							doc_debit.debit = rrbd_rate_amount
+							doc_debit.debit_in_account_currency = rrbd_rate_amount
+							doc_debit.party_type = 'Customer'
+							doc_debit.party = cust_name
+							doc_debit.user_remark = rrbd_remark
 
-				doc_credit = frappe.new_doc('Journal Entry Account')
-				doc_credit.account = je_credit_account
-				doc_credit.credit = today_rate
-				doc_credit.party_type = 'Customer'
-				doc_credit.party = cust_name
-				doc_credit.credit_in_account_currency = today_rate
-				doc_credit.user_remark = remark
+							doc_credit = frappe.new_doc('Journal Entry Account')
+							doc_credit.account = je_credit_account
+							doc_credit.credit = rrbd_rate_amount
+							doc_credit.party_type = 'Customer'
+							doc_credit.party = cust_name
+							doc_credit.credit_in_account_currency = rrbd_rate_amount
+							doc_credit.user_remark = rrbd_remark
 
-				doc_journal_entry.append('accounts', doc_debit)
-				doc_journal_entry.append('accounts', doc_credit)
+							doc_journal_entry.append('accounts', doc_debit)
+							doc_journal_entry.append('accounts', doc_credit)
 
-				doc_journal_entry.save()
-				doc_journal_entry.submit()
+							doc_journal_entry.save()
+							doc_journal_entry.submit()
+					else:
+						if rrbd_item.breakdown_name != 'Weekday Rate':
+							rrbd_rate_amount = float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
+
+							doc_journal_entry = frappe.new_doc('Journal Entry')
+							doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
+							doc_journal_entry.voucher_type = 'Journal Entry'
+							doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+							doc_journal_entry.posting_date = datetime.date.today()
+							doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+							doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+							doc_journal_entry.remark = rrbd_remark
+							doc_journal_entry.user_remark = rrbd_remark
+
+							doc_debit = frappe.new_doc('Journal Entry Account')
+							doc_debit.account = rrbd_item.breakdown_account
+							doc_debit.debit = rrbd_rate_amount
+							doc_debit.debit_in_account_currency = rrbd_rate_amount
+							doc_debit.party_type = 'Customer'
+							doc_debit.party = cust_name
+							doc_debit.user_remark = rrbd_remark
+
+							doc_credit = frappe.new_doc('Journal Entry Account')
+							doc_credit.account = je_credit_account
+							doc_credit.credit = rrbd_rate_amount
+							doc_credit.party_type = 'Customer'
+							doc_credit.party = cust_name
+							doc_credit.credit_in_account_currency = rrbd_rate_amount
+							doc_credit.user_remark = rrbd_remark
+
+							doc_journal_entry.append('accounts', doc_debit)
+							doc_journal_entry.append('accounts', doc_credit)
+
+							doc_journal_entry.save()
+							doc_journal_entry.submit()
 
 				folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 				doc_folio = frappe.get_doc('Folio', folio_name)
