@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+import datetime
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.hotel_tax.hotel_tax import calculate_hotel_tax_and_charges
 from front_desk.front_desk.doctype.folio.folio import get_deposit_amount
@@ -48,6 +49,70 @@ def check_special_charge(reservation_id):
 			add_early_checkin(room_stay.name)
 			add_late_checkout(room_stay.name)
 
+def create_additional_charge(reservation_id):
+	ac_list = frappe.get_all('Additional Charge',
+							 filters={'parent': reservation_id},
+							 fields=['*']
+							 )
+	if len(ac_list) > 0:
+		for ac_item in ac_list:
+			cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
+			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+			remark = ac_item.name + " -  Additional Charge " + reservation_id + " " + ac_item.ac_description
+			folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+			doc_folio = frappe.get_doc('Folio', folio_name)
+
+			exist_folio_trx_ac = frappe.db.exists('Folio Transaction',
+												  {'parent': doc_folio.name,
+												   'remark': remark})
+			if not exist_folio_trx_ac:
+				doc_journal_entry = frappe.new_doc('Journal Entry')
+				doc_journal_entry.title = ac_item.name + " Additional Charge of Reservation: " + reservation_id
+				doc_journal_entry.voucher_type = 'Journal Entry'
+				doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+				doc_journal_entry.posting_date = datetime.date.today()
+				doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+				doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+				doc_journal_entry.remark = remark
+				doc_journal_entry.user_remark = remark
+
+				doc_debit = frappe.new_doc('Journal Entry Account')
+				doc_debit.account = je_debit_account
+				doc_debit.debit = ac_item.ac_amount
+				doc_debit.debit_in_account_currency = ac_item.ac_amount
+				doc_debit.party_type = 'Customer'
+				doc_debit.party = cust_name
+				doc_debit.user_remark = remark
+
+				doc_credit = frappe.new_doc('Journal Entry Account')
+				doc_credit.account = je_credit_account
+				doc_credit.credit = ac_item.ac_amount
+				doc_credit.party_type = 'Customer'
+				doc_credit.party = cust_name
+				doc_credit.credit_in_account_currency = ac_item.ac_amount
+				doc_credit.user_remark = remark
+
+				doc_journal_entry.append('accounts', doc_debit)
+				doc_journal_entry.append('accounts', doc_credit)
+
+				doc_journal_entry.save()
+				doc_journal_entry.submit()
+
+				doc_folio_transaction = frappe.new_doc('Folio Transaction')
+				doc_folio_transaction.folio_id = doc_folio.name
+				doc_folio_transaction.amount = ac_item.ac_amount
+				doc_folio_transaction.flag = 'Debit'
+				doc_folio_transaction.account_id = je_debit_account
+				doc_folio_transaction.against_account_id = je_credit_account
+				doc_folio_transaction.remark = remark
+				doc_folio_transaction.is_additional_charge = 1
+				doc_folio_transaction.is_void = 0
+
+				doc_folio.append('transaction_detail', doc_folio_transaction)
+				doc_folio.save()
+
+
 def create_hotel_bill(reservation_id):
 	exist_bill = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
 
@@ -58,6 +123,7 @@ def create_hotel_bill(reservation_id):
 	# copy_trx_from_sales_invoice_to_folio_transaction(reservation_id)
 	copy_trx_from_sales_invoice_to_folio_transaction(reservation_id)
 	check_special_charge(reservation_id)
+	create_additional_charge(reservation_id)
 
 	folio_trx_list = frappe.get_all('Folio Transaction', filters={'folio_id': doc_folio.name, 'flag': 'Debit'},
 									fields=["*"])
@@ -215,6 +281,19 @@ def create_hotel_bill(reservation_id):
 				sp_doc_item.breakdown_acocunt = item.against_account_id
 				sp_doc_item.breakdown_acocunt_against = item.account_id
 				doc_hotel_bill.append('bill_breakdown', sp_doc_item)
+
+			# Additional charge are charges that added by Additional Charge form in Rerservation Page
+			elif item.is_additional_charge:
+				ac_doc_item = frappe.new_doc("Hotel Bill Breakdown")
+				ac_doc_item.is_folio_trx_pairing = 1
+				ac_doc_item.billing_folio_trx_id = item.name
+				ac_doc_item.breakdown_description = item.remark
+				ac_doc_item.breakdown_net_total = item.amount
+				ac_doc_item.breakdown_tax_amount = 0
+				ac_doc_item.breakdown_grand_total = item.amount
+				ac_doc_item.breakdown_acocunt = item.against_account_id
+				ac_doc_item.breakdown_acocunt_against = item.account_id
+				doc_hotel_bill.append('bill_breakdown', ac_doc_item)
 
 		# save all hotel bill breakdown to the hotel bill
 		doc_hotel_bill.save()

@@ -82,10 +82,24 @@ frappe.ui.form.on('Reservation', {
 		// 		}
 		// 	});
 		// });
+        // frm.add_custom_button(__("Additional Charge"), function () {
+		// 	frappe.call({
+		// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
+		// 		args: {
+		// 			reservation_id: reservation.name
+		// 		}
+		// 	});
+		// });
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
 			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
 			// 	frappe.call({
 			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
+			// 		args: {
+			// 			reservation_id: reservation.name
+			// 		}
+			// 	});
+			// 	frappe.call({
+			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
 			// 		args: {
 			// 			reservation_id: reservation.name
 			// 		}

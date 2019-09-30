@@ -120,6 +120,7 @@ scheduler_events = {
 	"cron": {
 		"59 23 * * *": [
 			"front_desk.front_desk.doctype.reservation.reservation.auto_room_charge",
+			"front_desk.front_desk.doctype.reservation.reservation.auto_additional_charge",
 		],
 		"0 18 * * *":[
 			"front_desk.front_desk.doctype.reservation.reservation.auto_release_reservation_at_six_pm",
