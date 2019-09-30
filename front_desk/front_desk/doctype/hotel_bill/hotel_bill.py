@@ -7,7 +7,9 @@ import frappe
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.hotel_tax.hotel_tax import calculate_hotel_tax_and_charges
 from front_desk.front_desk.doctype.folio.folio import get_deposit_amount
-
+from front_desk.front_desk.doctype.folio.folio import copy_trx_from_sales_invoice_to_folio_transaction
+from front_desk.front_desk.doctype.room_stay.room_stay import add_early_checkin
+from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
 
 class HotelBill(Document):
 	pass
@@ -16,10 +18,8 @@ class HotelBill(Document):
 def is_this_weekday(the_date):
 	weekno = the_date.weekday()
 	if weekno < 5:
-		frappe.msgprint("weekday nih")
 		return True
 	else:
-		frappe.msgprint("weekend loh")
 		return False
 
 def calculate_bill_total(doc, method):
@@ -38,10 +38,27 @@ def calculate_bill_total(doc, method):
 	doc.bill_tax_amount = hotel_bill_tax_amount
 	doc.bill_grand_total = hotel_bill_grand_total
 
+def check_special_charge(reservation_id):
+	room_stay_list = frappe.get_all('Room Stay',
+									filters={"reservation_id": reservation_id},
+									fields=["name", "room_rate", "room_id", "departure"]
+									)
+	if len(room_stay_list) > 0:
+		for room_stay in room_stay_list:
+			add_early_checkin(room_stay.name)
+			add_late_checkout(room_stay.name)
+
 def create_hotel_bill(reservation_id):
 	exist_bill = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
 
 	doc_folio = frappe.get_doc('Folio', frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name']))
+
+	# create all transaction that may occur after scheduler copy to folio trx
+	# create_special_charge(reservation_id)
+	# copy_trx_from_sales_invoice_to_folio_transaction(reservation_id)
+	copy_trx_from_sales_invoice_to_folio_transaction(reservation_id)
+	check_special_charge(reservation_id)
+
 	folio_trx_list = frappe.get_all('Folio Transaction', filters={'folio_id': doc_folio.name, 'flag': 'Debit'},
 									fields=["*"])
 
