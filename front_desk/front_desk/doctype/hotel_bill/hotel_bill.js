@@ -9,6 +9,10 @@ frappe.ui.form.on('Hotel Bill', {
 	onload: function(frm) {
 		frm.get_field("bill_breakdown").grid.only_sortable();
 	},
+	onload_post_render(frm, cdt, cdn) {
+		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
+		calculatePayments(frm, bp_list);
+	},
 	refresh: function(frm, cdt, cdn) {
 		var x = frappe.get_doc(cdt, cdn).bill_breakdown;
 		x.forEach(hideBreakdown);
