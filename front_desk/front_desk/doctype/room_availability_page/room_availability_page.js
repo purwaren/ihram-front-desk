@@ -2,38 +2,37 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Room Availability Page', {
-	refresh: function(frm, cdt, cdn) {
-		var doc = locals[cdt][cdn];
-
-		// doc.start = undefined;
-		// frm.refresh_field('start');
-		
-		// doc.end = undefined;
-		// frm.refresh_field('end');
-	},
-	start: function(frm, cdt, cdn) {
-		var doc = locals[cdt][cdn];
-	},
-	end: function(frm, cdt, cdn) {
-		var doc = locals[cdt][cdn];
-	},
 	search_button: function(frm, cdt, cdn) {
 		var doc = locals[cdt][cdn];
 
 		if (doc.start != undefined && doc.end != undefined) {
 			var wrapper = frm.get_field('html').$wrapper;
-			var html = '<div id="room-calendar"><table id="table-calendar"><tr id="table-calendar-title"><th width="100px">Room Number</th><th width="100px">Room Type</th><th width="100px">Bed Type</th><th width="100px">Smoking</th><th width="100px">Room View</th><th width="100px">Room Status</th></tr></table></div>';
-			var css = '<style>table, th, td {border:1px solid black;} th, td {padding:5px;} #room-calendar {font-size:12px; height:500px; overflow-y:scroll;}</style>';
+			
+			var html =	'<div id="room-calendar">\
+							<table class="form-grid" id="table-calendar">\
+								<tr class="grid-heading-row" id="table-calendar-title">\
+									<th class="grid-static-col">Room Number</th>\
+									<th class="grid-static-col">Room Type</th>\
+									<th class="grid-static-col">Bed Type</th>\
+									<th class="grid-static-col">Smoking</th>\
+									<th class="grid-static-col">Room View</th>\
+									<th class="grid-static-col">Room Status</th>\
+								</tr>\
+							</table>\
+						</div>';
+			
+			var css = 	'<style>\
+							#room-calendar {\
+								font-size:12px;\
+								height:300px;\
+								overflow-y:scroll;\
+							}\
+						</style>';
 
 			wrapper.html(html+css);
 			
 			var start = new Date(doc.start);
 			var	end = new Date(doc.end);
-			var today = new Date(formatDate(new Date()));
-
-			if (start < today) {
-				frappe.msgprint(__("Start < Today")); return;
-			}
 
 			if (start > end) {
 				frappe.msgprint(__("Start > End")); return;
@@ -41,8 +40,8 @@ frappe.ui.form.on('Room Availability Page', {
 
 			while (start <= end) {
 				var th = document.createElement('th');
+				th.className = 'grid-static-col';
 				th.innerHTML = formatDate(start);
-				th.style.cssText = 'width:100px;';
 				document.getElementById('table-calendar-title').appendChild(th);
 			
 				start.setDate(start.getDate() + 1);
@@ -55,26 +54,32 @@ frappe.ui.form.on('Room Availability Page', {
 						var tr = document.createElement('tr');
 						
 						var td = document.createElement('td');
+						td.className = 'grid-static-col';
 						td.innerHTML = elm.name;
 						tr.appendChild(td);
 
 						var td = document.createElement('td');
+						td.className = 'grid-static-col';
 						td.innerHTML = elm.room_type;
 						tr.appendChild(td);
 
 						var td = document.createElement('td');
+						td.className = 'grid-static-col';
 						td.innerHTML = elm.bed_type;
 						tr.appendChild(td);
 
 						var td = document.createElement('td');
+						td.className = 'grid-static-col';
 						td.innerHTML = elm.allow_smoke;
 						tr.appendChild(td);
 
 						var td = document.createElement('td');
+						td.className = 'grid-static-col';
 						td.innerHTML = elm.view;
 						tr.appendChild(td);
 
 						var td = document.createElement('td');
+						td.className = 'grid-static-col';
 						td.innerHTML = elm.room_status;
 						tr.appendChild(td);
 
@@ -100,6 +105,7 @@ frappe.ui.form.on('Room Availability Page', {
 								},
 								callback: (resp) => {
 									var td = document.createElement('td');
+									td.className = 'grid-static-col';
 									if (resp.message.length > 0) {
 										td.innerHTML = resp.message;
 									}
