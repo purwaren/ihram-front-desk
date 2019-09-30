@@ -16,8 +16,10 @@ class HotelBill(Document):
 def is_this_weekday(the_date):
 	weekno = the_date.weekday()
 	if weekno < 5:
+		frappe.msgprint("weekday nih")
 		return True
 	else:
+		frappe.msgprint("weekend loh")
 		return False
 
 def calculate_bill_total(doc, method):

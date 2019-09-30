@@ -73,6 +73,15 @@ frappe.ui.form.on('Reservation', {
 		// 		method: "front_desk.front_desk.doctype.reservation.reservation.auto_release_reservation_at_six_pm",
 		// 	});
 		// });
+
+		// frm.add_custom_button(__("Special Charge"), function () {
+		// 	frappe.call({
+		// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_special_charge",
+		// 		args: {
+		// 			reservation_id: reservation.name
+		// 		}
+		// 	});
+		// });
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
 			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
 			// 	frappe.call({

@@ -10,7 +10,8 @@ from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
 from front_desk.front_desk.doctype.room_booking.room_booking import update_by_reservation
 from front_desk.front_desk.doctype.hotel_bill.hotel_bill import create_hotel_bill
-from front_desk.front_desk.doctype.room_stay.room_stay import validate_special_charge
+from front_desk.front_desk.doctype.room_stay.room_stay import add_early_checkin
+from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
 
 class Reservation(Document):
 	pass
@@ -243,6 +244,8 @@ def create_room_charge(reservation_id):
 
 	if len(room_stay_list) > 0:
 		for room_stay in room_stay_list:
+			add_early_checkin(room_stay.name)
+			add_late_checkout(room_stay.name)
 			if room_stay.departure >= datetime.datetime.today():
 				# TODO: masuk jurnal entry bukan sebagai bundle auto room charge, tetapi sebagai breakdown item room charge
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
@@ -345,10 +348,13 @@ def create_room_charge(reservation_id):
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
 
-def add_special_charge(doc, method):
-	room_stay_list = doc.get('room_stay')
-
+@frappe.whitelist()
+def create_special_charge(reservation_id):
+	room_stay_list = frappe.get_all('Room Stay',
+									filters={"reservation_id": reservation_id},
+									fields=["name", "room_rate", "room_id", "departure"]
+									)
 	if len(room_stay_list) > 0:
-		for item in room_stay_list:
-			if item.is_early_checkin == 1 or item.is_late_checkout == 1:
-				validate_special_charge(item.name)
+		for room_stay in room_stay_list:
+			add_early_checkin(room_stay.name)
+			add_late_checkout(room_stay.name)
