@@ -45,7 +45,7 @@ def get_rate_after_tax(room_rate_id, selector, discount):
 	breakdown_list = room_rate.get('room_rate_breakdown')
 	total_weekday = 0.0
 	total_weekend = 0.0
-	amount_multiplier = 1 - discount/100.0
+	amount_multiplier = 1 - float(discount)/100.0
 
 	if selector == "Weekday Rate":
 		for bd_item in breakdown_list:
