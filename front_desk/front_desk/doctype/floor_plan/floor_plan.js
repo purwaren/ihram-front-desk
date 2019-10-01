@@ -3,7 +3,7 @@
 
 frappe.ui.form.on('Floor Plan', {
 	refresh: function(frm, cdt, cdn) {
-		var wrapper = frm.get_field("floor_html").$wrapper;
+		var wrapper = frm.get_field("html").$wrapper;
 		
 		var head = '' +
 			'<head>\
@@ -29,6 +29,7 @@ frappe.ui.form.on('Floor Plan', {
 						max-height: 160px;\
 						position: absolute;\
 						background-color: white;\
+						z-index: 1;\
 					}\
 					.dropdown-content a {\
 						padding: 5px 10px;\
@@ -51,7 +52,7 @@ frappe.ui.form.on('Floor Plan', {
 						<div class="dropdown-content" id="dropdown-content-floor-plan"></div>\
 					</div>\
 				</div>\
-				<div id="floor-plan-content"></div>\
+				<div class="col-xs-12 col-md-8" id="floor-plan-content"></div>\
 			</body>';
 
 		var script = '' +
@@ -130,24 +131,26 @@ frappe.ui.form.on('Floor Plan', {
 		});
 		
 		var information = '' +
-			'<svg id="information" width="250" height="350">\
-				<rect x="0" y="0" width="50" height="25" fill="#33a02c" stroke="black" />\
-				<text x="60" y="15" fill="black">AV (Available)</text>\
-				<rect x="0" y="50" width="50" height="25" fill="#1f78b4" stroke="black" />\
-				<text x="60" y="65" fill="black">RS (Room Sold)</text>\
-				<rect x="0" y="100" width="50" height="25" fill="#a6cee3" stroke="black" />\
-				<text x="60" y="115" fill="black">RC (Room Compliment)</text>\
-				<rect x="0" y="150" width="50" height="25" fill="#ff7f00" stroke="black" />\
-				<text x="60" y="165" fill="black">OU (Office Use)</text>\
-				<rect x="0" y="200" width="50" height="25" fill="#fdbf6f" stroke="black" />\
-				<text x="60" y="215" fill="black">HU (House Use)</text>\
-				<rect x="0" y="250" width="50" height="25" fill="#e31a1c" stroke="black" />\
-				<text x="60" y="265" fill="black">OO (Out of Order)</text>\
-				<rect x="0" y="300" width="50" height="25" fill="#fb9a99" stroke="black" />\
-				<text x="60" y="315" fill="black">UC (Under Construction)</text>\
-			</svg>'
+			'<divc class="col-xs-12 col-md-4">\
+				<p><b>Information</b></p>\
+				<svg id="information" width="250" height="350">\
+					<rect x="0" y="0" width="50" height="25" fill="#33a02c" stroke="black" />\
+					<text x="60" y="15" fill="black">AV (Available)</text>\
+					<rect x="0" y="50" width="50" height="25" fill="#1f78b4" stroke="black" />\
+					<text x="60" y="65" fill="black">RS (Room Sold)</text>\
+					<rect x="0" y="100" width="50" height="25" fill="#a6cee3" stroke="black" />\
+					<text x="60" y="115" fill="black">RC (Room Compliment)</text>\
+					<rect x="0" y="150" width="50" height="25" fill="#ff7f00" stroke="black" />\
+					<text x="60" y="165" fill="black">OU (Office Use)</text>\
+					<rect x="0" y="200" width="50" height="25" fill="#fdbf6f" stroke="black" />\
+					<text x="60" y="215" fill="black">HU (House Use)</text>\
+					<rect x="0" y="250" width="50" height="25" fill="#e31a1c" stroke="black" />\
+					<text x="60" y="265" fill="black">OO (Out of Order)</text>\
+					<rect x="0" y="300" width="50" height="25" fill="#fb9a99" stroke="black" />\
+					<text x="60" y="315" fill="black">UC (Under Construction)</text>\
+				</svg>\
+			</div>'
 
-		var wrapper = frm.get_field("information_html").$wrapper;
-		wrapper.html(information);
+		wrapper.html(wrapper.html() + information);
 	}
 });
