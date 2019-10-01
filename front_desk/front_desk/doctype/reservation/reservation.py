@@ -427,3 +427,12 @@ def create_additional_charge(reservation_id):
 
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
+
+def calculate_room_bill_amount(doc, method):
+	room_bill_amount = 0.0
+	room_stay = doc.get('room_stay')
+	if len(room_stay) > 0:
+		for rs_item in room_stay:
+			room_bill_amount = room_bill_amount + rs_item.total_bill_amount
+
+	doc.room_bill_amount = room_bill_amount

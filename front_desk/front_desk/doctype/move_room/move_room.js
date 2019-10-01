@@ -56,6 +56,18 @@ frappe.ui.form.on('Room Stay', {
 			child.room_rate = initial_room_stay.room_rate;
 			var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
 			field.read_only = 1;
+			// recalculate room stay bill
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+				},
+				callback: (response) => {
+					child.total_bill_amount = response.message;
+				}
+			});
 		} else {
 			child.room_rate = undefined;
 			var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
@@ -181,7 +193,23 @@ frappe.ui.form.on('Room Stay', {
 				}
 			});
 		}
-	}
+	},
+	room_rate: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		if (child.room_rate != undefined) {
+			frappe.call({
+			method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+			args: {
+				arrival: child.arrival,
+				departure: child.departure,
+				room_rate_id: child.room_rate,
+			},
+			callback: (response) => {
+				child.total_bill_amount = response.message;
+			}
+		});
+		}
+	},
 })
 
 function formatDate(date) {

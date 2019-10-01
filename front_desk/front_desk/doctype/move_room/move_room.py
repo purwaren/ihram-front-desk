@@ -22,6 +22,8 @@ def process_move_room(initial_room_stay_name):
 	frappe.db.set_value('Hotel Room', replacement_room_stay.room_id, 'room_status', 'Occupied Clean')
 
 	initial_room_stay.departure = replacement_room_stay.arrival
+	# calculate total bill amount karena departure berubah
+	initial_room_stay.total_bill_amount = room_stay.calculate_room_stay_bill(initial_room_stay.arrival, initial_room_stay.departure, initial_room_stay_name)
 	initial_room_stay.save()
 
 	replacement_room_stay.parent = replacement_room_stay.reservation_id
