@@ -177,9 +177,11 @@ def calculate_room_stay_bill(arrival, departure, room_rate_id):
 	start = datetime.datetime.strptime(arrival, "%Y-%m-%d %H:%M:%S")
 	day_before_start = datetime.datetime.strptime((datetime.datetime.strftime(start - datetime.timedelta(1), "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
 	end = datetime.datetime.strptime(departure, "%Y-%m-%d %H:%M:%S")
-	total_day = (end - day_before_start).days
+	day_before_end = datetime.datetime.strptime(
+		(datetime.datetime.strftime(end - datetime.timedelta(1), "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+	total_day = (end - start).days
 	weekday = 0
-	day_generator = (day_before_start + datetime.timedelta(x + 1) for x in range((end - day_before_start).days))
+	day_generator = (day_before_start + datetime.timedelta(x + 1) for x in range((day_before_end - day_before_start).days))
 	for day in day_generator:
 		if day.weekday() < 5:
 			weekday = weekday + 1
