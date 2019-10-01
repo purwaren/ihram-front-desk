@@ -7,7 +7,7 @@ var room_list = [];
 var reservation_detail_remove_list = [];
 var is_remove_reservation_detail = false;
 var is_remove_room_stay = false;
-var guest_request = 0;
+var guest_request = 1;
 
 frappe.ui.form.on('Reservation', {
 	onload: function(frm, cdt, cdn) {
@@ -174,6 +174,13 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('payment_method', 'hidden', 1);
 			frm.set_df_property('room_stay_section', 'hidden', 1);
 			frm.set_df_property('room_stay', 'hidden', 1);
+			frm.set_df_property('room_payment_section', 'hidden', 1);
+			frm.set_df_property('room_bill_amount', 'hidden', 1);
+			frm.set_df_property('paid_bill_amount', 'hidden', 1);
+			frm.set_df_property('room_bill_section_break', 'hidden', 1);
+			frm.set_df_property('room_bill_payments', 'hidden', 1);
+			frm.set_df_property('additional_charge_section', 'hidden', 1);
+			frm.set_df_property('additional_charge', 'hidden', 1);
 		}
 
 		if (reservation.status != 'Confirmed' && reservation.status != 'In House') {
@@ -453,7 +460,7 @@ frappe.ui.form.on('Room Stay', {
 			child.room_type = undefined;
 			child.bed_type = undefined;
 			child.room_id = undefined;
-			
+
 			if (guest_request == 1) {
 				child.room_rate = undefined;
 			}
@@ -472,7 +479,7 @@ frappe.ui.form.on('Room Stay', {
 			child.room_type = undefined;
 			child.bed_type = undefined;
 			child.room_id = undefined;
-			
+
 			if (guest_request == 1) {
 				child.room_rate = undefined;
 			}
@@ -490,7 +497,7 @@ frappe.ui.form.on('Room Stay', {
 			var child = locals[cdt][cdn];
 			child.bed_type = undefined;
 			child.room_id = undefined;
-			
+
 			if (guest_request == 1) {
 				child.room_rate = undefined;
 			}
@@ -556,6 +563,22 @@ frappe.ui.form.on('Room Stay', {
 		
 		if (!w) {
 			frappe.msgprint(__("Please enable pop-ups")); return;
+		}
+	},
+	room_rate: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		if (child.room_rate != undefined) {
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+				},
+				callback: (response) => {
+					child.total_bill_amount = response.message;
+				}
+			});
 		}
 	},
 	room_stay_remove: function(frm, cdt, cdn) {

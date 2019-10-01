@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
+from front_desk.front_desk.doctype.hotel_tax.hotel_tax import calculate_hotel_tax_and_charges
 
 class RoomRate(Document):
 	pass
@@ -38,3 +39,25 @@ def populate_breakdown_summary(doc,method):
 			summary = summary + str(index+1) + ". " + item.breakdown_qty + " " + item.breakdown_name + ' : Rp. ' + item.get_formatted("breakdown_amount") + " per pax\n"
 
 	doc.breakdown_summary = summary
+
+def get_rate_after_tax(room_rate_id, selector):
+	room_rate = frappe.get_doc('Room Rate', room_rate_id)
+	breakdown_list = room_rate.get('room_rate_breakdown')
+	total_weekday = 0.0
+	total_weekend = 0.0
+
+	if selector == "Weekday Rate":
+		for bd_item in breakdown_list:
+			if bd_item.breakdown_name != 'Weekend Rate':
+				_,_,tb_total = calculate_hotel_tax_and_charges(bd_item.breakdown_amount * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
+				total_weekday = total_weekday + tb_total[-1]
+
+		return total_weekday
+
+	if selector == "Weekend Rate":
+		for bd_item in breakdown_list:
+			if bd_item.breakdown_name != 'Weekday Rate':
+				_,_,tb_total = calculate_hotel_tax_and_charges(bd_item.breakdown_amount * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
+				total_weekend = total_weekend + tb_total[-1]
+
+		return total_weekend

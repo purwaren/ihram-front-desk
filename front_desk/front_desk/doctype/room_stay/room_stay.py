@@ -7,6 +7,7 @@ import datetime
 import frappe
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import get_folio_name
+from front_desk.front_desk.doctype.room_rate.room_rate import get_rate_after_tax
 
 class RoomStay(Document):
 	pass
@@ -166,3 +167,27 @@ def add_late_checkout(room_stay_id):
 
 			doc_folio.append('transaction_detail', doc_folio_transaction)
 			doc_folio.save()
+
+def daterange(start_date, end_date):
+    for n in range(int ((end_date - start_date).days)):
+        yield start_date + datetime.timedelta(n)
+
+@frappe.whitelist()
+def calculate_room_stay_bill(arrival, departure, room_rate_id):
+	start = datetime.datetime.strptime(arrival, "%Y-%m-%d %H:%M:%S")
+	day_before_start = datetime.datetime.strptime((datetime.datetime.strftime(start - datetime.timedelta(1), "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
+	end = datetime.datetime.strptime(departure, "%Y-%m-%d %H:%M:%S")
+	total_day = (end - day_before_start).days
+	weekday = 0
+	day_generator = (day_before_start + datetime.timedelta(x + 1) for x in range((end - day_before_start).days))
+	for day in day_generator:
+		if day.weekday() < 5:
+			weekday = weekday + 1
+	weekend = total_day - weekday
+
+	rate_weekday_taxed = get_rate_after_tax(room_rate_id, 'Weekday Rate')
+	rate_weekend_taxed = get_rate_after_tax(room_rate_id, 'Weekend Rate')
+
+	total_rate = (float(weekday) * rate_weekday_taxed) + (float(weekend) * rate_weekend_taxed)
+
+	return total_rate
