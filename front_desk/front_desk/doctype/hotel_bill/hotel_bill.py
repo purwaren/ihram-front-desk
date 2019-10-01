@@ -174,6 +174,9 @@ def create_hotel_bill(reservation_id):
 			# Input the folio trx with type of auto room charge
 			elif item.room_rate:
 				room_rate = frappe.get_doc('Room Rate', item.room_rate)
+				room_stay = frappe.get_doc('Room Stay', item.room_stay_id)
+				room_stay_discount = room_stay.discount_percentage/100.0
+				amount_multiplier = 1 - room_stay_discount
 				room_rate_breakdown_list = room_rate.get('room_rate_breakdown')
 				bundle_tax_amount = 0
 
@@ -186,7 +189,7 @@ def create_hotel_bill(reservation_id):
 													{'parent': item.room_rate, 'breakdown_name': 'Weekend Rate'})
 					description = "Weekend Rate of " + item.room_rate + ' + ' + rate_breakdown.breakdown_tax
 
-				base_amount = rate_breakdown.breakdown_amount
+				base_amount = rate_breakdown.breakdown_amount * amount_multiplier
 				breakdown_tax = rate_breakdown.breakdown_tax
 
 				room_tb_id, room_tb_amount, room_tb_total = calculate_hotel_tax_and_charges(base_amount, breakdown_tax)
@@ -195,7 +198,7 @@ def create_hotel_bill(reservation_id):
 				for rrbd_item in room_rate_breakdown_list:
 					if rrbd_item.breakdown_name != 'Weekend Rate' and rrbd_item.breakdown_name != 'Weekday Rate':
 						_, rrbd_tb_amount, _ = calculate_hotel_tax_and_charges(
-							rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
+							amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
 						bundle_tax_amount = bundle_tax_amount + sum(rrbd_tb_amount)
 
 				# input the Rate total corresponded to folio trx
@@ -240,7 +243,7 @@ def create_hotel_bill(reservation_id):
 				for rrbd_item in room_rate_breakdown_list:
 					if rrbd_item.breakdown_name != 'Weekend Rate' and rrbd_item.breakdown_name != 'Weekday Rate':
 						rrbd_tb_id, rrbd_tb_amount, rrbd_tb_total = calculate_hotel_tax_and_charges(
-							rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
+							amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
 
 						# input the other charge
 						orr_doc_item = frappe.new_doc("Hotel Bill Breakdown")

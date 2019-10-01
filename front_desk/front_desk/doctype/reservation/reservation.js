@@ -565,15 +565,33 @@ frappe.ui.form.on('Room Stay', {
 			frappe.msgprint(__("Please enable pop-ups")); return;
 		}
 	},
-	room_rate: function(frm, cdt, cdn) {
+	discount_percentage: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
-		if (child.room_rate != undefined) {
+		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
 			frappe.call({
 				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
 				args: {
 					arrival: child.arrival,
 					departure: child.departure,
 					room_rate_id: child.room_rate,
+					discount: child.discount_percentage,
+				},
+				callback: (response) => {
+					child.total_bill_amount = response.message;
+				}
+			});
+		}
+	},
+	room_rate: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+					discount: child.discount_percentage,
 				},
 				callback: (response) => {
 					child.total_bill_amount = response.message;

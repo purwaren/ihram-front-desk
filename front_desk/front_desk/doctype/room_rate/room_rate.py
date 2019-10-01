@@ -40,16 +40,17 @@ def populate_breakdown_summary(doc,method):
 
 	doc.breakdown_summary = summary
 
-def get_rate_after_tax(room_rate_id, selector):
+def get_rate_after_tax(room_rate_id, selector, discount):
 	room_rate = frappe.get_doc('Room Rate', room_rate_id)
 	breakdown_list = room_rate.get('room_rate_breakdown')
 	total_weekday = 0.0
 	total_weekend = 0.0
+	amount_multiplier = 1 - discount/100.0
 
 	if selector == "Weekday Rate":
 		for bd_item in breakdown_list:
 			if bd_item.breakdown_name != 'Weekend Rate':
-				_,_,tb_total = calculate_hotel_tax_and_charges(bd_item.breakdown_amount * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
+				_,_,tb_total = calculate_hotel_tax_and_charges(amount_multiplier * bd_item.breakdown_amount * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
 				total_weekday = total_weekday + tb_total[-1]
 
 		return total_weekday
@@ -57,7 +58,7 @@ def get_rate_after_tax(room_rate_id, selector):
 	if selector == "Weekend Rate":
 		for bd_item in breakdown_list:
 			if bd_item.breakdown_name != 'Weekday Rate':
-				_,_,tb_total = calculate_hotel_tax_and_charges(bd_item.breakdown_amount * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
+				_,_,tb_total = calculate_hotel_tax_and_charges(amount_multiplier * bd_item.breakdown_amount * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
 				total_weekend = total_weekend + tb_total[-1]
 
 		return total_weekend

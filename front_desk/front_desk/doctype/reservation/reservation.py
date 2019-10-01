@@ -244,26 +244,47 @@ def create_room_charge(reservation_id):
 
 	if len(room_stay_list) > 0:
 		for room_stay in room_stay_list:
+			# add special charge if any
 			add_early_checkin(room_stay.name)
 			add_late_checkout(room_stay.name)
-			if room_stay.departure >= datetime.datetime.today():
-				# TODO: masuk jurnal entry bukan sebagai bundle auto room charge, tetapi sebagai breakdown item room charge
+
+			# create room charge, if today is not departure day yet
+			if room_stay.departure > datetime.datetime.today():
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
 				room_name = room_stay.room_id
+				room_stay_discount = room_stay.discount_percentage/100.0
 				room_rate_breakdown = frappe.get_all('Room Rate Breakdown', filters={'parent':room_stay.room_rate}, fields=['*'])
 				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+
+				# define room rate for folio transaction. If room stay discount exist, apply the discount
 				if is_weekday():
-					today_rate = room_rate.rate_weekday
+					if room_stay_discount != 0:
+						today_rate = room_rate.rate_weekday * room_stay_discount
+					else:
+						today_rate = room_rate.rate_weekday
 				else:
-					today_rate = room_rate.rate_weekend
+					if room_stay_discount != 0:
+						today_rate = room_rate.rate_weekend * room_stay_discount
+					else:
+						today_rate = room_rate.rate_weekend
+
 				for rrbd_item in room_rate_breakdown:
 					rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
+					# Weekday room charge
 					if is_weekday():
+						# exclude the weekend rate
 						if rrbd_item.breakdown_name != 'Weekend Rate':
-							rrbd_rate_amount = float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
+							# define each of every rate breakdown amount. If room stay discount exist, apply the discount
+							if room_stay_discount != 0:
+								before_discount_amount = float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
+								after_discount_amount = before_discount_amount * room_stay_discount
+								rrbd_rate_amount = after_discount_amount
+							else:
+								rrbd_rate_amount = float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
 
+							# Create Journal Entry
 							doc_journal_entry = frappe.new_doc('Journal Entry')
 							doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
 							doc_journal_entry.voucher_type = 'Journal Entry'
@@ -273,7 +294,7 @@ def create_room_charge(reservation_id):
 							doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
 							doc_journal_entry.remark = rrbd_remark
 							doc_journal_entry.user_remark = rrbd_remark
-
+							# Journal Entry Account: Debit
 							doc_debit = frappe.new_doc('Journal Entry Account')
 							doc_debit.account = rrbd_item.breakdown_account
 							doc_debit.debit = rrbd_rate_amount
@@ -281,7 +302,7 @@ def create_room_charge(reservation_id):
 							doc_debit.party_type = 'Customer'
 							doc_debit.party = cust_name
 							doc_debit.user_remark = rrbd_remark
-
+							# Journal Entry Account: Credit
 							doc_credit = frappe.new_doc('Journal Entry Account')
 							doc_credit.account = je_credit_account
 							doc_credit.credit = rrbd_rate_amount
@@ -289,16 +310,25 @@ def create_room_charge(reservation_id):
 							doc_credit.party = cust_name
 							doc_credit.credit_in_account_currency = rrbd_rate_amount
 							doc_credit.user_remark = rrbd_remark
-
+							# Append debit and credit to Journal Account
 							doc_journal_entry.append('accounts', doc_debit)
 							doc_journal_entry.append('accounts', doc_credit)
-
+							# Save and Submit Journal Entry
 							doc_journal_entry.save()
 							doc_journal_entry.submit()
+					# Weekend room charge
 					else:
+						# exclude the weekday rate
 						if rrbd_item.breakdown_name != 'Weekday Rate':
-							rrbd_rate_amount = float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
-
+							# define each of every rate breakdown amount. If room stay discount exist, apply the discount
+							if room_stay_discount != 0:
+								before_discount_amount = float(rrbd_item.breakdown_amount) * float(
+									rrbd_item.breakdown_qty)
+								after_discount_amount = before_discount_amount * room_stay_discount
+								rrbd_rate_amount = after_discount_amount
+							else:
+								rrbd_rate_amount = float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
+							# Create Journal Entry
 							doc_journal_entry = frappe.new_doc('Journal Entry')
 							doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
 							doc_journal_entry.voucher_type = 'Journal Entry'
@@ -308,7 +338,7 @@ def create_room_charge(reservation_id):
 							doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
 							doc_journal_entry.remark = rrbd_remark
 							doc_journal_entry.user_remark = rrbd_remark
-
+							# Journal Entry Account: Debit
 							doc_debit = frappe.new_doc('Journal Entry Account')
 							doc_debit.account = rrbd_item.breakdown_account
 							doc_debit.debit = rrbd_rate_amount
@@ -316,7 +346,7 @@ def create_room_charge(reservation_id):
 							doc_debit.party_type = 'Customer'
 							doc_debit.party = cust_name
 							doc_debit.user_remark = rrbd_remark
-
+							# Journal Entry Account: Credit
 							doc_credit = frappe.new_doc('Journal Entry Account')
 							doc_credit.account = je_credit_account
 							doc_credit.credit = rrbd_rate_amount
@@ -324,19 +354,21 @@ def create_room_charge(reservation_id):
 							doc_credit.party = cust_name
 							doc_credit.credit_in_account_currency = rrbd_rate_amount
 							doc_credit.user_remark = rrbd_remark
-
+							# Append debit and credit to Journal Account
 							doc_journal_entry.append('accounts', doc_debit)
 							doc_journal_entry.append('accounts', doc_credit)
-
+							# Save and Submit Journal Entry
 							doc_journal_entry.save()
 							doc_journal_entry.submit()
 
+				# Create Folio Transaction of Room Charge
 				folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 				doc_folio = frappe.get_doc('Folio', folio_name)
 
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
 				doc_folio_transaction.folio_id = doc_folio.name
 				doc_folio_transaction.amount = today_rate
+				doc_folio_transaction.room_stay_id = room_stay.name
 				doc_folio_transaction.room_rate = room_stay.room_rate
 				doc_folio_transaction.flag = 'Debit'
 				doc_folio_transaction.account_id = je_debit_account
