@@ -41,6 +41,25 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('payment_method', 'set_only_once', 1);
 		}
 
+		if ((frappe.get_doc( 'Reservation', reservation.name ).room_stay).length <= 0) {
+			frm.set_df_property('paid_bill_amount', 'hidden', 1);
+			frm.set_df_property('is_round_change_amount', 'hidden', 1);
+			frm.set_df_property('rbp_change_rounding_amount', 'hidden', 1);
+			frm.set_df_property('room_bill_change_amount', 'hidden', 1);
+			frm.set_df_property('rbp_rounded_change_amount', 'hidden', 1);
+			frm.set_df_property('room_bill_section_break', 'hidden', 1);
+			frm.set_df_property('room_bill_payments', 'hidden', 1);
+		}
+		else {
+			frm.set_df_property('paid_bill_amount', 'hidden', 0);
+			frm.set_df_property('is_round_change_amount', 'hidden', 0);
+			frm.set_df_property('rbp_change_rounding_amount', 'hidden', 0);
+			frm.set_df_property('room_bill_change_amount', 'hidden', 0);
+			frm.set_df_property('rbp_rounded_change_amount', 'hidden', 0);
+			frm.set_df_property('room_bill_section_break', 'hidden', 0);
+			frm.set_df_property('room_bill_payments', 'hidden', 0);
+		}
+
 		if(reservation.status == 'Created') {
 			frm.page.add_menu_item(("Cancel"), function () {
 				frappe.confirm(
@@ -196,7 +215,7 @@ frappe.ui.form.on('Reservation', {
 		}
 	},
 	is_round_change_amount: function(frm, cdt, cdn) {
-		var rbp_list = frappe.get_doc( 'Reservation', frm.doc.name ).room_bill_payments;
+		var rbp_list = frappe.get_doc( 'Reservation', reservation.name ).room_bill_payments;
 		console.log("round change changed")
 		calculateRoomBillPayments(frm, rbp_list);
 	},
