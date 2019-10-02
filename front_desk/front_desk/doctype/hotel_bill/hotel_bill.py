@@ -254,7 +254,7 @@ def create_hotel_bill(reservation_id):
 						orr_doc_item.billing_folio_trx_id = item.name
 						orr_doc_item.breakdown_description = str(
 							rrbd_item.breakdown_qty) + " " + rrbd_item.breakdown_name + " of " + item.room_rate + ' + ' + rrbd_item.breakdown_tax
-						orr_doc_item.breakdown_net_total = rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty)
+						orr_doc_item.breakdown_net_total = amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty)
 						orr_doc_item.breakdown_tax_amount = sum(rrbd_tb_amount)
 						orr_doc_item.breakdown_grand_total = rrbd_tb_total[-1]
 						orr_doc_item.breakdown_tax_id = rrbd_item.breakdown_tax

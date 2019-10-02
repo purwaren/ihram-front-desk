@@ -252,12 +252,9 @@ def create_room_charge(reservation_id):
 			if room_stay.departure > datetime.datetime.today():
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
 				room_name = room_stay.room_id
-				frappe.msgprint("room stay: " + room_stay.name + " discount_percentage: " + str(room_stay.discount_percentage))
 				if not room_stay.discount_percentage:
-					frappe.msgprint("set room stay discount 0")
 					room_stay_discount = 0
 				else:
-					frappe.msgprint("set room stay discount sesuai dengan value")
 					room_stay_discount = float(room_stay.discount_percentage) / 100.0
 				amount_multiplier = 1 - room_stay_discount
 				room_rate_breakdown = frappe.get_all('Room Rate Breakdown', filters={'parent':room_stay.room_rate}, fields=['*'])
@@ -266,14 +263,10 @@ def create_room_charge(reservation_id):
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 
 				# define room rate for folio transaction. If room stay discount exist, apply the discount
-				frappe.msgprint(str(amount_multiplier))
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
-					frappe.msgprint(str(room_rate.rate_weekday) + ' * ' + str(amount_multiplier))
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
-					frappe.msgprint(str(room_rate.rate_weekend) + ' * ' + str(amount_multiplier))
-				frappe.msgprint(str(today_rate))
 				for rrbd_item in room_rate_breakdown:
 					rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 					# Weekday room charge
