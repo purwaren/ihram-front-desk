@@ -30,7 +30,7 @@ def calculate_bill_total(doc, method):
 
 	bill_breakdown_list = doc.get('bill_breakdown')
 	for bb_item in bill_breakdown_list:
-		if bb_item.is_folio_trx_pairing == 1:
+		if bb_item.is_folio_trx_pairing == 1 and bb_item.is_excluded == 0:
 			hotel_bill_net_total = hotel_bill_net_total + bb_item.breakdown_net_total
 			hotel_bill_tax_amount = hotel_bill_tax_amount + bb_item.breakdown_tax_amount
 			hotel_bill_grand_total = hotel_bill_grand_total + bb_item.breakdown_grand_total
@@ -208,6 +208,7 @@ def create_hotel_bill(reservation_id):
 				rr_bundle_item = frappe.new_doc("Hotel Bill Breakdown")
 				rr_bundle_item.is_tax_item = 0
 				rr_bundle_item.is_folio_trx_pairing = 1
+				rr_bundle_item.is_excluded = 1 #excluded because of room bill payment in reservation.
 				rr_bundle_item.breakdown_description = item.remark
 				rr_bundle_item.breakdown_net_total = item.amount
 				rr_bundle_item.breakdown_tax_amount = bundle_tax_amount
