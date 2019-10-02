@@ -175,7 +175,10 @@ def create_hotel_bill(reservation_id):
 			elif item.room_rate:
 				room_rate = frappe.get_doc('Room Rate', item.room_rate)
 				room_stay = frappe.get_doc('Room Stay', item.room_stay_id)
-				room_stay_discount = float(room_stay.discount_percentage)/100.0
+				if not room_stay.discount_percentage:
+					room_stay_discount = 0
+				else:
+					room_stay_discount = float(room_stay.discount_percentage)/100.0
 				amount_multiplier = 1 - room_stay_discount
 				room_rate_breakdown_list = room_rate.get('room_rate_breakdown')
 				bundle_tax_amount = 0

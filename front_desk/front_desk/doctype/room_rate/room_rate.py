@@ -41,6 +41,8 @@ def populate_breakdown_summary(doc,method):
 	doc.breakdown_summary = summary
 
 def get_rate_after_tax(room_rate_id, selector, discount):
+	if not discount:
+		discount = 0
 	room_rate = frappe.get_doc('Room Rate', room_rate_id)
 	breakdown_list = room_rate.get('room_rate_breakdown')
 	total_weekday = 0.0
