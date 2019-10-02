@@ -4,7 +4,7 @@ var bill_breakdown = null;
 var breakdown_shown = false;
 var outstanding_now = 0;
 var deposit = 0;
-var cash_used_in_room_bill_payment = false;
+var cash_used_in_hotel_bill_payment = false;
 
 frappe.ui.form.on('Hotel Bill', {
 	onload: function(frm) {
@@ -43,14 +43,14 @@ frappe.ui.form.on('Hotel Bill Payments', {
 	mode_of_payment: function (frm, cdt, cdn) {
 		let child = locals[cdt][cdn];
 		if (child.mode_of_payment == 'Cash') {
-			cash_used_in_room_bill_payment = true;
+			cash_used_in_hotel_bill_payment = true;
 			if (child.payment_amount > 0) {
 				var bp_list = frappe.get_doc( 'Hotel Bill', frm.doc.name ).bill_payments;
 				calculatePayments(frm, bp_list);
 			}
 		}
 		else {
-			cash_used_in_room_bill_payment = false;
+			cash_used_in_hotel_bill_payment = false;
 			frm.set_value('bill_change_amount', 0);
 			frm.set_value('bill_change_round_amount', 0);
 			frm.set_value('bill_rounded_change_amount', 0);
@@ -93,7 +93,7 @@ function calculatePayments(frm, bp_list) {
 	var diff = total_payment - frm.doc.bill_grand_total;
 	if (diff < 0) {
 		frm.set_value('bill_outstanding_amount', diff*-1);
-		if (cash_used_in_room_bill_payment) {
+		if (cash_used_in_hotel_bill_payment) {
 			frm.set_value('bill_change_amount', 0);
 			frm.set_value('bill_change_round_amount', 0);
 			frm.set_value('bill_rounded_change_amount', 0);
@@ -101,7 +101,7 @@ function calculatePayments(frm, bp_list) {
 	}
 	else {
 		frm.set_value('bill_outstanding_amount', 0);
-		if (cash_used_in_room_bill_payment) {
+		if (cash_used_in_hotel_bill_payment) {
 			frm.set_value('bill_change_amount', diff);
 
 			var roundedChange = Math.floor(diff / 100) * 100;
