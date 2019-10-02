@@ -41,7 +41,7 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('payment_method', 'set_only_once', 1);
 		}
 
-		if ((frappe.get_doc( 'Reservation', reservation.name ).room_stay).length <= 0) {
+		if (frappe.get_doc( 'Reservation', reservation.name ).room_stay != undefined && (frappe.get_doc( 'Reservation', reservation.name ).room_stay).length <= 0) {
 			frm.set_df_property('paid_bill_amount', 'hidden', 1);
 			frm.set_df_property('is_round_change_amount', 'hidden', 1);
 			frm.set_df_property('rbp_change_rounding_amount', 'hidden', 1);
