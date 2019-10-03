@@ -267,7 +267,7 @@ def create_room_charge(reservation_id):
 				amount_multiplier = 1 - room_stay_discount
 				room_rate_breakdown = frappe.get_all('Room Rate Breakdown', filters={'parent':room_stay.room_rate}, fields=['*'])
 				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
-				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 
 				# define room rate for folio transaction. If room stay discount exist, apply the discount
@@ -466,10 +466,10 @@ def calculate_room_bill_amount(doc, method):
 def create_room_bill_payment_entry(doc, method):
 	reservation_id = doc.name
 	rbp_list = doc.get('room_bill_payments')
-	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+	kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 
 	for rbp_item in rbp_list:
-		credit_account_name = kas_pendapatan_kamar
+		credit_account_name = kas_dp_kamar
 		debit_account_name = get_mode_of_payment_account(rbp_item.mode_of_payment, frappe.get_doc("Global Defaults").default_company)
 		amount = rbp_item.rbp_amount
 		remark = 'Room Bill Payment: ' + rbp_item.name + '(' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
