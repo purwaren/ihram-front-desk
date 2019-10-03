@@ -13,6 +13,20 @@ frappe.ui.form.on('Hotel Bill', {
 	onload_post_render(frm, cdt, cdn) {
 		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
 		calculatePayments(frm, bp_list);
+
+		frm.add_custom_button(__("Update Billing"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.update_hotel_bill",
+					args: {
+						reservation_id: frm.doc.reservation_id
+					},
+					callback: (r) => {
+						if (r.message) {
+                            	frappe.msgprint(__(r.message)); return;
+						}
+					}
+				});
+			});
 	},
 	refresh: function(frm, cdt, cdn) {
 		var x = frappe.get_doc(cdt, cdn).bill_breakdown;
