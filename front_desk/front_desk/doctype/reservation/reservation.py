@@ -244,12 +244,19 @@ def create_room_charge(reservation_id):
 
 	if len(room_stay_list) > 0:
 		for room_stay in room_stay_list:
+			#check if this room_stay is moved, if the moving took part in the same day, do not charge the room
+			room_is_moved_at_the_same_day = False
+			is_moved = frappe.db.exists('Move Room', {'initial_room_stay': room_stay.name})
+			delta_day = room_stay.departure.date() - room_stay.arrival.date()
+			if is_moved and delta_day <= 0:
+				room_is_moved_at_the_same_day = True
+
 			# add special charge if any
 			add_early_checkin(room_stay.name)
 			add_late_checkout(room_stay.name)
 
-			# create room charge, if today is not departure day yet
-			if room_stay.departure > datetime.datetime.today():
+			# create room charge, if today is not departure day yet and the room_stay is not moved at the same day
+			if room_stay.departure > datetime.datetime.today() and not room_is_moved_at_the_same_day:
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
 				room_name = room_stay.room_id
 				if not room_stay.discount_percentage:
