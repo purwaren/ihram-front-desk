@@ -9,6 +9,7 @@ var is_remove_reservation_detail = false;
 var is_remove_room_stay = false;
 var guest_request = 1;
 var cash_used_in_room_bill_payment = false;
+var room_bill_cash_count = 0;
 
 frappe.ui.form.on('Reservation', {
 	onload: function(frm, cdt, cdn) {
@@ -632,28 +633,44 @@ frappe.ui.form.on('Room Stay', {
 frappe.ui.form.on("Room Bill Payments", {
 	mode_of_payment: function (frm, cdt, cdn) {
 		let child = locals[cdt][cdn];
+		var rbp_list = frappe.get_doc( 'Reservation', frm.doc.name ).room_bill_payments;
 		if (child.mode_of_payment == 'Cash') {
 			cash_used_in_room_bill_payment = true;
 			if (child.rbp_amount > 0) {
-				var rbp_list = frappe.get_doc( 'Reservation', frm.doc.name ).room_bill_payments;
 				calculateRoomBillPayments(frm, rbp_list);
+				roomBillCashCount(frm, rbp_list);
 			}
 		}
 		else {
-			cash_used_in_room_bill_payment = false;
-			frm.set_value('rbp_change_rounding_amount', 0);
-			frm.set_value('room_bill_change_amount', 0);
-			frm.set_value('rbp_rounded_change_amount', 0);
+			console.log("masuk sini dong");
+			calculateRoomBillPayments(frm, rbp_list);
+			roomBillCashCount(frm, rbp_list);
 		}
 	},
 	rbp_amount: function (frm, cdt, cdn) {
 		var rbp_list = frappe.get_doc( 'Reservation', frm.doc.name ).room_bill_payments;
 		calculateRoomBillPayments(frm, rbp_list);
 	},
+	before_room_bill_payments_remove: function (frm, cdt, cdn) {
+		let child = locals[cdt][cdn];
+		var rbp_list = frappe.get_doc( 'Reservation', frm.doc.name ).room_bill_payments;
+
+		if (child.mode_of_payment == 'Cash') {
+			if (rbp_list.length == 1) {
+				cash_used_in_room_bill_payment = false;
+				frm.set_value('rbp_change_rounding_amount', 0);
+				frm.set_value('room_bill_change_amount', 0);
+				frm.set_value('rbp_rounded_change_amount', 0);
+			}
+			else {
+				roomBillCashCount(frm, rbp_list);
+			}
+		}
+	},
 	room_bill_payments_remove: function (frm, cdt, cdn) {
 		var rbp_list = frappe.get_doc( 'Reservation', frm.doc.name ).room_bill_payments;
 		calculateRoomBillPayments(frm, rbp_list);
-	}
+	},
 });
 
 function make_pin(length) {
@@ -930,5 +947,22 @@ function calculateRoomBillPayments(frm, rbp_list) {
 				frm.set_value('rbp_rounded_change_amount', diff);
 			}
 		}
+	}
+}
+
+function roomBillCashCount(frm, rbp_list) {
+	if (rbp_list.length > 0) {
+		for (let i = 0; i < rbp_list.length; i++) {
+			if (rbp_list[i].mode_of_payment === 'Cash') {
+				room_bill_cash_count = room_bill_cash_count + 1;
+				cash_used_in_room_bill_payment = true;
+			}
+		}
+	}
+	if (room_bill_cash_count <= 0) {
+		cash_used_in_room_bill_payment = false;
+		frm.set_value('rbp_change_rounding_amount', 0);
+		frm.set_value('room_bill_change_amount', 0);
+		frm.set_value('rbp_rounded_change_amount', 0);
 	}
 }
