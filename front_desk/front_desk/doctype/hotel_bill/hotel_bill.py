@@ -112,6 +112,11 @@ def create_additional_charge(reservation_id):
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
 
+@frappe.whitelist()
+def update_hotel_bill(reservation_id):
+	create_hotel_bill(reservation_id)
+	bill_name = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
+	return "Hotel Bill " + bill_name + " Updated."
 
 def create_hotel_bill(reservation_id):
 	exist_bill = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
@@ -160,8 +165,8 @@ def create_hotel_bill(reservation_id):
 				doc_hotel_bill.append('bill_breakdown', si_doc_item)
 
 				# Input the tax item
-				sales_tax_charges = frappe.get_doc('Sales Taxes and Charges', {'parent': item.sales_invoice_id})
-				if sales_tax_charges:
+				if frappe.db.exists('Sales Taxes and Charges', {'parent': item.sales_invoice_id}):
+					sales_tax_charges = frappe.get_doc('Sales Taxes and Charges', {'parent': item.sales_invoice_id})
 					si_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
 					si_doc_tax_item.is_tax_item = 1
 					si_doc_tax_item.billing_folio_trx_id = item.name
@@ -304,3 +309,6 @@ def create_hotel_bill(reservation_id):
 
 		# save all hotel bill breakdown to the hotel bill
 		doc_hotel_bill.save()
+
+def get_mode_of_payment_account(mode_of_payment_id, company_name):
+	return frappe.db.get_value('Mode of Payment Account', {'parent': mode_of_payment_id, 'company': company_name}, "default_account")
