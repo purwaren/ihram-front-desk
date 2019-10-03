@@ -309,3 +309,6 @@ def create_hotel_bill(reservation_id):
 
 		# save all hotel bill breakdown to the hotel bill
 		doc_hotel_bill.save()
+
+def get_mode_of_payment_account(mode_of_payment_id, company_name):
+	return frappe.db.get_value('Mode of Payment Account', {'parent': mode_of_payment_id, 'company': company_name}, "default_account")

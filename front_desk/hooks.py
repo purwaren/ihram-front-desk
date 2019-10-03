@@ -96,7 +96,8 @@ doc_events = {
 		"validate": "front_desk.front_desk.doctype.hotel_bill.hotel_bill.calculate_bill_total"
 	},
 	"Reservation": {
-		"validate": "front_desk.front_desk.doctype.reservation.reservation.calculate_room_bill_amount"
+		"validate": ["front_desk.front_desk.doctype.reservation.reservation.calculate_room_bill_amount",
+					 "front_desk.front_desk.doctype.reservation.reservation.create_room_bill_payment_entry"],
 	},
 }
 
@@ -125,7 +126,7 @@ scheduler_events = {
 			"front_desk.front_desk.doctype.reservation.reservation.auto_room_charge",
 			"front_desk.front_desk.doctype.reservation.reservation.auto_additional_charge",
 		],
-		"0 18 * * *":[
+		"0 18 * * *": [
 			"front_desk.front_desk.doctype.reservation.reservation.auto_release_reservation_at_six_pm",
 		]
 	}
@@ -142,4 +143,3 @@ scheduler_events = {
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "front_desk.event.get_events"
 # }
-

@@ -10,6 +10,7 @@ from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
 from front_desk.front_desk.doctype.room_booking.room_booking import update_by_reservation
 from front_desk.front_desk.doctype.hotel_bill.hotel_bill import create_hotel_bill
+from front_desk.front_desk.doctype.hotel_bill.hotel_bill import get_mode_of_payment_account
 from front_desk.front_desk.doctype.room_stay.room_stay import add_early_checkin
 from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
 
@@ -461,3 +462,57 @@ def calculate_room_bill_amount(doc, method):
 			room_bill_amount = room_bill_amount + rs_item.total_bill_amount
 
 	doc.room_bill_amount = room_bill_amount
+
+def create_room_bill_payment_entry(doc, method):
+	reservation_id = doc.name
+	rbp_list = doc.get('room_bill_payments')
+	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+
+	for rbp_item in rbp_list:
+		credit_account_name = kas_pendapatan_kamar
+		debit_account_name = get_mode_of_payment_account(rbp_item.mode_of_payment, frappe.get_doc("Global Defaults").default_company)
+		amount = rbp_item.rbp_amount
+		remark = 'Room Bill Payment: ' + rbp_item.name + '(' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
+		folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+		doc_folio = frappe.get_doc('Folio', folio_name)
+		exist_folio_trx_rbp_item = frappe.db.exists('Folio Transaction',
+											  {'parent': doc_folio.name,
+											   'remark': remark})
+		if not exist_folio_trx_rbp_item:
+			doc_journal_entry = frappe.new_doc('Journal Entry')
+			doc_journal_entry.voucher_type = 'Journal Entry'
+			doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			doc_journal_entry.posting_date = datetime.date.today()
+			doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			doc_journal_entry.remark = remark
+			doc_journal_entry.user_remark = remark
+
+			doc_debit = frappe.new_doc('Journal Entry Account')
+			doc_debit.account = debit_account_name
+			doc_debit.debit = amount
+			doc_debit.debit_in_account_currency = amount
+			doc_debit.user_remark = remark
+
+			doc_credit = frappe.new_doc('Journal Entry Account')
+			doc_credit.account = credit_account_name
+			doc_credit.credit = amount
+			doc_credit.credit_in_account_currency = amount
+			doc_credit.user_remark = remark
+
+			doc_journal_entry.append('accounts', doc_debit)
+			doc_journal_entry.append('accounts', doc_credit)
+
+			doc_journal_entry.save()
+			doc_journal_entry.submit()
+
+			doc_folio_transaction = frappe.new_doc('Folio Transaction')
+			doc_folio_transaction.folio_id = doc_folio.name
+			doc_folio_transaction.amount = amount
+			doc_folio_transaction.flag = 'Credit'
+			doc_folio_transaction.account_id = credit_account_name
+			doc_folio_transaction.against_account_id = debit_account_name
+			doc_folio_transaction.remark = remark
+			doc_folio_transaction.is_void = 0
+
+			doc_folio.append('transaction_detail', doc_folio_transaction)
+			doc_folio.save()
