@@ -237,10 +237,7 @@ def auto_room_charge():
 
 @frappe.whitelist()
 def create_room_charge(reservation_id):
-	room_stay_list = frappe.get_all('Room Stay',
-									filters={"reservation_id": reservation_id},
-									fields=["name","room_rate", "room_id", "departure","discount_percentage"]
-									)
+	room_stay_list = frappe.get_all('Room Stay', filters={"reservation_id": reservation_id}, fields=["*"])
 	cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
 
 	if len(room_stay_list) > 0:
@@ -248,8 +245,7 @@ def create_room_charge(reservation_id):
 			#check if this room_stay is moved, if the moving took part in the same day, do not charge the room
 			room_is_moved_at_the_same_day = False
 			is_moved = frappe.db.exists('Move Room', {'initial_room_stay': room_stay.name})
-			delta_day = room_stay.departure.date() - room_stay.arrival.date()
-			if is_moved and delta_day <= 0:
+			if is_moved and room_stay.departure.date() == room_stay.arrival.date():
 				room_is_moved_at_the_same_day = True
 
 			# add special charge if any
