@@ -172,7 +172,7 @@ function book_dialog(room_id, date, current_status) {
 					} else if (form.end == undefined) {
 						frappe.msgprint(__('Choose end')); return;
 					} else if (form.start == form.end) {
-						frappe.msgprint(__('Conflict Start == End')); return;
+						frappe.msgprint(__('Conflict: Start Cannot Be The Same With End')); return;
 					} else if (form.availability == undefined) {
 						frappe.msgprint(__('Choose availability')); return;
 					} else {
@@ -204,8 +204,8 @@ function book_dialog(room_id, date, current_status) {
 								frappe.msgprint(__('Choose start')); return;
 							} else if (form.end == undefined) {
 								frappe.msgprint(__('Choose end')); return;
-							} else if (form.start == form.end) {
-								frappe.msgprint(__('Conflict Start == End')); return;
+							} else if (form.start <= form.end) {
+								frappe.msgprint(__('Conflict: Start Cannot Be The Same With End')); return;
 							} else if (form.availability == undefined) {
 								frappe.msgprint(__('Choose availability')); return;
 							} else {
