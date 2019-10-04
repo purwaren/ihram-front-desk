@@ -167,12 +167,16 @@ function book_dialog(room_id, date, current_status) {
 				],
 				primary_action: function() {
 					var form = dialog.get_values();
-					if (form.start == form.end) {
+					if (form.start == undefined) {
+						frappe.msgprint(__('Choose start')); return;
+					} else if (form.end == undefined) {
+						frappe.msgprint(__('Choose end')); return;
+					} else if (form.start == form.end) {
 						frappe.msgprint(__('Conflict Start == End')); return;
 					} else if (form.availability == undefined) {
 						frappe.msgprint(__('Choose availability')); return;
 					} else {
-						process_booking(room_id, form, 'new');
+						process_booking(room_id, form, 'new', '');
 					}
 				}
 			});
@@ -191,11 +195,16 @@ function book_dialog(room_id, date, current_status) {
 							{'label': 'Start', 'fieldname': 'start', 'fieldtype': 'Date', 'default': resp.message[0][1]},
 							{'label': 'End', 'fieldname': 'end', 'fieldtype': 'Date', 'default': resp.message[0][2]},
 							{'label': 'Availability', 'fieldname': 'availability', 'fieldtype': 'Select', 'options': ['OU', 'HU', 'OO', 'UC'], 'default': resp.message[0][3]},
-							{'label': 'Description', 'fieldname': 'description', 'fieldtype': 'Small Text', 'default': resp.message[0][4]}
+							{'label': 'Description', 'fieldname': 'description', 'fieldtype': 'Small Text', 'default': resp.message[0][4]},
+							{'label': __('Cancel Booking'), 'fieldname': 'cancel_booking', 'fieldtype': 'Button'}
 						],
 						primary_action: function() {
 							var form = dialog.get_values();
-							if (form.start == form.end) {
+							if (form.start == undefined) {
+								frappe.msgprint(__('Choose start')); return;
+							} else if (form.end == undefined) {
+								frappe.msgprint(__('Choose end')); return;
+							} else if (form.start == form.end) {
 								frappe.msgprint(__('Conflict Start == End')); return;
 							} else if (form.availability == undefined) {
 								frappe.msgprint(__('Choose availability')); return;
@@ -204,6 +213,9 @@ function book_dialog(room_id, date, current_status) {
 							}
 						}
 					});
+					dialog.fields_dict['cancel_booking'].input.onclick = function() {
+						console.log("Hah");
+					}
 					dialog.show();
 				}
 			});
