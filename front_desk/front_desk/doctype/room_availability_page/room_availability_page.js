@@ -214,7 +214,13 @@ function book_dialog(room_id, date, current_status) {
 						}
 					});
 					dialog.fields_dict['cancel_booking'].input.onclick = function() {
-						console.log("Hah");
+						frappe.db.set_value('Room Booking', resp.message[0][0], {
+							status: 'Canceled'
+						}).then(r => {
+							search(doc);
+							dialog.hide();
+							frappe.msgprint(__('Success cancel book room ' + room_id));
+						})
 					}
 					dialog.show();
 				}
