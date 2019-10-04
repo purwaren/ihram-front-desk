@@ -144,8 +144,11 @@ def get_bed_type_available(doctype, txt, searchfield, start, page_len, filters):
 	return bed_type_list
 
 @frappe.whitelist()
-def is_available(room_id, start, end):
-	result = frappe.db.sql('SELECT room_id FROM `tabRoom Booking` WHERE %s = room_id AND status = "Booked" AND (start != end) AND ((%s >= start AND %s < end) OR (%s > start AND %s <= end) OR (%s < start AND %s > end))', (room_id, start, start, end, end, start, end))
+def is_available(room_id, start, end, name):
+	if name:
+		result = frappe.db.sql('SELECT room_id FROM `tabRoom Booking` WHERE %s != name AND %s = room_id AND status = "Booked" AND (start != end) AND ((%s >= start AND %s < end) OR (%s > start AND %s <= end) OR (%s < start AND %s > end))', (name, room_id, start, start, end, end, start, end))
+	else:
+		result = frappe.db.sql('SELECT room_id FROM `tabRoom Booking` WHERE %s = room_id AND status = "Booked" AND (start != end) AND ((%s >= start AND %s < end) OR (%s > start AND %s <= end) OR (%s < start AND %s > end))', (room_id, start, start, end, end, start, end))
 	if result:
 		return False
 	else:
@@ -154,3 +157,7 @@ def is_available(room_id, start, end):
 			return False
 		else:
 			return True
+
+@frappe.whitelist()
+def get_room_booking(room_id, date):
+	return frappe.db.sql('SELECT name, start, end, room_availability, note FROM `tabRoom Booking` WHERE status = "Booked" AND room_id = %s AND %s >= start AND %s < end', (room_id, date, date))

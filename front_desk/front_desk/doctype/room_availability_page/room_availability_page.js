@@ -172,40 +172,82 @@ function book_dialog(room_id, date, current_status) {
 					} else if (form.availability == undefined) {
 						frappe.msgprint(__('Choose availability')); return;
 					} else {
-						process_booking(room_id, form);
+						process_booking(room_id, form, 'new');
 					}
 				}
 			});
 			dialog.show();
 		} else {
-			
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_booking.room_booking.get_room_booking',
+				args: {
+					room_id: room_id,
+					date: date
+				},
+				callback: (resp) => {
+					dialog = new frappe.ui.Dialog({
+						'title': 'Book Room ' + room_id,
+						'fields': [
+							{'label': 'Start', 'fieldname': 'start', 'fieldtype': 'Date', 'default': resp.message[0][1]},
+							{'label': 'End', 'fieldname': 'end', 'fieldtype': 'Date', 'default': resp.message[0][2]},
+							{'label': 'Availability', 'fieldname': 'availability', 'fieldtype': 'Select', 'options': ['OU', 'HU', 'OO', 'UC'], 'default': resp.message[0][3]},
+							{'label': 'Description', 'fieldname': 'description', 'fieldtype': 'Small Text', 'default': resp.message[0][4]}
+						],
+						primary_action: function() {
+							var form = dialog.get_values();
+							if (form.start == form.end) {
+								frappe.msgprint(__('Conflict Start == End')); return;
+							} else if (form.availability == undefined) {
+								frappe.msgprint(__('Choose availability')); return;
+							} else {
+								process_booking(room_id, form, 'update', resp.message[0][0]);
+							}
+						}
+					});
+					dialog.show();
+				}
+			});
 		}
 	}
 }
 
-function process_booking(room_id, form) {
+function process_booking(room_id, form, flag, name) {
 	frappe.call({
 		method: 'front_desk.front_desk.doctype.room_booking.room_booking.is_available',
 		args: {
 			room_id: room_id,
 			start: form.start,
-			end: form.end
+			end: form.end,
+			name: name
 		},
 		callback: (resp) => {
 			if (resp.message == true) {
-				frappe.db.insert({
-					doctype: 'Room Booking',
-					status: 'Booked',
-					room_id: room_id,
-					start: form.start,
-					end: form.end,
-					room_availability: form.availability,
-					note: form.description
-				}).then(r => {
-					search(doc);
-					dialog.hide();
-					frappe.msgprint(__('Success book room ' + room_id + ' from ' + form.start + ' until ' + form.end));
-				})
+				if (flag == 'new') {
+					frappe.db.insert({
+						doctype: 'Room Booking',
+						status: 'Booked',
+						room_id: room_id,
+						start: form.start,
+						end: form.end,
+						room_availability: form.availability,
+						note: form.description
+					}).then(r => {
+						search(doc);
+						dialog.hide();
+						frappe.msgprint(__('Success book room ' + room_id + ' from ' + form.start + ' until ' + form.end));
+					})
+				} else if (flag == 'update') {
+					frappe.db.set_value('Room Booking', name, {
+						start: form.start,
+						end: form.end,
+						room_availability: form.availability,
+						note: form.description
+					}).then(r => {
+						search(doc);
+						dialog.hide();
+						frappe.msgprint(__('Success book room ' + room_id + ' from ' + form.start + ' until ' + form.end));
+					})
+				}
 			} else {
 				frappe.msgprint(__('Conflict date')); return;
 			}
