@@ -1,6 +1,6 @@
 // Copyright (c) 2019, PMM and contributors
 // For license information, please see license.txt
-
+// TODO: rbp_list ambil rbp_item yang is_paid-nya masih 0 saja
 var reservation = null;
 var has_deposit = false;
 var room_list = [];
@@ -43,13 +43,15 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (frappe.get_doc( 'Reservation', reservation.name ).room_stay != undefined && (frappe.get_doc( 'Reservation', reservation.name ).room_stay).length <= 0) {
-			frm.set_df_property('paid_bill_amount', 'hidden', 1);
-			frm.set_df_property('is_round_change_amount', 'hidden', 1);
-			frm.set_df_property('rbp_change_rounding_amount', 'hidden', 1);
-			frm.set_df_property('room_bill_change_amount', 'hidden', 1);
-			frm.set_df_property('rbp_rounded_change_amount', 'hidden', 1);
-			frm.set_df_property('room_bill_section_break', 'hidden', 1);
-			frm.set_df_property('room_bill_payments', 'hidden', 1);
+            frm.set_df_property('paid_bill_amount', 'hidden', 1);
+            frm.set_df_property('is_round_change_amount', 'hidden', 1);
+            frm.set_df_property('rbp_change_rounding_amount', 'hidden', 1);
+            frm.set_df_property('room_bill_change_amount', 'hidden', 1);
+            frm.set_df_property('rbp_rounded_change_amount', 'hidden', 1);
+            frm.set_df_property('room_bill_section_break', 'hidden', 1);
+            frm.set_df_property('room_bill_payments', 'hidden', 1);
+            frm.set_df_property('room_bill_paid_section', 'hidden', 1);
+            frm.set_df_property('room_bill_paid', 'hidden', 1);
 		}
 		else {
 			frm.set_df_property('paid_bill_amount', 'hidden', 0);
@@ -59,6 +61,8 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('rbp_rounded_change_amount', 'hidden', 0);
 			frm.set_df_property('room_bill_section_break', 'hidden', 0);
 			frm.set_df_property('room_bill_payments', 'hidden', 0);
+			frm.set_df_property('room_bill_paid_section', 'hidden', 0);
+			frm.set_df_property('room_bill_paid', 'hidden', 0);
 		}
 
 		if(reservation.status == 'Created') {
@@ -202,6 +206,8 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('room_bill_payments', 'hidden', 1);
 			frm.set_df_property('additional_charge_section', 'hidden', 1);
 			frm.set_df_property('additional_charge', 'hidden', 1);
+			 frm.set_df_property('room_bill_paid_section', 'hidden', 1);
+            frm.set_df_property('room_bill_paid', 'hidden', 1);
 		}
 
 		if (reservation.status != 'Confirmed' && reservation.status != 'In House') {
@@ -219,6 +225,21 @@ frappe.ui.form.on('Reservation', {
 		var rbp_list = frappe.get_doc( 'Reservation', reservation.name ).room_bill_payments;
 		console.log("round change changed")
 		calculateRoomBillPayments(frm, rbp_list);
+	},
+	make_payment: function(frm, cdt, cdn) {
+		frappe.call({
+			method: 'front_desk.front_desk.doctype.reservation.reservation.create_room_bill_payment_entry',
+			args: {
+				reservation_id: reservation.name,
+				room_bill_amount: frm.doc.room_bill_amount,
+				paid_bill_amount:frm.doc.paid_bill_amount,
+				is_round_down_checked: frm.doc.is_round_change_amount,
+				change_rounding_amount: frm.doc.rbp_change_rounding_amount,
+				change_amount: frm.doc.room_bill_change_amount,
+				rounded_change_amount: frm.doc.rbp_rounded_change_amount,
+			}
+		});
+
 	},
 	before_save: function(frm, cdt, cdn) {
 		if (reservation.__islocal == 1) {
