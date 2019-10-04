@@ -171,8 +171,8 @@ function book_dialog(room_id, date, current_status) {
 						frappe.msgprint(__('Choose start')); return;
 					} else if (form.end == undefined) {
 						frappe.msgprint(__('Choose end')); return;
-					} else if (form.start >= form.end) {
-						frappe.msgprint(__('Conflict: Start cannot be the same with end')); return;
+					} else if (form.end <= form.start) {
+						frappe.msgprint(__('Conflict: End cannot be the same or less than start')); return;
 					} else if (form.availability == undefined) {
 						frappe.msgprint(__('Choose availability')); return;
 					} else {
@@ -204,8 +204,8 @@ function book_dialog(room_id, date, current_status) {
 								frappe.msgprint(__('Choose start')); return;
 							} else if (form.end == undefined) {
 								frappe.msgprint(__('Choose end')); return;
-							} else if (form.start >= form.end) {
-								frappe.msgprint(__('Conflict: Start cannot be the same with end')); return;
+							} else if (form.end <= form.start) {
+								frappe.msgprint(__('Conflict: End cannot be the same or less than start')); return;
 							} else if (form.availability == undefined) {
 								frappe.msgprint(__('Choose availability')); return;
 							} else {
