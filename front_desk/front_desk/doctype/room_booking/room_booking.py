@@ -142,3 +142,15 @@ def get_bed_type_available(doctype, txt, searchfield, start, page_len, filters):
 		bed_type_list.append([t])
 
 	return bed_type_list
+
+@frappe.whitelist()
+def is_available(room_id, start, end):
+	result = frappe.db.sql('SELECT room_id FROM `tabRoom Booking` WHERE %s = room_id AND status = "Booked" AND (start != end) AND ((%s >= start AND %s < end) OR (%s > start AND %s <= end) OR (%s < start AND %s > end))', (room_id, start, start, end, end, start, end))
+	if result:
+		return False
+	else:
+		result = frappe.db.sql("SELECT rs.room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name WHERE %s = rs.room_id AND (r.status = 'Confirmed' OR r.status = 'In House') AND (CONVERT(rs.arrival, DATE) != CONVERT(rs.departure, DATE)) AND ((%s >= CONVERT(rs.arrival, DATE) AND %s < CONVERT(rs.departure, DATE)) OR (%s > CONVERT(rs.arrival, DATE) AND %s <= CONVERT(rs.departure, DATE)) OR (%s < CONVERT(rs.arrival, DATE) AND %s > CONVERT(rs.departure, DATE)))", (room_id, start, start, end, end, start, end))
+		if result:
+			return False
+		else:
+			return True
