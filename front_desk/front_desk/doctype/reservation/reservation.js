@@ -1,6 +1,5 @@
 // Copyright (c) 2019, PMM and contributors
 // For license information, please see license.txt
-// TODO: rbp_list ambil rbp_item yang is_paid-nya masih 0 saja
 var reservation = null;
 var has_deposit = false;
 var room_list = [];
