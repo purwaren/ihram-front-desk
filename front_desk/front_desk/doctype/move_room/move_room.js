@@ -52,6 +52,8 @@ frappe.ui.form.on('Room Stay', {
 		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "section_break_1"})[0];
 		field.hidden = 1;
 
+		child.room_bill_paid_id = initial_room_stay.room_bill_paid_id;
+		console.log(child);
 		if (guest_request == 0) {
 			child.room_rate = initial_room_stay.room_rate;
 			var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
