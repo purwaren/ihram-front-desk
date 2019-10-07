@@ -17,13 +17,15 @@ frappe.ui.form.on('Reservation', {
 				query: 'front_desk.front_desk.doctype.reservation.reservation.get_debit_account'
 			}
 		});
+		MakePaymentButtonStatus(frm, cdt,cdn);
+		frm.get_field("room_bill_paid").grid.only_sortable();
 	},
 	onload_post_render: function(frm, cdt, cdn) {
 		$('*[data-fieldname="reservation_detail"]').find('.grid-remove-rows').hide();
 		$('*[data-fieldname="room_stay"]').find('.grid-remove-rows').hide();
 
 		reservation = frappe.get_doc(cdt, cdn);
-		
+
 		frappe.meta.get_docfield('Room Stay', 'reservation_id', reservation.name).hidden = true;
 		frm.refresh_field('room_stay');
 
@@ -124,23 +126,23 @@ frappe.ui.form.on('Reservation', {
 		// 	});
 		// });
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
-			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
-			// 		args: {
-			// 			reservation_id: reservation.name
-			// 		}
-			// 	});
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
-			// 		args: {
-			// 			reservation_id: reservation.name
-			// 		}
-			// 	});
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
-			// 	});
-			// });
+			frm.add_custom_button(__("Trigger Auto Charges"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
+					args: {
+						reservation_id: reservation.name
+					}
+				});
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
+					args: {
+						reservation_id: reservation.name
+					}
+				});
+				frappe.call({
+					method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
+				});
+			});
 
 			frm.add_custom_button(__("Billing"), function () {
 				frappe.call({
@@ -245,9 +247,14 @@ frappe.ui.form.on('Reservation', {
 				change_rounding_amount: frm.doc.rbp_change_rounding_amount,
 				change_amount: frm.doc.room_bill_change_amount,
 				rounded_change_amount: frm.doc.rbp_rounded_change_amount,
+			},
+			callback: (response) => {
+				console.log(response.message);
+				frm.set_value('room_bill_amount', response.message);
+				frm.save();
 			}
 		});
-
+		MakePaymentButtonStatus(frm, cdt,cdn);
 	},
 	before_save: function(frm, cdt, cdn) {
 		if (reservation.__islocal == 1) {
@@ -310,7 +317,7 @@ frappe.ui.form.on('Reservation', {
 				reservation_name: frappe.get_doc(cdt, cdn).name
 			}
 		});
-
+		MakePaymentButtonStatus(frm, cdt,cdn);
 		frm.reload_doc();
 	}
 });
@@ -713,7 +720,9 @@ function calculateRoomBillPayments(frm, rbp_list) {
 	var current_change = frm.doc.room_bill_change_amount;
 	var i;
 	for (i = 0; i < rbp_list.length; i++) {
-		total_payment += rbp_list[i].rbp_amount;
+		if (rbp_list[i].is_paid == 0) {
+			total_payment += rbp_list[i].rbp_amount;
+		}
 	}
 	frm.set_value('paid_bill_amount', total_payment);
 	var diff = total_payment - frm.doc.room_bill_amount;
@@ -756,5 +765,31 @@ function roomBillCashCount(frm, rbp_list) {
 		frm.set_value('rbp_change_rounding_amount', 0);
 		frm.set_value('room_bill_change_amount', 0);
 		frm.set_value('rbp_rounded_change_amount', 0);
+	}
+}
+
+function MakePaymentButtonStatus(frm, cdt, cdn) {
+	console.log("makepaymentbuttonstatus kepanggil")
+	reservation = frappe.get_doc(cdt, cdn);
+	var rbp_list = frappe.get_doc('Reservation', reservation.name).room_bill_payments;
+	var exist_rbp_not_paid = false;
+	var i = 0;
+
+	for (i = 0; i < rbp_list.length; i++) {
+		if (rbp_list[i].is_paid == 0) {
+			exist_rbp_not_paid = true;
+		}
+	}
+
+	if (reservation.room_bill_amount > 0 && exist_rbp_not_paid) {
+		console.log("if room bill amount > 0 dan ada rbp yang belum dibayar")
+		frm.set_df_property('make_payment_section_break', 'hidden', 0);
+		frm.set_df_property('make_payment', 'hidden', 0);
+
+	} else {
+		console.log("else room bill amount > 0")
+		console.log("hide the payment button")
+		frm.set_df_property('make_payment_section_break', 'hidden', 1);
+		frm.set_df_property('make_payment', 'hidden', 1);
 	}
 }
