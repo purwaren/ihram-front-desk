@@ -489,6 +489,20 @@ frappe.ui.form.on("Room Bill Payments", {
 	},
 });
 
+frappe.ui.form.on("Room Bill Paid", {
+	print_rbpd_button: function(frm, cdt, cdn) {
+		var w = window.open(frappe.urllib.get_full_url("/printview?"
+			+"doctype="+encodeURIComponent("Room Bill Paid")
+			+"&name="+encodeURIComponent(frappe.get_doc(cdt, cdn).name)
+			+"&no_letterhead=0"
+			));
+
+		if (!w) {
+			frappe.msgprint(__("Please enable pop-ups")); return;
+		}
+	},
+});
+
 function make_pin(length) {
 	var result           = '';
 	var characters       = '0123456789';
@@ -773,10 +787,11 @@ function MakePaymentButtonStatus(frm, cdt, cdn) {
 	var rbp_list = frappe.get_doc('Reservation', reservation.name).room_bill_payments;
 	var exist_rbp_not_paid = false;
 	var i = 0;
-
-	for (i = 0; i < rbp_list.length; i++) {
-		if (rbp_list[i].is_paid == 0) {
-			exist_rbp_not_paid = true;
+	if (rbp_list != undefined && rbp_list.length > 0) {
+		for (i = 0; i < rbp_list.length; i++) {
+			if (rbp_list[i].is_paid == 0) {
+				exist_rbp_not_paid = true;
+			}
 		}
 	}
 
