@@ -57,8 +57,8 @@ def create_additional_charge(reservation_id):
 	if len(ac_list) > 0:
 		for ac_item in ac_list:
 			cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
-			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
-			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 			remark = ac_item.name + " -  Additional Charge " + reservation_id + " " + ac_item.ac_description
 			folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 			doc_folio = frappe.get_doc('Folio', folio_name)
