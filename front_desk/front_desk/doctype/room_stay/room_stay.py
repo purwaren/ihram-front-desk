@@ -42,8 +42,8 @@ def add_early_checkin(room_stay_id):
             ec_percentage) + "% of Room Rate)"
         exist_folio_trx_ec = frappe.db.exists('Folio Transaction', {'parent':get_folio_name(room_stay.reservation_id), 'remark': ec_remark})
         if not exist_folio_trx_ec:
-            je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
-            je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+            je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+            je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
             cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', room_stay.reservation_id).customer_id).name
             room_rate_doc = frappe.get_doc('Room Rate', room_stay.room_rate)
             if is_this_weekday(room_stay.arrival):
@@ -110,8 +110,8 @@ def add_late_checkout(room_stay_id):
             lc_percentage) + "% of Room Rate)"
         exist_folio_trx_lc = frappe.db.exists('Folio Transaction', {'parent':get_folio_name(room_stay.reservation_id), 'remark': lc_remark})
         if not exist_folio_trx_lc:
-            je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
-            je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+            je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+            je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
             cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', room_stay.reservation_id).customer_id).name
             room_rate_doc = frappe.get_doc('Room Rate', room_stay.room_rate)
 
