@@ -18,14 +18,14 @@ frappe.listview_settings['Reservation'] = {
             });
         });
 
-        listview.page.add_action_item( ('Check Out'), function () {
-            frappe.call({
-                method: "front_desk.front_desk.doctype.reservation.reservation.check_out",
-                args: {
-                    reservation_id_list: listview.get_checked_items(true)
-                }
-            });
-        });
+        // listview.page.add_action_item( ('Check Out'), function () {
+        //     frappe.call({
+        //         method: "front_desk.front_desk.doctype.reservation.reservation.check_out",
+        //         args: {
+        //             reservation_id_list: listview.get_checked_items(true)
+        //         }
+        //     });
+        // });
 
         listview.page.add_action_item( ('Cancel'), function () {
             frappe.confirm(
