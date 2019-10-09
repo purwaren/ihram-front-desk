@@ -115,7 +115,8 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 					doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 					doc = frappe.new_doc('Folio Transaction')
 					doc.folio_id = folio_id
-					doc.amount = sales_invoice.total #total before tax. use sales_invoice .grand_total for after tax
+					doc.amount = sales_invoice.total
+					doc.amount_after_tax = sales_invoice.grand_total
 					doc.sales_invoice_id = sales_invoice.name
 					doc.total_qty = sales_invoice.total_qty
 					doc.pos_profile = pos_profile.name
@@ -145,7 +146,8 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 				doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 				doc = frappe.new_doc('Folio Transaction')
 				doc.folio_id = folio_id
-				doc.amount = sales_invoice.total #total before tax. use sales_invoice .grand_total for after tax
+				doc.amount = sales_invoice.total
+				doc.amount_after_tax = sales_invoice.grand_total
 				doc.sales_invoice_id = sales_invoice.name
 				doc.total_qty = sales_invoice.total_qty
 				doc.flag = 'Debit'

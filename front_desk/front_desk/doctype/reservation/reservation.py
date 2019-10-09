@@ -13,6 +13,7 @@ from front_desk.front_desk.doctype.hotel_bill.hotel_bill import create_hotel_bil
 from front_desk.front_desk.doctype.hotel_bill.hotel_bill import get_mode_of_payment_account
 from front_desk.front_desk.doctype.room_stay.room_stay import add_early_checkin
 from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
+from front_desk.front_desk.doctype.room_stay.room_stay import get_rate_after_tax
 
 class Reservation(Document):
 	pass
@@ -269,8 +270,10 @@ def create_room_charge(reservation_id):
 				# define room rate for folio transaction. If room stay discount exist, apply the discount
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate', room_stay.discount_percentage)
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate', room_stay.discount_percentage)
 				for rrbd_item in room_rate_breakdown:
 					rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 					# Weekday room charge
@@ -358,6 +361,7 @@ def create_room_charge(reservation_id):
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
 				doc_folio_transaction.folio_id = doc_folio.name
 				doc_folio_transaction.amount = today_rate
+				doc_folio_transaction.amount_after_tax = today_rate_after_tax
 				doc_folio_transaction.room_stay_id = room_stay.name
 				doc_folio_transaction.room_rate = room_stay.room_rate
 				doc_folio_transaction.flag = 'Debit'
