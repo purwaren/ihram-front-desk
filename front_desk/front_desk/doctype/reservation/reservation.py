@@ -495,7 +495,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 			frappe.db.set_value('Room Stay', room_stay_item.name, 'room_bill_paid_id', doc_rbpd.name)
 
 	# Create Journal Entry for Room Bill Paid Change if there is any Change
-	if doc_rbpd.rbpd_rounded_change_amount > 0:
+	if float(doc_rbpd.rbpd_rounded_change_amount) > 0:
 		rbpd_change_remark = "Change from " + doc_rbpd.name
 		kas_besar = frappe.db.get_list('Account', filters={'account_number': '1111.002'})[0].name
 		piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
