@@ -124,6 +124,26 @@ frappe.ui.form.on('Reservation', {
 		// 		}
 		// 	});
 		// });
+
+		if (reservation.status != 'Cancel' && reservation.status != 'Created' && reservation.status != 'Confirmed') {
+			frm.add_custom_button(__("Show Billing"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.get_hotel_bill_url",
+					args: {
+						reservation_id: reservation.name
+					},
+					callback: (r) => {
+						if (r.message) {
+							var w = window.open(r.message, "_blank");
+                        	if (!w) {
+                            	frappe.msgprint(__("Please enable pop-ups")); return;
+                        	}
+						}
+					}
+				});
+			});
+		}
+
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
 			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
 			// 	frappe.call({
@@ -143,47 +163,30 @@ frappe.ui.form.on('Reservation', {
 			// 	});
 			// });
 
-			frm.add_custom_button(__("Billing"), function () {
-				frappe.call({
-					method: "front_desk.front_desk.doctype.reservation.reservation.get_hotel_bill_url",
-					args: {
-						reservation_id: reservation.name
-					},
-					callback: (r) => {
-						if (r.message) {
-							var w = window.open(r.message, "_blank");
-                        	if (!w) {
-                            	frappe.msgprint(__("Please enable pop-ups")); return;
-                        	}
-						}
-					}
-				});
-			});
-
-			frm.add_custom_button(__("Print Receipt"), function() {
-    			frappe.call({
-					method: "frappe.client.get_value",
-					args: {
-						doctype: "Folio",
-						filters: {"reservation_id": reservation.name},
-						fieldname: "name"
-					},
-					callback: (r) => {
-						if (r.message.name) {
-							var w = window.open(frappe.urllib.get_full_url("/printview?"
-									+"doctype="+encodeURIComponent("Folio")
-									+"&name="+encodeURIComponent(r.message.name)
-									+"&trigger_print=1"
-									+"&no_letterhead=0"
-									))
-
-							if (!w) {
-								frappe.msgprint(__("Please enable pop-ups")); return;
-							}
-						}
-					}
-				});
-			});
+			// frm.add_custom_button(__("Print Receipt"), function() {
+    		// 	frappe.call({
+			// 		method: "frappe.client.get_value",
+			// 		args: {
+			// 			doctype: "Folio",
+			// 			filters: {"reservation_id": reservation.name},
+			// 			fieldname: "name"
+			// 		},
+			// 		callback: (r) => {
+			// 			if (r.message.name) {
+			// 				var w = window.open(frappe.urllib.get_full_url("/printview?"
+			// 						+"doctype="+encodeURIComponent("Folio")
+			// 						+"&name="+encodeURIComponent(r.message.name)
+			// 						+"&trigger_print=1"
+			// 						+"&no_letterhead=0"
+			// 						))
+			//
+			// 				if (!w) {
+			// 					frappe.msgprint(__("Please enable pop-ups")); return;
+			// 				}
+			// 			}
+			// 		}
+			// 	});
+			// });
 
 			frm.add_custom_button(__("Show Folio"), function() {
     			frappe.call({
@@ -710,7 +713,8 @@ function get_room_rate(child_field) {
 			field.get_query = function () {
 				return {
 					filters: {
-						'room_type': child.room_type
+						'room_type': child.room_type,
+						'is_disabled': 0
 					},
 					or_filters: [
 						{'customer_group': 'All Customer Groups'},
@@ -782,7 +786,6 @@ function roomBillCashCount(frm, rbp_list) {
 }
 
 function MakePaymentButtonStatus(frm, cdt, cdn) {
-	console.log("makepaymentbuttonstatus kepanggil")
 	reservation = frappe.get_doc(cdt, cdn);
 	var rbp_list = frappe.get_doc('Reservation', reservation.name).room_bill_payments;
 	var exist_rbp_not_paid = false;
@@ -796,13 +799,10 @@ function MakePaymentButtonStatus(frm, cdt, cdn) {
 	}
 
 	if (reservation.room_bill_amount > 0 && exist_rbp_not_paid) {
-		console.log("if room bill amount > 0 dan ada rbp yang belum dibayar")
 		frm.set_df_property('make_payment_section_break', 'hidden', 0);
 		frm.set_df_property('make_payment', 'hidden', 0);
 
 	} else {
-		console.log("else room bill amount > 0")
-		console.log("hide the payment button")
 		frm.set_df_property('make_payment_section_break', 'hidden', 1);
 		frm.set_df_property('make_payment', 'hidden', 1);
 	}
