@@ -144,6 +144,8 @@ def create_hotel_bill(reservation_id):
 
 	for item in folio_trx_list:
 		doc_hotel_bill = frappe.get_doc("Hotel Bill", {'name': exist_bill})
+		kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+
 		# Input if only there is no record of this folio_trx in the hotell billing yet
 		if not frappe.db.exists('Hotel Bill Breakdown', {'parent': exist_bill, 'billing_folio_trx_id': item.name}):
 			# Input the folio trx with type of sales invoice
@@ -199,7 +201,7 @@ def create_hotel_bill(reservation_id):
 
 				base_amount = rate_breakdown.breakdown_amount * amount_multiplier
 				breakdown_tax = rate_breakdown.breakdown_tax
-
+				room_rate_breakdown_account = rate_breakdown.breakdown_account
 				room_tb_id, room_tb_amount, room_tb_total = calculate_hotel_tax_and_charges(base_amount, breakdown_tax)
 
 				bundle_tax_amount = bundle_tax_amount + sum(room_tb_amount)
@@ -231,9 +233,8 @@ def create_hotel_bill(reservation_id):
 				rr_doc_item.breakdown_tax_amount = sum(room_tb_amount)
 				rr_doc_item.breakdown_grand_total = room_tb_total[-1]
 				rr_doc_item.breakdown_tax_id = breakdown_tax
-				# TODO: account and against account
-				rr_doc_item.breakdown_account = ''
-				rr_doc_item.breakdown_account_against = ''
+				rr_doc_item.breakdown_account = room_rate_breakdown_account # cek account dari room rate breakdown most likely pendapatan kamar
+				rr_doc_item.breakdown_account_against = kas_dp_kamar
 				doc_hotel_bill.append('bill_breakdown', rr_doc_item)
 
 				# input the tax item of room charge
@@ -243,9 +244,8 @@ def create_hotel_bill(reservation_id):
 					rr_doc_tax_item.is_tax_item = 1
 					rr_doc_tax_item.breakdown_description = hotel_tax_breakdown.breakdown_description
 					rr_doc_tax_item.breakdown_grand_total = room_tb_amount[index]
-					# TODO: account and against account
-					rr_doc_item.breakdown_account = ''
-					rr_doc_item.breakdown_account_against = ''
+					rr_doc_tax_item.breakdown_account = hotel_tax_breakdown.breakdown_account # account dari tax
+					rr_doc_tax_item.breakdown_account_against = kas_dp_kamar
 					doc_hotel_bill.append('bill_breakdown', rr_doc_tax_item)
 
 				# input the other room rate charge besides room rate: e.g: breakfast, coffee break, etc
@@ -264,9 +264,8 @@ def create_hotel_bill(reservation_id):
 						orr_doc_item.breakdown_tax_amount = sum(rrbd_tb_amount)
 						orr_doc_item.breakdown_grand_total = rrbd_tb_total[-1]
 						orr_doc_item.breakdown_tax_id = rrbd_item.breakdown_tax
-						# TODO: account and against account
-						rr_doc_item.breakdown_account = ''
-						rr_doc_item.breakdown_account_against = ''
+						orr_doc_item.breakdown_account = rrbd_item.breakdown_account # cek account dari room rate breakdown
+						orr_doc_item.breakdown_account_against = kas_dp_kamar
 						doc_hotel_bill.append('bill_breakdown', orr_doc_item)
 
 						# input the other charge tax item
@@ -276,9 +275,8 @@ def create_hotel_bill(reservation_id):
 							orr_doc_tax_item.is_tax_item = 1
 							orr_doc_tax_item.breakdown_description = orr_hotel_tax_breakdown.breakdown_description
 							orr_doc_tax_item.breakdown_grand_total = rrbd_tb_amount[index]
-							# TODO: account and against account
-							rr_doc_item.breakdown_account = ''
-							rr_doc_item.breakdown_account_against = ''
+							orr_doc_tax_item.breakdown_account = orr_hotel_tax_breakdown.breakdown_account # cek account dari hotel tax
+							orr_doc_tax_item.breakdown_account_against = kas_dp_kamar
 							doc_hotel_bill.append('bill_breakdown', orr_doc_tax_item)
 
 			# Special charge are early check-in and late check-out fee
@@ -290,8 +288,8 @@ def create_hotel_bill(reservation_id):
 				sp_doc_item.breakdown_net_total = item.amount
 				sp_doc_item.breakdown_tax_amount = 0
 				sp_doc_item.breakdown_grand_total = item.amount
-				sp_doc_item.breakdown_acocunt = item.against_account_id
-				sp_doc_item.breakdown_acocunt_against = item.account_id
+				sp_doc_item.breakdown_account = item.against_account_id
+				sp_doc_item.breakdown_account_against = item.account_id
 				doc_hotel_bill.append('bill_breakdown', sp_doc_item)
 
 			# Additional charge are charges that added by Additional Charge form in Rerservation Page
@@ -303,8 +301,8 @@ def create_hotel_bill(reservation_id):
 				ac_doc_item.breakdown_net_total = item.amount
 				ac_doc_item.breakdown_tax_amount = 0
 				ac_doc_item.breakdown_grand_total = item.amount
-				ac_doc_item.breakdown_acocunt = item.against_account_id
-				ac_doc_item.breakdown_acocunt_against = item.account_id
+				ac_doc_item.breakdown_account = item.against_account_id
+				ac_doc_item.breakdown_account_against = item.account_id
 				doc_hotel_bill.append('bill_breakdown', ac_doc_item)
 
 		# save all hotel bill breakdown to the hotel bill
