@@ -295,7 +295,7 @@ def create_room_charge(reservation_id):
 							doc_journal_entry.user_remark = rrbd_remark
 							# Journal Entry Account: Debit
 							doc_debit = frappe.new_doc('Journal Entry Account')
-							doc_debit.account = rrbd_item.breakdown_account
+							doc_debit.account = je_debit_account
 							doc_debit.debit = rrbd_rate_amount
 							doc_debit.debit_in_account_currency = rrbd_rate_amount
 							doc_debit.party_type = 'Customer'
@@ -303,7 +303,7 @@ def create_room_charge(reservation_id):
 							doc_debit.user_remark = rrbd_remark
 							# Journal Entry Account: Credit
 							doc_credit = frappe.new_doc('Journal Entry Account')
-							doc_credit.account = je_credit_account
+							doc_credit.account = rrbd_item.breakdown_account
 							doc_credit.credit = rrbd_rate_amount
 							doc_credit.party_type = 'Customer'
 							doc_credit.party = cust_name
@@ -399,8 +399,8 @@ def create_additional_charge(reservation_id):
 	if len(ac_list) > 0:
 		for ac_item in ac_list:
 			cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
-			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
-			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 			remark = ac_item.name + " -  Additional Charge " + reservation_id + " " + ac_item.ac_description
 			folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 			doc_folio = frappe.get_doc('Folio', folio_name)
