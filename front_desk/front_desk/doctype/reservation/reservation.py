@@ -92,6 +92,7 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 	doc_folio_transaction = frappe.new_doc('Folio Transaction')
 	doc_folio_transaction.folio_id = doc_folio.name
 	doc_folio_transaction.amount = amount
+	doc_folio_transaction.amount_after_tax = amount
 	doc_folio_transaction.flag = 'Credit'
 	doc_folio_transaction.account_id = credit_account_name
 	doc_folio_transaction.against_account_id = debit_account_name
@@ -274,85 +275,86 @@ def create_room_charge(reservation_id):
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate', room_stay.discount_percentage)
-				for rrbd_item in room_rate_breakdown:
-					rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
-					# Weekday room charge
-					if is_weekday():
-						# exclude the weekend rate
-						if rrbd_item.breakdown_name != 'Weekend Rate':
-							# define each of every rate breakdown amount. If room stay discount exist, apply the discount
-							rrbd_rate_amount = amount_multiplier * float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
-
-							# Create Journal Entry
-							doc_journal_entry = frappe.new_doc('Journal Entry')
-							doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
-							doc_journal_entry.voucher_type = 'Journal Entry'
-							doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-							doc_journal_entry.posting_date = datetime.date.today()
-							doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-							doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-							doc_journal_entry.remark = rrbd_remark
-							doc_journal_entry.user_remark = rrbd_remark
-							# Journal Entry Account: Debit
-							doc_debit = frappe.new_doc('Journal Entry Account')
-							doc_debit.account = je_debit_account
-							doc_debit.debit = rrbd_rate_amount
-							doc_debit.debit_in_account_currency = rrbd_rate_amount
-							doc_debit.party_type = 'Customer'
-							doc_debit.party = cust_name
-							doc_debit.user_remark = rrbd_remark
-							# Journal Entry Account: Credit
-							doc_credit = frappe.new_doc('Journal Entry Account')
-							doc_credit.account = rrbd_item.breakdown_account
-							doc_credit.credit = rrbd_rate_amount
-							doc_credit.party_type = 'Customer'
-							doc_credit.party = cust_name
-							doc_credit.credit_in_account_currency = rrbd_rate_amount
-							doc_credit.user_remark = rrbd_remark
-							# Append debit and credit to Journal Account
-							doc_journal_entry.append('accounts', doc_debit)
-							doc_journal_entry.append('accounts', doc_credit)
-							# Save and Submit Journal Entry
-							doc_journal_entry.save()
-							doc_journal_entry.submit()
-					# Weekend room charge
-					else:
-						# exclude the weekday rate
-						if rrbd_item.breakdown_name != 'Weekday Rate':
-							# define each of every rate breakdown amount. If room stay discount exist, apply the discount
-							rrbd_rate_amount = amount_multiplier * float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
-							# Create Journal Entry
-							doc_journal_entry = frappe.new_doc('Journal Entry')
-							doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
-							doc_journal_entry.voucher_type = 'Journal Entry'
-							doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-							doc_journal_entry.posting_date = datetime.date.today()
-							doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-							doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-							doc_journal_entry.remark = rrbd_remark
-							doc_journal_entry.user_remark = rrbd_remark
-							# Journal Entry Account: Debit
-							doc_debit = frappe.new_doc('Journal Entry Account')
-							doc_debit.account = rrbd_item.breakdown_account
-							doc_debit.debit = rrbd_rate_amount
-							doc_debit.debit_in_account_currency = rrbd_rate_amount
-							doc_debit.party_type = 'Customer'
-							doc_debit.party = cust_name
-							doc_debit.user_remark = rrbd_remark
-							# Journal Entry Account: Credit
-							doc_credit = frappe.new_doc('Journal Entry Account')
-							doc_credit.account = je_credit_account
-							doc_credit.credit = rrbd_rate_amount
-							doc_credit.party_type = 'Customer'
-							doc_credit.party = cust_name
-							doc_credit.credit_in_account_currency = rrbd_rate_amount
-							doc_credit.user_remark = rrbd_remark
-							# Append debit and credit to Journal Account
-							doc_journal_entry.append('accounts', doc_debit)
-							doc_journal_entry.append('accounts', doc_credit)
-							# Save and Submit Journal Entry
-							doc_journal_entry.save()
-							doc_journal_entry.submit()
+				# !!IMPORTANTE!! sepertinya masukin ke journal entry ketika billing selesai saja. pas saat ini cukup create folio transaction yang sesuai jumlahnya after tax
+				# for rrbd_item in room_rate_breakdown:
+				# 	rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
+				# 	# Weekday room charge
+				# 	if is_weekday():
+				# 		# exclude the weekend rate
+				# 		if rrbd_item.breakdown_name != 'Weekend Rate':
+				# 			# define each of every rate breakdown amount. If room stay discount exist, apply the discount
+				# 			rrbd_rate_amount = amount_multiplier * float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
+				#
+				# 			# Create Journal Entry
+				# 			doc_journal_entry = frappe.new_doc('Journal Entry')
+				# 			doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
+				# 			doc_journal_entry.voucher_type = 'Journal Entry'
+				# 			doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+				# 			doc_journal_entry.posting_date = datetime.date.today()
+				# 			doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+				# 			doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+				# 			doc_journal_entry.remark = rrbd_remark
+				# 			doc_journal_entry.user_remark = rrbd_remark
+				# 			# Journal Entry Account: Debit
+				# 			doc_debit = frappe.new_doc('Journal Entry Account')
+				# 			doc_debit.account = je_debit_account
+				# 			doc_debit.debit = rrbd_rate_amount
+				# 			doc_debit.debit_in_account_currency = rrbd_rate_amount
+				# 			doc_debit.party_type = 'Customer'
+				# 			doc_debit.party = cust_name
+				# 			doc_debit.user_remark = rrbd_remark
+				# 			# Journal Entry Account: Credit
+				# 			doc_credit = frappe.new_doc('Journal Entry Account')
+				# 			doc_credit.account = rrbd_item.breakdown_account
+				# 			doc_credit.credit = rrbd_rate_amount
+				# 			doc_credit.party_type = 'Customer'
+				# 			doc_credit.party = cust_name
+				# 			doc_credit.credit_in_account_currency = rrbd_rate_amount
+				# 			doc_credit.user_remark = rrbd_remark
+				# 			# Append debit and credit to Journal Account
+				# 			doc_journal_entry.append('accounts', doc_debit)
+				# 			doc_journal_entry.append('accounts', doc_credit)
+				# 			# Save and Submit Journal Entry
+				# 			doc_journal_entry.save()
+				# 			doc_journal_entry.submit()
+				# 	# Weekend room charge
+				# 	else:
+				# 		# exclude the weekday rate
+				# 		if rrbd_item.breakdown_name != 'Weekday Rate':
+				# 			# define each of every rate breakdown amount. If room stay discount exist, apply the discount
+				# 			rrbd_rate_amount = amount_multiplier * float(rrbd_item.breakdown_amount) * float(rrbd_item.breakdown_qty)
+				# 			# Create Journal Entry
+				# 			doc_journal_entry = frappe.new_doc('Journal Entry')
+				# 			doc_journal_entry.title = rrbd_item.breakdown_name + ' of Auto Room Charge:' + reservation_id + ': ' + room_name
+				# 			doc_journal_entry.voucher_type = 'Journal Entry'
+				# 			doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+				# 			doc_journal_entry.posting_date = datetime.date.today()
+				# 			doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+				# 			doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+				# 			doc_journal_entry.remark = rrbd_remark
+				# 			doc_journal_entry.user_remark = rrbd_remark
+				# 			# Journal Entry Account: Debit
+				# 			doc_debit = frappe.new_doc('Journal Entry Account')
+				# 			doc_debit.account = rrbd_item.breakdown_account
+				# 			doc_debit.debit = rrbd_rate_amount
+				# 			doc_debit.debit_in_account_currency = rrbd_rate_amount
+				# 			doc_debit.party_type = 'Customer'
+				# 			doc_debit.party = cust_name
+				# 			doc_debit.user_remark = rrbd_remark
+				# 			# Journal Entry Account: Credit
+				# 			doc_credit = frappe.new_doc('Journal Entry Account')
+				# 			doc_credit.account = je_credit_account
+				# 			doc_credit.credit = rrbd_rate_amount
+				# 			doc_credit.party_type = 'Customer'
+				# 			doc_credit.party = cust_name
+				# 			doc_credit.credit_in_account_currency = rrbd_rate_amount
+				# 			doc_credit.user_remark = rrbd_remark
+				# 			# Append debit and credit to Journal Account
+				# 			doc_journal_entry.append('accounts', doc_debit)
+				# 			doc_journal_entry.append('accounts', doc_credit)
+				# 			# Save and Submit Journal Entry
+				# 			doc_journal_entry.save()
+				# 			doc_journal_entry.submit()
 
 				# Create Folio Transaction of Room Charge
 				folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
@@ -501,7 +503,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 	# Create Journal Entry for Room Bill Paid Change if there is any Change
 	if float(doc_rbpd.rbpd_rounded_change_amount) > 0:
 		rbpd_change_remark = "Change from " + doc_rbpd.name
-		kas_besar = frappe.db.get_list('Account', filters={'account_number': '1111.002'})[0].name
+		kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
 		piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 
 		change_doc_journal_entry = frappe.new_doc('Journal Entry')
@@ -517,14 +519,15 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		change_doc_debit.debit = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_debit.debit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_debit.user_remark = rbpd_change_remark
-		change_doc_debit.party_type = 'Customer'
-		change_doc_debit.party = reservation.customer_id
+
 
 		change_doc_credit = frappe.new_doc('Journal Entry Account')
-		change_doc_credit.account = kas_besar
+		change_doc_credit.account = kas_kecil
 		change_doc_credit.credit = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_credit.credit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_credit.user_remark = rbpd_change_remark
+		change_doc_credit.party_type = 'Customer'
+		change_doc_credit.party = reservation.customer_id
 		change_doc_journal_entry.append('accounts', change_doc_debit)
 		change_doc_journal_entry.append('accounts', change_doc_credit)
 
@@ -534,9 +537,10 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		change_doc_folio_transaction = frappe.new_doc('Folio Transaction')
 		change_doc_folio_transaction.folio_id = doc_folio.name
 		change_doc_folio_transaction.amount = doc_rbpd.rbpd_rounded_change_amount
+		change_doc_folio_transaction.amount_after_tax = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_folio_transaction.flag = 'Debit'
 		change_doc_folio_transaction.account_id = piutang_lain2
-		change_doc_folio_transaction.against_account_id = kas_besar
+		change_doc_folio_transaction.against_account_id = kas_kecil
 		change_doc_folio_transaction.remark = rbpd_change_remark
 		change_doc_folio_transaction.is_void = 0
 
@@ -580,6 +584,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 			doc_folio_transaction = frappe.new_doc('Folio Transaction')
 			doc_folio_transaction.folio_id = doc_folio.name
 			doc_folio_transaction.amount = amount
+			doc_folio_transaction.amount_after_tax = amount
 			doc_folio_transaction.flag = 'Credit'
 			doc_folio_transaction.account_id = credit_account_name
 			doc_folio_transaction.against_account_id = debit_account_name
