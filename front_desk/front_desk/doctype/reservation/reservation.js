@@ -235,7 +235,6 @@ frappe.ui.form.on('Reservation', {
 	},
 	is_round_change_amount: function(frm, cdt, cdn) {
 		var rbp_list = frappe.get_doc( 'Reservation', reservation.name ).room_bill_payments;
-		console.log("round change changed")
 		calculateRoomBillPayments(frm, rbp_list);
 	},
 	make_payment: function(frm, cdt, cdn) {
@@ -251,7 +250,6 @@ frappe.ui.form.on('Reservation', {
 				rounded_change_amount: frm.doc.rbp_rounded_change_amount,
 			},
 			callback: (response) => {
-				console.log(response.message);
 				frm.set_value('room_bill_amount', response.message);
 				frm.save();
 			}
@@ -371,6 +369,12 @@ frappe.ui.form.on('Room Stay', {
 
 		manage_form_render('room_stay');
 		manage_filter('', 'room_stay');
+		if (child.__islocal == 1) {
+			frappe.meta.get_docfield('Room Stay', 'section_break_2', reservation.name).hidden = true;
+		}
+		else {
+			frappe.meta.get_docfield('Room Stay', 'section_break_2', reservation.name).hidden = false;
+		}
 	},
 	arrival: function (frm, cdt, cdn) {
 		manage_filter('arrival', 'room_stay');
@@ -461,7 +465,6 @@ frappe.ui.form.on("Room Bill Payments", {
 			}
 		}
 		else {
-			console.log("masuk sini dong");
 			calculateRoomBillPayments(frm, rbp_list);
 			roomBillCashCount(frm, rbp_list);
 		}
