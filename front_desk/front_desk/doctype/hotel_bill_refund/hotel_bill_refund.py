@@ -8,3 +8,7 @@ from frappe.model.document import Document
 
 class HotelBillRefund(Document):
 	pass
+
+@frappe.whitelist()
+def get_value_by_desc(desc, field):
+    return frappe.db.get_value('Hotel Bill Refund', {'refund_description': desc}, [field])

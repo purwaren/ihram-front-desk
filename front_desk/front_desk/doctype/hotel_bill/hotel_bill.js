@@ -23,6 +23,7 @@ frappe.ui.form.on('Hotel Bill', {
 					callback: (r) => {
 						if (r.message) {
                             	frappe.msgprint(__(r.message)); return;
+                            	frm.reload_doc();
 						}
 					}
 				});
@@ -46,6 +47,7 @@ frappe.ui.form.on('Hotel Bill', {
 	use_deposit: function(frm, cdt, cdn) {
 		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
 		calculatePayments(frm, bp_list);
+		calculateDepositRefund(frm);
 	},
 	round_down_change: function(frm, cdt, cdn) {
 		var bp_list = frappe.get_doc( 'Hotel Bill', frm.doc.name ).bill_payments;
@@ -129,4 +131,73 @@ function calculatePayments(frm, bp_list) {
 			}
 		}
 	}
+}
+
+function calculateDepositRefund(frm) {
+	let deposit_description = 'Deposit Refund of Reservation: ' + frm.doc.reservation_id;
+	frappe.call({
+		method: "front_desk.front_desk.doctype.hotel_bill_refund.hotel_bill_refund.get_value_by_desc",
+		args: {
+			desc: deposit_description,
+			field: 'name'
+		},
+		callback: (r) => {
+			let child = locals['Hotel Bill Refund'][r.message];
+			let bill_amount = frm.doc.bill_grand_total;
+			let deposit_amount = frm.doc.bill_deposit_amount;
+			var account = '';
+			var account_against = '';
+
+			if (frm.doc.use_deposit == 1) {
+				if (deposit_amount > bill_amount) {
+					child.refund_amount = deposit_amount - bill_amount;
+					frm.refresh_field('bill_refund');
+				}
+				else {
+					if (child != undefined){
+						child.refund_amount = 0;
+						frm.refresh_field('bill_refund');
+					}
+					else {
+						var tbl = frm.doc.bill_refund || [];
+						var i = tbl.length;
+						while (i--) {
+							if (tbl[i].refund_description == deposit_description) {
+								frm.get_field("bill_refund").grid.grid_rows[i].remove();
+							}
+						}
+						frm.refresh_field('bill_refund');
+					}
+				}
+			} else {
+				if (child != undefined) {
+					child.refund_amount = deposit_amount;
+					frm.refresh_field('bill_refund');
+				}
+				else {
+					frappe.call({
+						method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
+						args: {type: 'account'},
+						callback: (account) => {
+							account = account.message;
+							frappe.call({
+								method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
+								args: {type: 'against'},
+								callback: (against) => {
+									account_against = against.message;
+									var new_child = frm.add_child('bill_refund');
+									new_child.refund_description = deposit_description;
+									new_child.refund_amount = deposit_amount;
+									new_child.is_refunded = 0;
+									new_child.account = account;
+									new_child.account_against = account_against;
+									frm.refresh_field('bill_refund');
+								}
+							});
+						}
+					});
+				}
+			}
+		}
+	});
 }

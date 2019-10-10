@@ -346,6 +346,24 @@ def create_hotel_bill(reservation_id):
 
 			this_hotel_bill.append('bill_refund', refund_item)
 			this_hotel_bill.save()
+	else:
+		refund_description = 'Deposit Refund of Reservation: ' + str(this_hotel_bill.reservation_id)
+		exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
+												  {'parent': this_hotel_bill.name,
+												   'refund_description': refund_description})
+		if exist_this_refund_item:
+			refund_list = this_hotel_bill.get('bill_refund')
+			for item in refund_list:
+				if item.name == exist_this_refund_item:
+					refund_list.remove(item)
+					this_hotel_bill.save()
 
 def get_mode_of_payment_account(mode_of_payment_id, company_name):
 	return frappe.db.get_value('Mode of Payment Account', {'parent': mode_of_payment_id, 'company': company_name}, "default_account")
+
+@frappe.whitelist()
+def deposit_refund_account(type):
+	if type == 'account':
+		return frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+	elif type == 'against':
+		return frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
