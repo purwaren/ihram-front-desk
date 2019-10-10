@@ -380,7 +380,29 @@ frappe.ui.form.on('Room Stay', {
 		manage_filter('arrival', 'room_stay');
 	},
 	departure: function (frm, cdt, cdn) {
-		manage_filter('departure', 'room_stay');
+		child = locals[cdt][cdn];
+		frappe.call({
+			method: "front_desk.front_desk.doctype.room_stay.room_stay.get_value",
+			args: {
+				room_stay_id: child.name,
+				field: 'departure'
+			},
+			callback: (r) => {
+				 console.log("old departure: "+ r.message);
+				 console.log("new departure: "+ child.departure);
+				if (r.message < child.departure) {
+					child.departure = r.message;
+					frm.refresh_field('room_stay');
+					frappe.msgprint("Please create New Room Stay instead of extending Departure date.");
+				}
+				else {
+					child.old_departure = r.message;
+					child.is_need_refund = 1;
+					manage_filter('departure', 'room_stay');
+
+				}
+			}
+		});
 	},
 	allow_smoke: function(frm, cdt, cdn) {
 		manage_filter('allow_smoke', 'room_stay');
@@ -433,6 +455,8 @@ frappe.ui.form.on('Room Stay', {
 		}
 	},
 	room_rate: function(frm, cdt, cdn) {
+		let child = locals[cdt][cdn];
+		let old_total_bill_amount = child.total_bill_amount;
 		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
 			frappe.call({
 				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
@@ -443,7 +467,11 @@ frappe.ui.form.on('Room Stay', {
 					discount: child.discount_percentage,
 				},
 				callback: (response) => {
+					if (old_total_bill_amount > 0) {
+						child.old_total_bill_amount = old_total_bill_amount;
+					}
 					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
 				}
 			});
 		}
@@ -585,6 +613,10 @@ function set_all_field_read_only(doc_field, flag) {
 	for (var i = 0; i < x; i++) {
 		fields[i].read_only = flag;
 	}
+	frappe.meta.get_docfield('Room Stay', 'total_bill_amount', reservation.name).read_only = true;
+	frappe.meta.get_docfield('Room Stay', 'is_need_refund', reservation.name).read_only = true;
+	frappe.meta.get_docfield('Room Stay', 'old_departure', reservation.name).read_only = true;
+	frappe.meta.get_docfield('Room Stay', 'old_total_bill_amount', reservation.name).read_only = true;
 
 	cur_frm.refresh_field(doc_field);
 }

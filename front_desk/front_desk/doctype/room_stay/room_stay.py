@@ -192,3 +192,7 @@ def calculate_room_stay_bill(arrival, departure, room_rate_id, discount):
     total_rate = (float(weekday) * rate_weekday_taxed) + (float(weekend) * rate_weekend_taxed)
 
     return total_rate
+
+@frappe.whitelist()
+def get_value(room_stay_id, field):
+    return frappe.db.get_value('Room Stay', room_stay_id, [field])
