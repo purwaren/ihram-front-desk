@@ -11,6 +11,7 @@ from front_desk.front_desk.doctype.folio.folio import get_deposit_amount
 from front_desk.front_desk.doctype.folio.folio import copy_trx_from_sales_invoice_to_folio_transaction
 from front_desk.front_desk.doctype.room_stay.room_stay import add_early_checkin
 from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
+from front_desk.front_desk.doctype.room_stay.room_stay import checkout_early_refund
 
 class HotelBill(Document):
 	pass
@@ -101,6 +102,7 @@ def create_additional_charge(reservation_id):
 
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
 				doc_folio_transaction.folio_id = doc_folio.name
+				doc_folio_transaction.amount_after_tax = ac_item.ac_amount
 				doc_folio_transaction.amount = ac_item.ac_amount
 				doc_folio_transaction.flag = 'Debit'
 				doc_folio_transaction.account_id = je_debit_account
@@ -119,6 +121,7 @@ def update_hotel_bill(reservation_id):
 	return "Hotel Bill " + bill_name + " Updated."
 
 def create_hotel_bill(reservation_id):
+	deposit_refund_amount = 0
 	exist_bill = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
 
 	doc_folio = frappe.get_doc('Folio', frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name']))
@@ -307,6 +310,42 @@ def create_hotel_bill(reservation_id):
 
 		# save all hotel bill breakdown to the hotel bill
 		doc_hotel_bill.save()
+
+	# Check if any checkout early type of refund
+	room_stay_list = frappe.get_all('Room Stay', filters={"reservation_id": reservation_id}, fields=["*"])
+	if len(room_stay_list) > 0:
+		for rs_item in room_stay_list:
+			checkout_early_refund(rs_item.name)
+
+	# Check deposit refund
+	this_hotel_bill = frappe.get_doc("Hotel Bill", exist_bill)
+	if this_hotel_bill.use_deposit == 1:
+		if this_hotel_bill.bill_deposit_amount > this_hotel_bill.bill_grand_total:
+			deposit_refund_amount = this_hotel_bill.bill_deposit_amount - this_hotel_bill.bill_grand_total
+		else:
+			deposit_refund_amount = 0
+	else:
+		deposit_refund_amount = this_hotel_bill.bill_deposit_amount
+
+	if deposit_refund_amount > 0:
+		refund_description = 'Deposit Refund of Reservation: ' + str(this_hotel_bill.reservation_id)
+		kas_deposit_customer = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+		kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+
+		exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
+												  {'parent': this_hotel_bill.name,
+												   'refund_description': refund_description})
+		if not exist_this_refund_item:
+			refund_item = frappe.new_doc('Hotel Bill Refund')
+			refund_item.naming_series = 'FO-BILL-RFND-.YYYY.-'
+			refund_item.refund_amount = deposit_refund_amount
+			refund_item.refund_description = refund_description
+			refund_item.is_refunded = 0
+			refund_item.account = kas_fo
+			refund_item.account_against = kas_deposit_customer
+
+			this_hotel_bill.append('bill_refund', refund_item)
+			this_hotel_bill.save()
 
 def get_mode_of_payment_account(mode_of_payment_id, company_name):
 	return frappe.db.get_value('Mode of Payment Account', {'parent': mode_of_payment_id, 'company': company_name}, "default_account")
