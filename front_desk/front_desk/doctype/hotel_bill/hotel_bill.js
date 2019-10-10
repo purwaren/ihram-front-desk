@@ -154,20 +154,14 @@ function calculateDepositRefund(frm) {
 					frm.refresh_field('bill_refund');
 				}
 				else {
-					if (child != undefined){
-						child.refund_amount = 0;
-						frm.refresh_field('bill_refund');
-					}
-					else {
-						var tbl = frm.doc.bill_refund || [];
-						var i = tbl.length;
-						while (i--) {
-							if (tbl[i].refund_description == deposit_description) {
-								frm.get_field("bill_refund").grid.grid_rows[i].remove();
-							}
+					var tbl = frm.doc.bill_refund || [];
+					var i = tbl.length;
+					while (i--) {
+						if (tbl[i].refund_description == deposit_description) {
+							frm.get_field("bill_refund").grid.grid_rows[i].remove();
 						}
-						frm.refresh_field('bill_refund');
 					}
+					frm.refresh_field('bill_refund');
 				}
 			} else {
 				if (child != undefined) {

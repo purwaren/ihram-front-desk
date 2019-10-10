@@ -390,17 +390,23 @@ frappe.ui.form.on('Room Stay', {
 			callback: (r) => {
 				 console.log("old departure: "+ r.message);
 				 console.log("new departure: "+ child.departure);
-				if (r.message < child.departure) {
-					child.departure = r.message;
-					frm.refresh_field('room_stay');
-					frappe.msgprint("Please create New Room Stay instead of extending Departure date.");
-				}
-				else {
-					child.old_departure = r.message;
-					child.is_need_refund = 1;
-					manage_filter('departure', 'room_stay');
+				 if (r.message != undefined) {
+				 	if (r.message < child.departure) {
+						child.departure = r.message;
+						frm.refresh_field('room_stay');
+						frappe.msgprint("Please create New Room Stay instead of extending Departure date.");
+					}
+					else {
+						child.old_departure = r.message;
+						child.is_need_refund = 1;
+						manage_filter('departure', 'room_stay');
 
-				}
+					}
+				 }
+				 else {
+				 	manage_filter('departure', 'room_stay');
+				 }
+
 			}
 		});
 	},
