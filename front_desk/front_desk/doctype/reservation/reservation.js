@@ -145,23 +145,23 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
-			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
-			// 		args: {
-			// 			reservation_id: reservation.name
-			// 		}
-			// 	});
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
-			// 		args: {
-			// 			reservation_id: reservation.name
-			// 		}
-			// 	});
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
-			// 	});
-			// });
+			frm.add_custom_button(__("Trigger Auto Charges"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
+					args: {
+						reservation_id: reservation.name
+					}
+				});
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
+					args: {
+						reservation_id: reservation.name
+					}
+				});
+				frappe.call({
+					method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
+				});
+			});
 
 			// frm.add_custom_button(__("Print Receipt"), function() {
     		// 	frappe.call({
@@ -394,14 +394,64 @@ frappe.ui.form.on('Room Stay', {
 				 if (r.message != undefined) {
 				 	if (r.message < child.departure) {
 						child.departure = r.message;
+						child.is_need_refund = 0;
+						child.old_departure = null;
+						child.old_total_bill_amount = 0;
 						frm.refresh_field('room_stay');
 						frappe.msgprint("Please create New Room Stay instead of extending Departure date.");
+					}
+				 	else if (r.message == child.departure) {
+				 		frm.reload_doc();
+					}
+				 	else if (child.departure < frappe.datetime.get_today()) {
+				 		child.departure = r.message;
+				 		child.is_need_refund = 0;
+						child.old_departure = null;
+						child.old_total_bill_amount = 0;
+						frm.refresh_field('room_stay');
+						frappe.msgprint("Departure date must be greater today.");
+					}
+				 	else if (child.departure < child.arrival) {
+				 		child.departure = r.message;
+				 		child.is_need_refund = 0;
+						child.old_departure = null;
+						child.old_total_bill_amount = 0;
+						frm.refresh_field('room_stay');
+						frappe.msgprint("Departure date must be greater than Arrival date.");
 					}
 					else {
 						child.old_departure = r.message;
 						child.is_need_refund = 1;
-						manage_filter('departure', 'room_stay');
-
+						frappe.call({
+							method: "front_desk.front_desk.doctype.room_stay.room_stay.get_value",
+							args: {
+								room_stay_id: child.name,
+								field: 'total_bill_amount'
+							},
+							callback: (resp) => {
+								if (resp.message) {
+									let old_total_bill_amount = resp.message;
+									if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
+										frappe.call({
+											method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+											args: {
+												arrival: child.arrival,
+												departure: child.departure,
+												room_rate_id: child.room_rate,
+												discount: child.discount_percentage,
+											},
+											callback: (response) => {
+												if (old_total_bill_amount > 0) {
+													child.old_total_bill_amount = old_total_bill_amount;
+												}
+												child.total_bill_amount = response.message;
+												frm.refresh_field('room_stay');
+											}
+										});
+									}
+								}
+							}
+						});
 					}
 				 }
 				 else {
