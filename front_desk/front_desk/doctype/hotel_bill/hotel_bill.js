@@ -13,30 +13,37 @@ frappe.ui.form.on('Hotel Bill', {
 		frm.get_field("bill_breakdown").grid.only_sortable();
 		if (frm.doc.is_paid == 1) {
 			set_all_read_only();
+			frm.disable_save();
 		}
 	},
 	onload_post_render(frm, cdt, cdn) {
 		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
 		calculatePayments(frm, bp_list);
 		calculateDepositRefund(frm);
-		frm.add_custom_button(__("Update Billing"), function () {
-			frappe.call({
-				method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.update_hotel_bill",
-				args: {
-					reservation_id: frm.doc.reservation_id
-				},
-				callback: (r) => {
-					if (r.message) {
-							frappe.msgprint(__(r.message)); return;
-							frm.reload_doc();
-					}
-				}
-			});
-		});
 	},
 	refresh: function(frm, cdt, cdn) {
 		var x = frappe.get_doc(cdt, cdn).bill_breakdown;
 		x.forEach(hideBreakdown);
+		if (frm.doc.is_paid == 0) {
+			frm.set_intro(__('Remember to always save the Hotel Bill after every change.'));
+			frm.set_intro(__('If there are any billing not yet showing, click the \'Update Billing\' button to trigger the billing update.'));
+			frm.set_footnote(__('To finalize the payment, click the \'Make Payment\' button. ' +
+				'Once the payment finalized, the Hotel Bill cannot be changed anymore.'));
+			frm.add_custom_button(__("Update Billing"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.update_hotel_bill",
+					args: {
+						reservation_id: frm.doc.reservation_id
+					},
+					callback: (r) => {
+						if (r.message) {
+								frappe.show_alert(__(r.message)); return;
+								frm.reload_doc();
+						}
+					}
+				});
+			});
+		}
 	},
 	bill_toggle_details: function(frm, cdt, cdn) {
 		bill_breakdown = frappe.get_doc(cdt, cdn).bill_breakdown;
@@ -84,6 +91,23 @@ frappe.ui.form.on('Hotel Bill Payments', {
 	bill_payments_remove: function (frm, cdt, cdn) {
 		var bp_list = frappe.get_doc( 'Hotel Bill', frm.doc.name ).bill_payments;
 		calculatePayments(frm, bp_list);
+	}
+});
+
+frappe.ui.form.on ('Hotel Bill Refund', {
+	bill_refund_add: function (frm, cdt, cdn) {
+		let child = locals[cdt][cdn];
+		frappe.call({
+			method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
+			args: {type: 'account'},
+			callback: (resp) => {
+				if (resp.message) {
+					account = resp.message;
+					child.account = account;
+					frm.refresh_field('bill_refund');
+				}
+			}
+		});
 	}
 });
 
@@ -152,25 +176,30 @@ function calculateDepositRefund(frm) {
 		callback: (r) => {
 			if (r.message) {
 				let child = locals['Hotel Bill Refund'][r.message];
-				if (frm.doc.use_deposit == 1) {
-					if (deposit_amount > bill_amount) {
-						child.refund_amount = deposit_amount - bill_amount;
-						frm.refresh_field('bill_refund');
-					}
-					else {
-						let tbl = frm.doc.bill_refund || [];
-						let i = tbl.length;
-						while (i--) {
-							if (tbl[i].refund_description == deposit_description) {
-								frm.get_field("bill_refund").grid.grid_rows[i].remove();
-							}
-						}
-						frm.refresh_field('bill_refund');
-					}
+				if (child == undefined) {
+					frm.reload_doc();
 				}
 				else {
-					child.refund_amount = deposit_amount;
-					frm.refresh_field('bill_refund');
+					if (frm.doc.use_deposit == 1) {
+						if (deposit_amount > bill_amount) {
+							child.refund_amount = deposit_amount - bill_amount;
+							frm.refresh_field('bill_refund');
+						}
+						else {
+							let tbl = frm.doc.bill_refund || [];
+							let i = tbl.length;
+							while (i--) {
+								if (tbl[i].refund_description == deposit_description) {
+									frm.get_field("bill_refund").grid.grid_rows[i].remove();
+								}
+							}
+							frm.refresh_field('bill_refund');
+						}
+					}
+					else {
+						child.refund_amount = deposit_amount;
+						frm.refresh_field('bill_refund');
+					}
 				}
 			}
 
@@ -184,6 +213,7 @@ function calculateDepositRefund(frm) {
 					}
 				}
 				if (deposit_refund_exist_not_saved_yet_id != null) {
+					console.log("masuk ada ghost child");
 					let ghost_child = locals['Hotel Bill Refund'][deposit_refund_exist_not_saved_yet_id];
 					if (frm.doc.use_deposit == 1) {
 						if (deposit_amount > bill_amount) {
@@ -207,8 +237,11 @@ function calculateDepositRefund(frm) {
 					}
 				}
 				else {
+					console.log("masuk di tidak ada ghost child");
 					if (frm.doc.use_deposit == 1) {
+						console.log("masuk ke use_deposit == 1");
 						if (deposit_amount > bill_amount) {
+							console.log("masuk ke deposit amount > bill_amount");
 							frappe.call({
 								method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
 								args: {type: 'account'},
@@ -237,6 +270,7 @@ function calculateDepositRefund(frm) {
 						}
 					}
 					else {
+						console.log("masuk ke use_deposit == 0");
 						frappe.call({
 							method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
 							args: {type: 'account'},

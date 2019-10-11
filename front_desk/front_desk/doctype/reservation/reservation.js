@@ -252,6 +252,7 @@ frappe.ui.form.on('Reservation', {
 			callback: (response) => {
 				frm.set_value('room_bill_amount', response.message);
 				frm.save();
+				frappe.show_alert("Room Bill Payment successfully made. Please check <b>ROOM PAYMENT HISTORY</b> for the details.")
 			}
 		});
 		MakePaymentButtonStatus(frm, cdt,cdn);

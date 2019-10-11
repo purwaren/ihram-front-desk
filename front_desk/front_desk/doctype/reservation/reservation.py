@@ -606,6 +606,4 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		if not room_stay_item.room_bill_paid_id:
 			updated_room_bill_amount = updated_room_bill_amount + room_stay_item.total_bill_amount
 
-	frappe.msgprint("Room Payment Saved")
-
 	return updated_room_bill_amount
