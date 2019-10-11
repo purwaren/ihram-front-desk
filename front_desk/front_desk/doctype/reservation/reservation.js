@@ -218,7 +218,7 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('room_bill_payments', 'hidden', 1);
 			frm.set_df_property('additional_charge_section', 'hidden', 1);
 			frm.set_df_property('additional_charge', 'hidden', 1);
-			 frm.set_df_property('room_bill_paid_section', 'hidden', 1);
+			frm.set_df_property('room_bill_paid_section', 'hidden', 1);
             frm.set_df_property('room_bill_paid', 'hidden', 1);
 		}
 

@@ -11,6 +11,9 @@ var cash_used_in_hotel_bill_payment = false;
 frappe.ui.form.on('Hotel Bill', {
 	onload: function(frm) {
 		frm.get_field("bill_breakdown").grid.only_sortable();
+		if (frm.doc.is_paid == 1) {
+			set_all_read_only();
+		}
 	},
 	onload_post_render(frm, cdt, cdn) {
 		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
@@ -264,4 +267,21 @@ function calculateDepositRefund(frm) {
 			}
 		}
 	});
+}
+function set_all_read_only() {
+	cur_frm.set_df_property('use_deposit', 'read_only', 1);
+	cur_frm.get_field("bill_refund").grid.only_sortable();
+	cur_frm.get_field("bill_payments").grid.only_sortable();
+	cur_frm.set_df_property('round_down_change', 'read_only', 1);
+
+	frappe.meta.get_docfield('Hotel Bill Refund', 'refund_description', cur_frm.docname).read_only = true;
+	frappe.meta.get_docfield('Hotel Bill Refund', 'refund_amount', cur_frm.docname).read_only = true;
+	frappe.meta.get_docfield('Hotel Bill Refund', 'account', cur_frm.docname).read_only = true;
+
+	frappe.meta.get_docfield('Hotel Bill Payments', 'mode_of_payment', cur_frm.docname).read_only = true;
+	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_amount', cur_frm.docname).read_only = true;
+	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_reference_no', cur_frm.docname).read_only = true;
+	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_reference_date', cur_frm.docname).read_only = true;
+	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_clearance_date', cur_frm.docname).read_only = true;
+
 }
