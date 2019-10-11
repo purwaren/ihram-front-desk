@@ -379,9 +379,28 @@ frappe.ui.form.on('Room Stay', {
 	},
 	arrival: function (frm, cdt, cdn) {
 		manage_filter('arrival', 'room_stay');
+		let child = locals[cdt][cdn];
+		if (child.arrival < frappe.datetime.get_today()) {
+			child.arrival = frappe.datetime.now_datetime();
+			frm.refresh_field('room_stay');
+			frappe.msgprint("Arrival date must be greater today.");
+		}
 	},
 	departure: function (frm, cdt, cdn) {
-		child = locals[cdt][cdn];
+		let child = locals[cdt][cdn];
+		if (child.__islocal == 1) {
+			if (child.departure < frappe.datetime.get_today()) {
+				child.departure = null;
+				frm.refresh_field('room_stay');
+				frappe.msgprint("Arrival date must be greater than today.");
+			}
+			else if (child.departure < child.arrival) {
+				child.departure = null;
+				frm.refresh_field('room_stay');
+				frappe.msgprint("Departure date must be greater than Arrival date.");
+			}
+		}
+
 		frappe.call({
 			method: "front_desk.front_desk.doctype.room_stay.room_stay.get_value",
 			args: {
@@ -389,8 +408,6 @@ frappe.ui.form.on('Room Stay', {
 				field: 'departure'
 			},
 			callback: (r) => {
-				 console.log("old departure: "+ r.message);
-				 console.log("new departure: "+ child.departure);
 				 if (r.message != undefined) {
 				 	if (r.message < child.departure) {
 						child.departure = r.message;
@@ -409,7 +426,7 @@ frappe.ui.form.on('Room Stay', {
 						child.old_departure = null;
 						child.old_total_bill_amount = 0;
 						frm.refresh_field('room_stay');
-						frappe.msgprint("Departure date must be greater today.");
+						frappe.msgprint("Departure date must be greater than today.");
 					}
 				 	else if (child.departure < child.arrival) {
 				 		child.departure = r.message;
@@ -457,7 +474,6 @@ frappe.ui.form.on('Room Stay', {
 				 else {
 				 	manage_filter('departure', 'room_stay');
 				 }
-
 			}
 		});
 	},
