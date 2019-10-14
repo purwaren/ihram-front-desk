@@ -136,227 +136,234 @@ def create_hotel_bill(reservation_id):
 	folio_trx_list = frappe.get_all('Folio Transaction', filters={'folio_id': doc_folio.name, 'flag': 'Debit'},
 									fields=["*"])
 
-	if not exist_bill:
+	customer_deposit = get_deposit_amount(reservation_id)
+
+	if not exist_bill and float(customer_deposit) > 0:
 		new_doc_hotel_bill = frappe.new_doc('Hotel Bill')
 		new_doc_hotel_bill.naming_series = 'FO-BILL-.YYYY.-'
 		new_doc_hotel_bill.reservation_id = reservation_id
 		new_doc_hotel_bill.customer_id = frappe.get_doc('Reservation', reservation_id).customer_id
-		new_doc_hotel_bill.bill_deposit_amount = get_deposit_amount(reservation_id)
+		new_doc_hotel_bill.bill_deposit_amount = customer_deposit
 		new_doc_hotel_bill.save()
 		exist_bill = new_doc_hotel_bill.name
+	else:
+		frappe.msgprint("Please Make Customer Deposit First")
 
-	for item in folio_trx_list:
-		doc_hotel_bill = frappe.get_doc("Hotel Bill", {'name': exist_bill})
-		kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+	if exist_bill:
+		for item in folio_trx_list:
+			doc_hotel_bill = frappe.get_doc("Hotel Bill", {'name': exist_bill})
+			kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 
-		# Input if only there is no record of this folio_trx in the hotell billing yet
-		if not frappe.db.exists('Hotel Bill Breakdown', {'parent': exist_bill, 'billing_folio_trx_id': item.name}):
-			# Input the folio trx with type of sales invoice
-			if item.sales_invoice_id:
-				sales_invoice = frappe.get_doc('Sales Invoice', item.sales_invoice_id)
-				# Input the sales invoice item first
-				si_doc_item = frappe.new_doc("Hotel Bill Breakdown")
-				si_doc_item.is_tax_item = 0
-				si_doc_item.is_folio_trx_pairing = 1
-				si_doc_item.billing_folio_trx_id = item.name
-				si_doc_item.breakdown_description = item.remark
-				si_doc_item.breakdown_net_total = item.amount
-				si_doc_item.breakdown_tax_id = sales_invoice.taxes_and_charges  # masih null
-				si_doc_item.breakdown_tax_amount = sales_invoice.total_taxes_and_charges
-				si_doc_item.breakdown_grand_total = sales_invoice.grand_total
-				# folio accounts are from the Customer's side, needed to flip it in Hotel Bill Breakdown
-				si_doc_item.breakdown_account = item.against_account_id
-				si_doc_item.breakdown_account_against = item.account_id
-				doc_hotel_bill.append('bill_breakdown', si_doc_item)
+			# Input if only there is no record of this folio_trx in the hotell billing yet
+			if not frappe.db.exists('Hotel Bill Breakdown', {'parent': exist_bill, 'billing_folio_trx_id': item.name}):
+				# Input the folio trx with type of sales invoice
+				if item.sales_invoice_id:
+					sales_invoice = frappe.get_doc('Sales Invoice', item.sales_invoice_id)
+					# Input the sales invoice item first
+					si_doc_item = frappe.new_doc("Hotel Bill Breakdown")
+					si_doc_item.is_tax_item = 0
+					si_doc_item.is_folio_trx_pairing = 1
+					si_doc_item.billing_folio_trx_id = item.name
+					si_doc_item.breakdown_description = item.remark
+					si_doc_item.breakdown_net_total = item.amount
+					si_doc_item.breakdown_tax_id = sales_invoice.taxes_and_charges  # masih null
+					si_doc_item.breakdown_tax_amount = sales_invoice.total_taxes_and_charges
+					si_doc_item.breakdown_grand_total = sales_invoice.grand_total
+					# folio accounts are from the Customer's side, needed to flip it in Hotel Bill Breakdown
+					si_doc_item.breakdown_account = item.against_account_id
+					si_doc_item.breakdown_account_against = item.account_id
+					doc_hotel_bill.append('bill_breakdown', si_doc_item)
 
-				# Input the tax item
-				if frappe.db.exists('Sales Taxes and Charges', {'parent': item.sales_invoice_id}):
-					sales_tax_charges = frappe.get_doc('Sales Taxes and Charges', {'parent': item.sales_invoice_id})
-					si_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
-					si_doc_tax_item.is_tax_item = 1
-					si_doc_tax_item.billing_folio_trx_id = item.name
-					si_doc_tax_item.breakdown_grand_total = sales_invoice.total_taxes_and_charges
-					si_doc_tax_item.breakdown_account = sales_tax_charges.account_head
-					# si_doc_tax_item.breakdown_account_against = doc_hotel_bill.customer_id
-					si_doc_tax_item.breakdown_description = sales_tax_charges.description + ' of ' + item.sales_invoice_id
-					doc_hotel_bill.append('bill_breakdown', si_doc_tax_item)
+					# Input the tax item
+					if frappe.db.exists('Sales Taxes and Charges', {'parent': item.sales_invoice_id}):
+						sales_tax_charges = frappe.get_doc('Sales Taxes and Charges', {'parent': item.sales_invoice_id})
+						si_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
+						si_doc_tax_item.is_tax_item = 1
+						si_doc_tax_item.billing_folio_trx_id = item.name
+						si_doc_tax_item.breakdown_grand_total = sales_invoice.total_taxes_and_charges
+						si_doc_tax_item.breakdown_account = sales_tax_charges.account_head
+						# si_doc_tax_item.breakdown_account_against = doc_hotel_bill.customer_id
+						si_doc_tax_item.breakdown_description = sales_tax_charges.description + ' of ' + item.sales_invoice_id
+						doc_hotel_bill.append('bill_breakdown', si_doc_tax_item)
 
-			# Input the folio trx with type of auto room charge
-			elif item.room_rate:
-				room_rate = frappe.get_doc('Room Rate', item.room_rate)
-				room_stay = frappe.get_doc('Room Stay', item.room_stay_id)
-				if not room_stay.discount_percentage:
-					room_stay_discount = 0
-				else:
-					room_stay_discount = float(room_stay.discount_percentage)/100.0
-				amount_multiplier = 1 - room_stay_discount
-				room_rate_breakdown_list = room_rate.get('room_rate_breakdown')
-				bundle_tax_amount = 0
+				# Input the folio trx with type of auto room charge
+				elif item.room_rate:
+					room_rate = frappe.get_doc('Room Rate', item.room_rate)
+					room_stay = frappe.get_doc('Room Stay', item.room_stay_id)
+					if not room_stay.discount_percentage:
+						room_stay_discount = 0
+					else:
+						room_stay_discount = float(room_stay.discount_percentage)/100.0
+					amount_multiplier = 1 - room_stay_discount
+					room_rate_breakdown_list = room_rate.get('room_rate_breakdown')
+					bundle_tax_amount = 0
 
-				if is_this_weekday(item.creation):
-					rate_breakdown = frappe.get_doc('Room Rate Breakdown',
-													{'parent': item.room_rate, 'breakdown_name': 'Weekday Rate'})
-					description = "Weekday Rate of " + item.room_rate + ' + ' + rate_breakdown.breakdown_tax
-				else:
-					rate_breakdown = frappe.get_doc('Room Rate Breakdown',
-													{'parent': item.room_rate, 'breakdown_name': 'Weekend Rate'})
-					description = "Weekend Rate of " + item.room_rate + ' + ' + rate_breakdown.breakdown_tax
+					if is_this_weekday(item.creation):
+						rate_breakdown = frappe.get_doc('Room Rate Breakdown',
+														{'parent': item.room_rate, 'breakdown_name': 'Weekday Rate'})
+						description = "Weekday Rate of " + item.room_rate + ' + ' + rate_breakdown.breakdown_tax
+					else:
+						rate_breakdown = frappe.get_doc('Room Rate Breakdown',
+														{'parent': item.room_rate, 'breakdown_name': 'Weekend Rate'})
+						description = "Weekend Rate of " + item.room_rate + ' + ' + rate_breakdown.breakdown_tax
 
-				base_amount = rate_breakdown.breakdown_amount * amount_multiplier
-				breakdown_tax = rate_breakdown.breakdown_tax
-				room_rate_breakdown_account = rate_breakdown.breakdown_account
-				room_tb_id, room_tb_amount, room_tb_total = calculate_hotel_tax_and_charges(base_amount, breakdown_tax)
+					base_amount = rate_breakdown.breakdown_amount * amount_multiplier
+					breakdown_tax = rate_breakdown.breakdown_tax
+					room_rate_breakdown_account = rate_breakdown.breakdown_account
+					room_tb_id, room_tb_amount, room_tb_total = calculate_hotel_tax_and_charges(base_amount, breakdown_tax)
 
-				bundle_tax_amount = bundle_tax_amount + sum(room_tb_amount)
-				for rrbd_item in room_rate_breakdown_list:
-					if rrbd_item.breakdown_name != 'Weekend Rate' and rrbd_item.breakdown_name != 'Weekday Rate':
-						_, rrbd_tb_amount, _ = calculate_hotel_tax_and_charges(
-							amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
-						bundle_tax_amount = bundle_tax_amount + sum(rrbd_tb_amount)
+					bundle_tax_amount = bundle_tax_amount + sum(room_tb_amount)
+					for rrbd_item in room_rate_breakdown_list:
+						if rrbd_item.breakdown_name != 'Weekend Rate' and rrbd_item.breakdown_name != 'Weekday Rate':
+							_, rrbd_tb_amount, _ = calculate_hotel_tax_and_charges(
+								amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
+							bundle_tax_amount = bundle_tax_amount + sum(rrbd_tb_amount)
 
-				# input the Rate total corresponded to folio trx
-				rr_bundle_item = frappe.new_doc("Hotel Bill Breakdown")
-				rr_bundle_item.is_tax_item = 0
-				rr_bundle_item.is_folio_trx_pairing = 1
-				rr_bundle_item.is_excluded = 1 #excluded because of room bill payment in reservation.
-				rr_bundle_item.breakdown_description = item.remark
-				rr_bundle_item.breakdown_net_total = item.amount
-				rr_bundle_item.breakdown_tax_amount = bundle_tax_amount
-				rr_bundle_item.breakdown_grand_total = rr_bundle_item.breakdown_net_total + rr_bundle_item.breakdown_tax_amount
-				rr_bundle_item.breakdown_account = item.against_account_id
-				rr_bundle_item.breakdown_account_against = item.account_id
-				doc_hotel_bill.append('bill_breakdown', rr_bundle_item)
+					# input the Rate total corresponded to folio trx
+					rr_bundle_item = frappe.new_doc("Hotel Bill Breakdown")
+					rr_bundle_item.is_tax_item = 0
+					rr_bundle_item.is_folio_trx_pairing = 1
+					rr_bundle_item.is_excluded = 1 #excluded because of room bill payment in reservation.
+					rr_bundle_item.breakdown_description = item.remark
+					rr_bundle_item.breakdown_net_total = item.amount
+					rr_bundle_item.breakdown_tax_amount = bundle_tax_amount
+					rr_bundle_item.breakdown_grand_total = rr_bundle_item.breakdown_net_total + rr_bundle_item.breakdown_tax_amount
+					rr_bundle_item.breakdown_account = item.against_account_id
+					rr_bundle_item.breakdown_account_against = item.account_id
+					doc_hotel_bill.append('bill_breakdown', rr_bundle_item)
 
-				# Input the item room charge
-				rr_doc_item = frappe.new_doc("Hotel Bill Breakdown")
-				rr_doc_item.is_tax_item = 0
-				rr_doc_item.billing_folio_trx_id = item.name
-				rr_doc_item.breakdown_description = description
-				rr_doc_item.breakdown_net_total = base_amount
-				rr_doc_item.breakdown_tax_amount = sum(room_tb_amount)
-				rr_doc_item.breakdown_grand_total = room_tb_total[-1]
-				rr_doc_item.breakdown_tax_id = breakdown_tax
-				rr_doc_item.breakdown_account = room_rate_breakdown_account # cek account dari room rate breakdown most likely pendapatan kamar
-				rr_doc_item.breakdown_account_against = kas_dp_kamar
-				doc_hotel_bill.append('bill_breakdown', rr_doc_item)
+					# Input the item room charge
+					rr_doc_item = frappe.new_doc("Hotel Bill Breakdown")
+					rr_doc_item.is_tax_item = 0
+					rr_doc_item.billing_folio_trx_id = item.name
+					rr_doc_item.breakdown_description = description
+					rr_doc_item.breakdown_net_total = base_amount
+					rr_doc_item.breakdown_tax_amount = sum(room_tb_amount)
+					rr_doc_item.breakdown_grand_total = room_tb_total[-1]
+					rr_doc_item.breakdown_tax_id = breakdown_tax
+					rr_doc_item.breakdown_account = room_rate_breakdown_account # cek account dari room rate breakdown most likely pendapatan kamar
+					rr_doc_item.breakdown_account_against = kas_dp_kamar
+					doc_hotel_bill.append('bill_breakdown', rr_doc_item)
 
-				# input the tax item of room charge
-				for index, room_charge_tax_item_name in enumerate(room_tb_id):
-					hotel_tax_breakdown = frappe.get_doc('Hotel Tax Breakdown', room_charge_tax_item_name)
-					rr_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
-					rr_doc_tax_item.is_tax_item = 1
-					rr_doc_tax_item.breakdown_description = hotel_tax_breakdown.breakdown_description
-					rr_doc_tax_item.breakdown_grand_total = room_tb_amount[index]
-					rr_doc_tax_item.breakdown_account = hotel_tax_breakdown.breakdown_account # account dari tax
-					rr_doc_tax_item.breakdown_account_against = kas_dp_kamar
-					doc_hotel_bill.append('bill_breakdown', rr_doc_tax_item)
+					# input the tax item of room charge
+					for index, room_charge_tax_item_name in enumerate(room_tb_id):
+						hotel_tax_breakdown = frappe.get_doc('Hotel Tax Breakdown', room_charge_tax_item_name)
+						rr_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
+						rr_doc_tax_item.is_tax_item = 1
+						rr_doc_tax_item.breakdown_description = hotel_tax_breakdown.breakdown_description
+						rr_doc_tax_item.breakdown_grand_total = room_tb_amount[index]
+						rr_doc_tax_item.breakdown_account = hotel_tax_breakdown.breakdown_account # account dari tax
+						rr_doc_tax_item.breakdown_account_against = kas_dp_kamar
+						doc_hotel_bill.append('bill_breakdown', rr_doc_tax_item)
 
-				# input the other room rate charge besides room rate: e.g: breakfast, coffee break, etc
-				for rrbd_item in room_rate_breakdown_list:
-					if rrbd_item.breakdown_name != 'Weekend Rate' and rrbd_item.breakdown_name != 'Weekday Rate':
-						rrbd_tb_id, rrbd_tb_amount, rrbd_tb_total = calculate_hotel_tax_and_charges(
-							amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
+					# input the other room rate charge besides room rate: e.g: breakfast, coffee break, etc
+					for rrbd_item in room_rate_breakdown_list:
+						if rrbd_item.breakdown_name != 'Weekend Rate' and rrbd_item.breakdown_name != 'Weekday Rate':
+							rrbd_tb_id, rrbd_tb_amount, rrbd_tb_total = calculate_hotel_tax_and_charges(
+								amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty), rrbd_item.breakdown_tax)
 
-						# input the other charge
-						orr_doc_item = frappe.new_doc("Hotel Bill Breakdown")
-						orr_doc_item.is_tax_item = 0
-						orr_doc_item.billing_folio_trx_id = item.name
-						orr_doc_item.breakdown_description = str(
-							rrbd_item.breakdown_qty) + " " + rrbd_item.breakdown_name + " of " + item.room_rate + ' + ' + rrbd_item.breakdown_tax
-						orr_doc_item.breakdown_net_total = amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty)
-						orr_doc_item.breakdown_tax_amount = sum(rrbd_tb_amount)
-						orr_doc_item.breakdown_grand_total = rrbd_tb_total[-1]
-						orr_doc_item.breakdown_tax_id = rrbd_item.breakdown_tax
-						orr_doc_item.breakdown_account = rrbd_item.breakdown_account # cek account dari room rate breakdown
-						orr_doc_item.breakdown_account_against = kas_dp_kamar
-						doc_hotel_bill.append('bill_breakdown', orr_doc_item)
+							# input the other charge
+							orr_doc_item = frappe.new_doc("Hotel Bill Breakdown")
+							orr_doc_item.is_tax_item = 0
+							orr_doc_item.billing_folio_trx_id = item.name
+							orr_doc_item.breakdown_description = str(
+								rrbd_item.breakdown_qty) + " " + rrbd_item.breakdown_name + " of " + item.room_rate + ' + ' + rrbd_item.breakdown_tax
+							orr_doc_item.breakdown_net_total = amount_multiplier * rrbd_item.breakdown_amount * float(rrbd_item.breakdown_qty)
+							orr_doc_item.breakdown_tax_amount = sum(rrbd_tb_amount)
+							orr_doc_item.breakdown_grand_total = rrbd_tb_total[-1]
+							orr_doc_item.breakdown_tax_id = rrbd_item.breakdown_tax
+							orr_doc_item.breakdown_account = rrbd_item.breakdown_account # cek account dari room rate breakdown
+							orr_doc_item.breakdown_account_against = kas_dp_kamar
+							doc_hotel_bill.append('bill_breakdown', orr_doc_item)
 
-						# input the other charge tax item
-						for index, orr_tax_item_name in enumerate(rrbd_tb_id):
-							orr_hotel_tax_breakdown = frappe.get_doc('Hotel Tax Breakdown', orr_tax_item_name)
-							orr_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
-							orr_doc_tax_item.is_tax_item = 1
-							orr_doc_tax_item.breakdown_description = orr_hotel_tax_breakdown.breakdown_description
-							orr_doc_tax_item.breakdown_grand_total = rrbd_tb_amount[index]
-							orr_doc_tax_item.breakdown_account = orr_hotel_tax_breakdown.breakdown_account # cek account dari hotel tax
-							orr_doc_tax_item.breakdown_account_against = kas_dp_kamar
-							doc_hotel_bill.append('bill_breakdown', orr_doc_tax_item)
+							# input the other charge tax item
+							for index, orr_tax_item_name in enumerate(rrbd_tb_id):
+								orr_hotel_tax_breakdown = frappe.get_doc('Hotel Tax Breakdown', orr_tax_item_name)
+								orr_doc_tax_item = frappe.new_doc("Hotel Bill Breakdown")
+								orr_doc_tax_item.is_tax_item = 1
+								orr_doc_tax_item.breakdown_description = orr_hotel_tax_breakdown.breakdown_description
+								orr_doc_tax_item.breakdown_grand_total = rrbd_tb_amount[index]
+								orr_doc_tax_item.breakdown_account = orr_hotel_tax_breakdown.breakdown_account # cek account dari hotel tax
+								orr_doc_tax_item.breakdown_account_against = kas_dp_kamar
+								doc_hotel_bill.append('bill_breakdown', orr_doc_tax_item)
 
-			# Special charge are early check-in and late check-out fee
-			elif item.is_special_charge:
-				sp_doc_item = frappe.new_doc("Hotel Bill Breakdown")
-				sp_doc_item.is_folio_trx_pairing = 1
-				sp_doc_item.billing_folio_trx_id = item.name
-				sp_doc_item.breakdown_description = item.remark
-				sp_doc_item.breakdown_net_total = item.amount
-				sp_doc_item.breakdown_tax_amount = 0
-				sp_doc_item.breakdown_grand_total = item.amount
-				sp_doc_item.breakdown_account = item.against_account_id
-				sp_doc_item.breakdown_account_against = item.account_id
-				doc_hotel_bill.append('bill_breakdown', sp_doc_item)
+				# Special charge are early check-in and late check-out fee
+				elif item.is_special_charge:
+					sp_doc_item = frappe.new_doc("Hotel Bill Breakdown")
+					sp_doc_item.is_folio_trx_pairing = 1
+					sp_doc_item.billing_folio_trx_id = item.name
+					sp_doc_item.breakdown_description = item.remark
+					sp_doc_item.breakdown_net_total = item.amount
+					sp_doc_item.breakdown_tax_amount = 0
+					sp_doc_item.breakdown_grand_total = item.amount
+					sp_doc_item.breakdown_account = item.against_account_id
+					sp_doc_item.breakdown_account_against = item.account_id
+					doc_hotel_bill.append('bill_breakdown', sp_doc_item)
 
-			# Additional charge are charges that added by Additional Charge form in Rerservation Page
-			elif item.is_additional_charge:
-				ac_doc_item = frappe.new_doc("Hotel Bill Breakdown")
-				ac_doc_item.is_folio_trx_pairing = 1
-				ac_doc_item.billing_folio_trx_id = item.name
-				ac_doc_item.breakdown_description = item.remark
-				ac_doc_item.breakdown_net_total = item.amount
-				ac_doc_item.breakdown_tax_amount = 0
-				ac_doc_item.breakdown_grand_total = item.amount
-				ac_doc_item.breakdown_account = item.against_account_id
-				ac_doc_item.breakdown_account_against = item.account_id
-				doc_hotel_bill.append('bill_breakdown', ac_doc_item)
+				# Additional charge are charges that added by Additional Charge form in Rerservation Page
+				elif item.is_additional_charge:
+					ac_doc_item = frappe.new_doc("Hotel Bill Breakdown")
+					ac_doc_item.is_folio_trx_pairing = 1
+					ac_doc_item.billing_folio_trx_id = item.name
+					ac_doc_item.breakdown_description = item.remark
+					ac_doc_item.breakdown_net_total = item.amount
+					ac_doc_item.breakdown_tax_amount = 0
+					ac_doc_item.breakdown_grand_total = item.amount
+					ac_doc_item.breakdown_account = item.against_account_id
+					ac_doc_item.breakdown_account_against = item.account_id
+					doc_hotel_bill.append('bill_breakdown', ac_doc_item)
 
-		# save all hotel bill breakdown to the hotel bill
-		doc_hotel_bill.save()
+			# save all hotel bill breakdown to the hotel bill
+			doc_hotel_bill.save()
 
-	# Check if any checkout early type of refund
-	room_stay_list = frappe.get_all('Room Stay', filters={"reservation_id": reservation_id}, fields=["*"])
-	if len(room_stay_list) > 0:
-		for rs_item in room_stay_list:
-			checkout_early_refund(rs_item.name)
+		# Check if any checkout early type of refund
+		room_stay_list = frappe.get_all('Room Stay', filters={"reservation_id": reservation_id}, fields=["*"])
+		if len(room_stay_list) > 0:
+			for rs_item in room_stay_list:
+				checkout_early_refund(rs_item.name)
 
-	# Check deposit refund
-	this_hotel_bill = frappe.get_doc("Hotel Bill", exist_bill)
-	if this_hotel_bill.use_deposit == 1:
-		if this_hotel_bill.bill_deposit_amount > this_hotel_bill.bill_grand_total:
-			deposit_refund_amount = this_hotel_bill.bill_deposit_amount - this_hotel_bill.bill_grand_total
+		# Check deposit refund
+		this_hotel_bill = frappe.get_doc("Hotel Bill", exist_bill)
+		if this_hotel_bill.use_deposit == 1:
+			if this_hotel_bill.bill_deposit_amount > this_hotel_bill.bill_grand_total:
+				deposit_refund_amount = this_hotel_bill.bill_deposit_amount - this_hotel_bill.bill_grand_total
+			else:
+				deposit_refund_amount = 0
 		else:
-			deposit_refund_amount = 0
+			deposit_refund_amount = this_hotel_bill.bill_deposit_amount
+
+		if deposit_refund_amount > 0:
+			refund_description = 'Deposit Refund of Reservation: ' + str(this_hotel_bill.reservation_id)
+			kas_deposit_customer = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+			kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+
+			exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
+													  {'parent': this_hotel_bill.name,
+													   'refund_description': refund_description})
+			if not exist_this_refund_item:
+				refund_item = frappe.new_doc('Hotel Bill Refund')
+				refund_item.naming_series = 'FO-BILL-RFND-.YYYY.-'
+				refund_item.refund_amount = deposit_refund_amount
+				refund_item.refund_description = refund_description
+				refund_item.is_refunded = 0
+				refund_item.account = kas_fo
+				refund_item.account_against = kas_deposit_customer
+
+				this_hotel_bill.append('bill_refund', refund_item)
+				this_hotel_bill.save()
+		else:
+			refund_description = 'Deposit Refund of Reservation: ' + str(this_hotel_bill.reservation_id)
+			exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
+													  {'parent': this_hotel_bill.name,
+													   'refund_description': refund_description})
+			if exist_this_refund_item:
+				refund_list = this_hotel_bill.get('bill_refund')
+				for item in refund_list:
+					if item.name == exist_this_refund_item:
+						refund_list.remove(item)
+						this_hotel_bill.save()
 	else:
-		deposit_refund_amount = this_hotel_bill.bill_deposit_amount
-
-	if deposit_refund_amount > 0:
-		refund_description = 'Deposit Refund of Reservation: ' + str(this_hotel_bill.reservation_id)
-		kas_deposit_customer = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
-		kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-
-		exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
-												  {'parent': this_hotel_bill.name,
-												   'refund_description': refund_description})
-		if not exist_this_refund_item:
-			refund_item = frappe.new_doc('Hotel Bill Refund')
-			refund_item.naming_series = 'FO-BILL-RFND-.YYYY.-'
-			refund_item.refund_amount = deposit_refund_amount
-			refund_item.refund_description = refund_description
-			refund_item.is_refunded = 0
-			refund_item.account = kas_fo
-			refund_item.account_against = kas_deposit_customer
-
-			this_hotel_bill.append('bill_refund', refund_item)
-			this_hotel_bill.save()
-	else:
-		refund_description = 'Deposit Refund of Reservation: ' + str(this_hotel_bill.reservation_id)
-		exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
-												  {'parent': this_hotel_bill.name,
-												   'refund_description': refund_description})
-		if exist_this_refund_item:
-			refund_list = this_hotel_bill.get('bill_refund')
-			for item in refund_list:
-				if item.name == exist_this_refund_item:
-					refund_list.remove(item)
-					this_hotel_bill.save()
+		frappe.msgprint('Hotel Bill Cannot be found. Check if Customer Deposit already made or not.')
 
 def get_mode_of_payment_account(mode_of_payment_id, company_name):
 	return frappe.db.get_value('Mode of Payment Account', {'parent': mode_of_payment_id, 'company': company_name}, "default_account")
