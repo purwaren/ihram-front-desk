@@ -367,3 +367,275 @@ def deposit_refund_account(type):
 		return frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
 	elif type == 'against':
 		return frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+
+@frappe.whitelist()
+def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
+	hotel_bill = frappe.get_doc('Hotel Bill', hotel_bill_id)
+	bill_breakdown_list = hotel_bill.get('bill_breakdown')
+	bill_refund_list = hotel_bill.get('bill_refund')
+	bill_payment_list = hotel_bill.get('bill_payments')
+
+	if float(latest_outstanding_amount) > 0:
+		frappe.msgprint("There are still outstanding amount needed to be paid")
+	else:
+
+		# 1. Room Rate Breakdown Journal Entry
+		for bb_item in bill_breakdown_list:
+			# 1.1 Room Rate Breakdown: is_excluded = 0, is_tax_item = 0, is_folio_trx_pairing = 0, breakdown_tax_id != null
+			if bb_item.is_excluded == 0 and bb_item.is_tax_item == 0 and bb_item.is_folio_trx_pairing == 0 and bb_item.breakdown_tax_id is not None:
+				bb_title = 'Hotel Bill Breakdown: ' + bb_item.breakdown_description + ' - ' + bb_item.name
+				bb_remark = bb_title + '. @ ' + str(bb_item.creation)
+
+				bb_doc_journal_entry = frappe.new_doc('Journal Entry')
+				bb_doc_journal_entry.title = bb_title
+				bb_doc_journal_entry.voucher_type = 'Journal Entry'
+				bb_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+				bb_doc_journal_entry.posting_date = datetime.date.today()
+				bb_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+				bb_doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+				bb_doc_journal_entry.remark = bb_remark
+				bb_doc_journal_entry.user_remark = bb_remark
+
+				# Journal Entry Account: Debit
+				bb_doc_debit = frappe.new_doc('Journal Entry Account')
+				bb_doc_debit.account = bb_item.breakdown_account_against
+				bb_doc_debit.debit = bb_item.breakdown_net_total
+				bb_doc_debit.debit_in_account_currency = bb_item.breakdown_net_total
+				bb_doc_debit.party_type = 'Customer'
+				bb_doc_debit.party = hotel_bill.customer_id
+				bb_doc_debit.user_remark = bb_remark
+
+				# Journal Entry Account: Credit
+				bb_doc_credit = frappe.new_doc('Journal Entry Account')
+				bb_doc_credit.account = bb_item.breakdown_account
+				bb_doc_credit.credit = bb_item.breakdown_net_total
+				bb_doc_credit.credit_in_account_currency = bb_item.breakdown_net_total
+				bb_doc_credit.party_type = 'Customer'
+				bb_doc_credit.party = hotel_bill.customer_id
+				bb_doc_credit.user_remark = bb_remark
+
+				# Append debit and credit to Journal Account
+				bb_doc_journal_entry.append('accounts', bb_doc_debit)
+				bb_doc_journal_entry.append('accounts', bb_doc_credit)
+
+				# Save and Submit Journal Entry
+				bb_doc_journal_entry.save()
+				bb_doc_journal_entry.submit()
+
+			# 1.2 Room Rate Breakdown Tax: is_excluded = 0, is_tax_item = 1
+			elif bb_item.is_excluded == 0 and bb_item.is_tax_item == 1:
+				bb_tax_title = 'Hotel Bill Breakdown Tax: ' + bb_item.breakdown_description + ' - ' + bb_item.name
+				bb_tax_remark = bb_tax_title + '. @ ' + str(bb_item.creation)
+
+				bb_tax_doc_journal_entry = frappe.new_doc('Journal Entry')
+				bb_tax_doc_journal_entry.title = bb_tax_title
+				bb_tax_doc_journal_entry.voucher_type = 'Journal Entry'
+				bb_tax_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+				bb_tax_doc_journal_entry.posting_date = datetime.date.today()
+				bb_tax_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+				bb_tax_doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+				bb_tax_doc_journal_entry.remark = bb_tax_remark
+				bb_tax_doc_journal_entry.user_remark = bb_tax_remark
+
+				# Journal Entry Account: Debit
+				bb_tax_doc_debit = frappe.new_doc('Journal Entry Account')
+				bb_tax_doc_debit.account = bb_item.breakdown_account_against
+				bb_tax_doc_debit.debit = bb_item.breakdown_grand_total
+				bb_tax_doc_debit.debit_in_account_currency = bb_item.breakdown_grand_total
+				bb_tax_doc_debit.party_type = 'Customer'
+				bb_tax_doc_debit.party = hotel_bill.customer_id
+				bb_tax_doc_debit.user_remark = bb_tax_remark
+
+				# Journal Entry Account: Credit
+				bb_tax_doc_credit = frappe.new_doc('Journal Entry Account')
+				bb_tax_doc_credit.account = bb_item.breakdown_account
+				bb_tax_doc_credit.credit = bb_item.breakdown_grand_total
+				bb_tax_doc_credit.credit_in_account_currency = bb_item.breakdown_grand_total
+				bb_tax_doc_credit.party_type = 'Customer'
+				bb_tax_doc_credit.party = hotel_bill.customer_id
+				bb_tax_doc_credit.user_remark = bb_tax_remark
+
+				# Append debit and credit to Journal Account
+				bb_tax_doc_journal_entry.append('accounts', bb_tax_doc_debit)
+				bb_tax_doc_journal_entry.append('accounts', bb_tax_doc_credit)
+
+				# Save and Submit Journal Entry
+				bb_tax_doc_journal_entry.save()
+				bb_tax_doc_journal_entry.submit()
+		# 2. Hotel Bill Refund Journal Entry
+		for br_item in bill_refund_list:
+			br_title = 'Hotel Bill Refund: ' + br_item.refund_description + ' - ' + br_item.name
+			br_remark = br_title + '. @ ' + str(br_item.creation)
+
+			br_doc_journal_entry = frappe.new_doc('Journal Entry')
+			br_doc_journal_entry.title = br_title
+			br_doc_journal_entry.voucher_type = 'Journal Entry'
+			br_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			br_doc_journal_entry.posting_date = datetime.date.today()
+			br_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			br_doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+			br_doc_journal_entry.remark = br_remark
+			br_doc_journal_entry.user_remark = br_remark
+
+			# Journal Entry Account: Debit
+			br_doc_debit = frappe.new_doc('Journal Entry Account')
+			br_doc_debit.account = br_item.account_against
+			br_doc_debit.debit = br_item.refund_amount
+			br_doc_debit.debit_in_account_currency = br_item.refund_amount
+			br_doc_debit.party_type = 'Customer'
+			br_doc_debit.party = hotel_bill.customer_id
+			br_doc_debit.user_remark = br_remark
+
+			# Journal Entry Account: Credit
+			br_doc_credit = frappe.new_doc('Journal Entry Account')
+			br_doc_credit.account = br_item.account
+			br_doc_credit.credit = br_item.refund_amount
+			br_doc_credit.credit_in_account_currency = br_item.refund_amount
+			br_doc_credit.party_type = 'Customer'
+			br_doc_credit.party = hotel_bill.customer_id
+			br_doc_credit.user_remark = br_remark
+
+			# Append debit and credit to Journal Account
+			br_doc_journal_entry.append('accounts', br_doc_debit)
+			br_doc_journal_entry.append('accounts', br_doc_credit)
+
+			# Save and Submit Journal Entry
+			br_doc_journal_entry.save()
+			br_doc_journal_entry.submit()
+
+			# Flag this br_item as refunded
+			frappe.db.set_value('Hotel Bill Refund', br_item.name, 'is_refunded', 1)
+		# 3. Hotel Bill Payment Journal Entry
+		for bp_item in bill_payment_list:
+			bp_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+			bp_debit_account_name = get_mode_of_payment_account(bp_item.mode_of_payment,
+															 frappe.get_doc("Global Defaults").default_company)
+			bp_title = 'Hotel Bill Payment (' + str(bp_item.mode_of_payment) + '): ' + str(bp_item.parent) + ' - ' + bp_item.name
+			bp_remark = bp_title + ' - @' + str(bp_item.creation)
+
+			bp_doc_journal_entry = frappe.new_doc('Journal Entry')
+			bp_doc_journal_entry.title = bp_title
+			bp_doc_journal_entry.voucher_type = 'Journal Entry'
+			bp_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			bp_doc_journal_entry.posting_date = datetime.date.today()
+			bp_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			bp_doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+			bp_doc_journal_entry.remark = bp_remark
+			bp_doc_journal_entry.user_remark = bp_remark
+
+			# Journal Entry Account: Debit
+			bp_doc_debit = frappe.new_doc('Journal Entry Account')
+			bp_doc_debit.account = bp_debit_account_name
+			bp_doc_debit.debit = bp_item.payment_amount
+			bp_doc_debit.debit_in_account_currency = bp_item.payment_amount
+			bp_doc_debit.party_type = 'Customer'
+			bp_doc_debit.party = hotel_bill.customer_id
+			bp_doc_debit.user_remark = bp_remark
+
+			# Journal Entry Account: Credit
+			bp_doc_credit = frappe.new_doc('Journal Entry Account')
+			bp_doc_credit.account = bp_credit_account_name
+			bp_doc_credit.credit = bp_item.payment_amount
+			bp_doc_credit.credit_in_account_currency = bp_item.payment_amount
+			bp_doc_credit.party_type = 'Customer'
+			bp_doc_credit.party = hotel_bill.customer_id
+			bp_doc_credit.user_remark = bp_remark
+
+			# Append debit and credit to Journal Account
+			bp_doc_journal_entry.append('accounts', bp_doc_debit)
+			bp_doc_journal_entry.append('accounts', bp_doc_credit)
+
+			# Save and Submit Journal Entry
+			bp_doc_journal_entry.save()
+			bp_doc_journal_entry.submit()
+
+		# 4. Deposit as Payment Journal Entry, if Use Deposit is checked
+		if hotel_bill.use_deposit == 1:
+			depo_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '1111.002'})[0].name
+			depo_debit_account_name = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+			depo_title = 'Hotel Bill Payment (Deposit): ' + hotel_bill.name
+			depo_remark = depo_title + ' - @' + str(hotel_bill.creation)
+			refund_description = 'Deposit Refund of Reservation: ' + str(hotel_bill.reservation_id)
+			exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
+													  {'parent': hotel_bill.name,
+													   'refund_description': refund_description})
+			if exist_this_refund_item:
+				deposit_refund_amount = frappe.db.get_value('Hotel Bill Refund', {'name': exist_this_refund_item}, ['refund_amount'])
+				deposit_used_amount = hotel_bill.bill_deposit_amount - deposit_refund_amount
+			else:
+				deposit_used_amount = hotel_bill.bill_deposit_amount
+
+			depo_doc_journal_entry = frappe.new_doc('Journal Entry')
+			depo_doc_journal_entry.title = depo_title
+			depo_doc_journal_entry.voucher_type = 'Journal Entry'
+			depo_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			depo_doc_journal_entry.posting_date = datetime.date.today()
+			depo_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			depo_doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+			depo_doc_journal_entry.remark = depo_remark
+			depo_doc_journal_entry.user_remark = depo_remark
+
+			# Journal Entry Account: Debit
+			depo_doc_debit = frappe.new_doc('Journal Entry Account')
+			depo_doc_debit.account = depo_debit_account_name
+			depo_doc_debit.debit = deposit_used_amount
+			depo_doc_debit.debit_in_account_currency = deposit_used_amount
+			depo_doc_debit.party_type = 'Customer'
+			depo_doc_debit.party = hotel_bill.customer_id
+			depo_doc_debit.user_remark = depo_remark
+
+			# Journal Entry Account: Credit
+			depo_doc_credit = frappe.new_doc('Journal Entry Account')
+			depo_doc_credit.account = depo_credit_account_name
+			depo_doc_credit.credit = deposit_used_amount
+			depo_doc_credit.credit_in_account_currency = deposit_used_amount
+			depo_doc_credit.party_type = 'Customer'
+			depo_doc_credit.party = hotel_bill.customer_id
+			depo_doc_credit.user_remark = depo_remark
+
+			# Append debit and credit to Journal Account
+			depo_doc_journal_entry.append('accounts', depo_doc_debit)
+			depo_doc_journal_entry.append('accounts', depo_doc_credit)
+
+			# Save and Submit Journal Entry
+			depo_doc_journal_entry.save()
+			depo_doc_journal_entry.submit()
+		# 5. Hotel Bill Change Journal Entry, if Cash Used in Payments, and there is excess in payment needed to be returned
+		if float(hotel_bill.bill_change_amount) > 0:
+			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
+			piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			change_title = 'Hotel Bill Change: ' + hotel_bill.name
+			change_remark = change_title + ' - @' + str(hotel_bill.creation)
+
+			change_doc_journal_entry = frappe.new_doc('Journal Entry')
+			change_doc_journal_entry.title = change_title
+			change_doc_journal_entry.voucher_type = 'Journal Entry'
+			change_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			change_doc_journal_entry.posting_date = datetime.date.today()
+			change_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			change_doc_journal_entry.remark = change_remark
+			change_doc_journal_entry.user_remark = change_remark
+
+			change_doc_debit = frappe.new_doc('Journal Entry Account')
+			change_doc_debit.account = piutang_lain2
+			change_doc_debit.debit = hotel_bill.bill_rounded_change_amount
+			change_doc_debit.debit_in_account_currency = hotel_bill.bill_rounded_change_amount
+			change_doc_debit.party_type = 'Customer'
+			change_doc_debit.party = hotel_bill.customer_id
+			change_doc_debit.user_remark = change_remark
+
+			change_doc_credit = frappe.new_doc('Journal Entry Account')
+			change_doc_credit.account = kas_kecil
+			change_doc_credit.credit = hotel_bill.bill_rounded_change_amount
+			change_doc_credit.credit_in_account_currency = hotel_bill.bill_rounded_change_amount
+			change_doc_credit.party_type = 'Customer'
+			change_doc_credit.party = hotel_bill.customer_id
+			change_doc_credit.user_remark = change_remark
+
+			change_doc_journal_entry.append('accounts', change_doc_debit)
+			change_doc_journal_entry.append('accounts', change_doc_credit)
+
+			change_doc_journal_entry.save()
+			change_doc_journal_entry.submit()
+		# 6. Set Hotel Bill is_paid = 1
+		frappe.db.set_value('Hotel Bill', hotel_bill_id, 'is_paid', 1)

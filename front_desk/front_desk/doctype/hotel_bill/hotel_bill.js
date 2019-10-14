@@ -44,6 +44,9 @@ frappe.ui.form.on('Hotel Bill', {
 				});
 			});
 		}
+		else if (frm.doc.is_paid == 1) {
+			cur_frm.set_df_property('hb_section_break8', 'hidden', 1);
+		}
 	},
 	bill_toggle_details: function(frm, cdt, cdn) {
 		bill_breakdown = frappe.get_doc(cdt, cdn).bill_breakdown;
@@ -65,6 +68,21 @@ frappe.ui.form.on('Hotel Bill', {
 		var bp_list = frappe.get_doc( 'Hotel Bill', frm.doc.name ).bill_payments;
 		calculatePayments(frm, bp_list);
 	},
+	make_payment: function (frm, cdt, cdn) {
+		if (frm.doc.__unsaved != undefined && frm.doc.__unsaved == 1) {
+			frappe.msgprint("The Hotel Bill has been modified, please Save first before making payment entry");
+		}
+		else {
+			frappe.call({
+				method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.make_payment_hotel_bill",
+				args: {
+					hotel_bill_id: cdn,
+					latest_outstanding_amount: frm.doc.bill_outstanding_amount
+				}
+			});
+			frm.reload_doc();
+		}
+	}
 });
 
 frappe.ui.form.on('Hotel Bill Payments', {

@@ -532,8 +532,8 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		change_doc_credit.credit = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_credit.credit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_credit.user_remark = rbpd_change_remark
-		# change_doc_credit.party_type = 'Customer'
-		# change_doc_credit.party = reservation.customer_id
+		change_doc_credit.party_type = 'Customer'
+		change_doc_credit.party = reservation.customer_id
 		change_doc_journal_entry.append('accounts', change_doc_debit)
 		change_doc_journal_entry.append('accounts', change_doc_credit)
 
