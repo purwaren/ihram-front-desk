@@ -125,7 +125,7 @@ frappe.ui.form.on('Reservation', {
 		// 	});
 		// });
 
-		if (reservation.status != 'Cancel' && reservation.status != 'Created' && reservation.status != 'Confirmed' && float(reservation.deposit) > 0) {
+		if (reservation.status != 'Cancel' && reservation.status != 'Created' && reservation.status != 'Confirmed' && parseFloat(reservation.deposit) > 0) {
 			frm.add_custom_button(__("Show Billing"), function () {
 				frappe.call({
 					method: "front_desk.front_desk.doctype.reservation.reservation.get_hotel_bill_url",
