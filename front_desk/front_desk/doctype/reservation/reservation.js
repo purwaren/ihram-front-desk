@@ -8,6 +8,7 @@ var after_remove = false;
 var guest_request = 1;
 var cash_used_in_room_bill_payment = false;
 var room_bill_cash_count = 0;
+var max_discount = 90;
 
 frappe.ui.form.on('Reservation', {
 	onload: function(frm, cdt, cdn) {
@@ -145,23 +146,23 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
-			frm.add_custom_button(__("Trigger Auto Charges"), function () {
-				frappe.call({
-					method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
-					args: {
-						reservation_id: reservation.name
-					}
-				});
-				frappe.call({
-					method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
-					args: {
-						reservation_id: reservation.name
-					}
-				});
-				frappe.call({
-					method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
-				});
-			});
+			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
+			// 	frappe.call({
+			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
+			// 		args: {
+			// 			reservation_id: reservation.name
+			// 		}
+			// 	});
+			// 	frappe.call({
+			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
+			// 		args: {
+			// 			reservation_id: reservation.name
+			// 		}
+			// 	});
+			// 	frappe.call({
+			// 		method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
+			// 	});
+			// });
 
 			// frm.add_custom_button(__("Print Receipt"), function() {
     		// 	frappe.call({
@@ -512,6 +513,11 @@ frappe.ui.form.on('Room Stay', {
 		}
 	},
 	discount_percentage: function(frm, cdt, cdn) {
+		if (child.discount_percentage >= max_discount) {
+			frappe.msgprint("Discount Limit of "  + max_discount+ "% Exceeded. Please input lower Discount Rate.");
+			child.discount_percentage = 0;
+			frm.refresh_field('room_stay');
+		}
 		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
 			frappe.call({
 				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
@@ -523,6 +529,7 @@ frappe.ui.form.on('Room Stay', {
 				},
 				callback: (response) => {
 					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
 				}
 			});
 		}

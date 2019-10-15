@@ -477,9 +477,11 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 	reservation = frappe.get_doc('Reservation', reservation_id)
 	folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 	doc_folio = frappe.get_doc('Folio', folio_name)
+	rbpd_remark = "Payment for: \n"
 	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent':reservation_id, 'is_paid': 0}, fields=["*"])
 	room_stay_list = frappe.get_all('Room Stay', filters={'reservation_id': reservation_id}, fields=["*"])
 	kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 
 	# Create Room Bill Paid Entry for this "MAKE PAYMENT" action
 	doc_rbpd = frappe.new_doc('Room Bill Paid')
@@ -504,6 +506,11 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 	for room_stay_item in room_stay_list:
 		if room_stay_item.room_bill_paid_id is None:
 			frappe.db.set_value('Room Stay', room_stay_item.name, 'room_bill_paid_id', doc_rbpd.name)
+			room_remark = " - Room Stay: " + room_stay_item.name + " - Room No. " + room_stay_item.room_id + "\n"
+			rbpd_remark = rbpd_remark + room_remark
+
+	#Update the room bill paid remark
+	frappe.db.set_value('Room Bill Paid', doc_rbpd.name, 'rbpd_remark', rbpd_remark)
 
 	# Create Journal Entry for Room Bill Paid Change if there is any Change
 	if float(doc_rbpd.rbpd_rounded_change_amount) > 0:
@@ -552,6 +559,21 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		change_doc_folio_transaction.is_void = 0
 
 		doc_folio.append('transaction_detail', change_doc_folio_transaction)
+
+		frappe.msgprint("is rounded down change = " + doc_rbpd.rbpd_is_rounded_down_change)
+		if int(doc_rbpd.rbpd_is_rounded_down_change) == 1:
+			frappe.msgprint("masuk bikin folio untuk rounded down change")
+			rounded_down_doc_ft = frappe.new_doc('Folio Transaction')
+			rounded_down_doc_ft.folio_id = doc_folio.name
+			rounded_down_doc_ft.amount = doc_rbpd.rbpd_change_rounding_amount
+			rounded_down_doc_ft.amount_after_tax = doc_rbpd.rbpd_change_rounding_amount
+			rounded_down_doc_ft.flag = 'Debit'
+			rounded_down_doc_ft.account_id = kas_pendapatan_kamar
+			rounded_down_doc_ft.against_account_id = kas_dp_kamar
+			rounded_down_doc_ft.remark = "Rounded Down Change Amount from " + doc_rbpd.name
+			rounded_down_doc_ft.is_void = 0
+			doc_folio.append('transaction_detail', rounded_down_doc_ft)
+
 		doc_folio.save()
 
 	# Create Folio Transaction and Journal Entry for all the Room Bill Payment related to current Room Bill Paid Entry
