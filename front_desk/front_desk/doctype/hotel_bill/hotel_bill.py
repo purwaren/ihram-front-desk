@@ -102,8 +102,8 @@ def create_additional_charge(reservation_id):
 
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
 				doc_folio_transaction.folio_id = doc_folio.name
-				doc_folio_transaction.amount_after_tax = ac_item.ac_amount
 				doc_folio_transaction.amount = ac_item.ac_amount
+				doc_folio_transaction.amount_after_tax = ac_item.ac_amount
 				doc_folio_transaction.flag = 'Debit'
 				doc_folio_transaction.account_id = je_debit_account
 				doc_folio_transaction.against_account_id = je_credit_account
