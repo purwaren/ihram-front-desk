@@ -227,7 +227,7 @@ def auto_release_reservation_at_six_pm():
 		for rd in reservation_detail_list:
 			if rd.expected_arrival < datetime.datetime.today().date():
 				arrival_expired = True
-				room_booking_id = frappe.db.get_value('Room Booking', {'reference': rd.name}, ['name'])
+				room_booking_id = frappe.db.get_value('Room Booking', {'reference_name': rd.name}, ['name'])
 				if room_booking_id:
 					frappe.db.set_value('Room Booking', room_booking_id, 'status', 'Canceled')
 
