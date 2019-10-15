@@ -138,7 +138,7 @@ def create_hotel_bill(reservation_id):
 
 	customer_deposit = get_deposit_amount(reservation_id)
 
-	if not exist_bill and float(customer_deposit) > 0:
+	if not exist_bill:
 		new_doc_hotel_bill = frappe.new_doc('Hotel Bill')
 		new_doc_hotel_bill.naming_series = 'FO-BILL-.YYYY.-'
 		new_doc_hotel_bill.reservation_id = reservation_id
@@ -146,8 +146,6 @@ def create_hotel_bill(reservation_id):
 		new_doc_hotel_bill.bill_deposit_amount = customer_deposit
 		new_doc_hotel_bill.save()
 		exist_bill = new_doc_hotel_bill.name
-	else:
-		frappe.msgprint("Please Make Customer Deposit First")
 
 	if exist_bill:
 		for item in folio_trx_list:
