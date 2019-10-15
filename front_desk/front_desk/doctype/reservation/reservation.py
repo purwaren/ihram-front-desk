@@ -365,6 +365,7 @@ def create_room_charge(reservation_id):
 				doc_folio = frappe.get_doc('Folio', folio_name)
 
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
+				doc_folio_transaction.creation =  datetime.datetime.today()
 				doc_folio_transaction.folio_id = doc_folio.name
 				doc_folio_transaction.amount = today_rate
 				doc_folio_transaction.amount_after_tax = today_rate_after_tax
