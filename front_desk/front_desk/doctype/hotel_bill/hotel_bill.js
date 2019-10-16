@@ -7,6 +7,7 @@ var deposit = 0;
 var account = null;
 var account_against = null;
 var cash_used_in_hotel_bill_payment = false;
+var need_resave = false;
 
 frappe.ui.form.on('Hotel Bill', {
 	onload: function(frm) {
@@ -15,6 +16,7 @@ frappe.ui.form.on('Hotel Bill', {
 			set_all_read_only();
 			frm.disable_save();
 		}
+		need_resave = false;
 	},
 	onload_post_render(frm, cdt, cdn) {
 		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
@@ -45,6 +47,8 @@ frappe.ui.form.on('Hotel Bill', {
 			});
 		}
 		else if (frm.doc.is_paid == 1) {
+			frm.set_intro(__('This Hotel Bill Payment successfully finalized. You cannot change it anymore.'));
+			frm.set_footnote(__('This Hotel Bill Payment successfully finalized. You cannot change it anymore.'));
 			cur_frm.set_df_property('hb_section_break8', 'hidden', 1);
 		}
 	},
@@ -70,7 +74,10 @@ frappe.ui.form.on('Hotel Bill', {
 	},
 	make_payment: function (frm, cdt, cdn) {
 		if (frm.doc.__unsaved != undefined && frm.doc.__unsaved == 1) {
-			frappe.msgprint("The Hotel Bill has been modified, please Save first before making payment entry");
+			frappe.msgprint("The Hotel Bill has been modified, please click Save and Reload page, before making payment entry");
+		}
+		else if (need_resave) {
+			frappe.msgprint("The Hotel Bill has been modified, please click Save and Reload page, before making payment entry");
 		}
 		else {
 			frappe.call({
@@ -78,9 +85,16 @@ frappe.ui.form.on('Hotel Bill', {
 				args: {
 					hotel_bill_id: cdn,
 					latest_outstanding_amount: frm.doc.bill_outstanding_amount
+				},
+				callback: (effin_response) => {
+					if (effin_response.message) {
+						if (effin_response.message == 1) {
+							frm.set_intro(__('This Hotel Bill Payment successfully finalized. You cannot change it anymore.'));
+							frm.reload_doc();
+						}
+					}
 				}
 			});
-			frm.reload_doc();
 		}
 	}
 });
@@ -184,6 +198,7 @@ function calculateDepositRefund(frm) {
 	let deposit_description = 'Deposit Refund of Reservation: ' + frm.doc.reservation_id;
 	let bill_amount = frm.doc.bill_grand_total;
 	let deposit_amount = frm.doc.bill_deposit_amount;
+	let refund_amount_in_db = 0;
 
 	frappe.call({
 		method: "front_desk.front_desk.doctype.hotel_bill_refund.hotel_bill_refund.get_value_by_desc",
@@ -192,134 +207,161 @@ function calculateDepositRefund(frm) {
 			field: 'name'
 		},
 		callback: (r) => {
-			if (r.message) {
-				let child = locals['Hotel Bill Refund'][r.message];
-				if (child == undefined) {
-					frm.reload_doc();
-				}
-				else {
-					if (frm.doc.use_deposit == 1) {
-						if (deposit_amount > bill_amount) {
-							child.refund_amount = deposit_amount - bill_amount;
-							frm.refresh_field('bill_refund');
-						}
-						else {
-							let tbl = frm.doc.bill_refund || [];
-							let i = tbl.length;
-							while (i--) {
-								if (tbl[i].refund_description == deposit_description) {
-									frm.get_field("bill_refund").grid.grid_rows[i].remove();
-								}
-							}
-							frm.refresh_field('bill_refund');
-						}
-					}
-					else {
-						child.refund_amount = deposit_amount;
-						frm.refresh_field('bill_refund');
-					}
-				}
-			}
 
-			else {
-				let deposit_refund_exist_not_saved_yet_id = null;
-				let refund_list = frm.doc.bill_refund || [];
-				let i = refund_list.length;
-				while (i--) {
-					if (refund_list[i].refund_description == deposit_description) {
-						deposit_refund_exist_not_saved_yet_id = refund_list[i].name;
+			frappe.call({
+				method: "front_desk.front_desk.doctype.hotel_bill_refund.hotel_bill_refund.get_value_by_desc",
+				args: {
+					desc: deposit_description,
+					field: 'refund_amount'
+				},
+				callback: (r2) => {
+					if (r2.message) {
+						refund_amount_in_db = r2.message;
 					}
-				}
-				if (deposit_refund_exist_not_saved_yet_id != null) {
-					console.log("masuk ada ghost child");
-					let ghost_child = locals['Hotel Bill Refund'][deposit_refund_exist_not_saved_yet_id];
-					if (frm.doc.use_deposit == 1) {
-						if (deposit_amount > bill_amount) {
-							ghost_child.refund_amount = deposit_amount - bill_amount;
-							frm.refresh_field('bill_refund');
+					if (r.message) {
+						let child = locals['Hotel Bill Refund'][r.message];
+						if (child == undefined) {
+							frm.reload_doc();
 						}
 						else {
-							let tbl = frm.doc.bill_refund || [];
-							let i = tbl.length;
-							while (i--) {
-								if (tbl[i].refund_description == deposit_description) {
-									frm.get_field("bill_refund").grid.grid_rows[i].remove();
+							if (frm.doc.use_deposit == 1) {
+								if (deposit_amount > bill_amount) {
+									if (parseFloat(refund_amount_in_db) != 0 && (parseFloat(refund_amount_in_db) != parseFloat(deposit_amount - bill_amount))) {
+										console.log("need resave");
+										need_resave = true;
+									}
+									else {
+										need_resave = false;
+									}
+									child.refund_amount = deposit_amount - bill_amount;
+									frm.refresh_field('bill_refund');
+								}
+								else {
+									let tbl = frm.doc.bill_refund || [];
+									let i = tbl.length;
+									while (i--) {
+										if (tbl[i].refund_description == deposit_description) {
+											frm.get_field("bill_refund").grid.grid_rows[i].remove();
+										}
+									}
+									frm.refresh_field('bill_refund');
 								}
 							}
-							frm.refresh_field('bill_refund');
-						}
-					}
-					else {
-						ghost_child.refund_amount = deposit_amount;
-						frm.refresh_field('bill_refund');
-					}
-				}
-				else {
-					console.log("masuk di tidak ada ghost child");
-					if (frm.doc.use_deposit == 1) {
-						console.log("masuk ke use_deposit == 1");
-						if (deposit_amount > bill_amount) {
-							console.log("masuk ke deposit amount > bill_amount");
-							frappe.call({
-								method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
-								args: {type: 'account'},
-								callback: (account_resp) => {
-									if (account_resp.message) {
-										account = account_resp.message;
-										frappe.call({
-											method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
-											args: {type: 'against'},
-											callback: (against_resp) => {
-												if (against_resp.message) {
-													account_against = against_resp.message;
-													var new_child = frm.add_child('bill_refund');
-													new_child.refund_description = deposit_description;
-													new_child.refund_amount = deposit_amount - bill_amount;
-													new_child.is_refunded = 0;
-													new_child.account = account;
-													new_child.account_against = account_against;
-													frm.refresh_field('bill_refund');
-												}
-											}
-										});
-									}
+							else {
+								if ( parseFloat(refund_amount_in_db) != 0 && parseFloat(refund_amount_in_db) != parseFloat(deposit_amount)) {
+									console.log("need resave");
+									need_resave = true;
 								}
-							});
+								else {
+									need_resave = false;
+								}
+								child.refund_amount = deposit_amount;
+								frm.refresh_field('bill_refund');
+							}
 						}
 					}
 					else {
-						console.log("masuk ke use_deposit == 0");
-						frappe.call({
-							method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
-							args: {type: 'account'},
-							callback: (account_resp) => {
-								if (account_resp.message) {
-									account = account_resp.message;
+						let deposit_refund_exist_not_saved_yet_id = null;
+						let refund_list = frm.doc.bill_refund || [];
+						let i = refund_list.length;
+						while (i--) {
+							if (refund_list[i].refund_description == deposit_description) {
+								deposit_refund_exist_not_saved_yet_id = refund_list[i].name;
+							}
+						}
+						if (deposit_refund_exist_not_saved_yet_id != null) {
+							console.log("masuk ada ghost child");
+							let ghost_child = locals['Hotel Bill Refund'][deposit_refund_exist_not_saved_yet_id];
+							if (frm.doc.use_deposit == 1) {
+								if (deposit_amount > bill_amount) {
+									ghost_child.refund_amount = deposit_amount - bill_amount;
+									frm.refresh_field('bill_refund');
+								}
+								else {
+									let tbl = frm.doc.bill_refund || [];
+									let i = tbl.length;
+									while (i--) {
+										if (tbl[i].refund_description == deposit_description) {
+											frm.get_field("bill_refund").grid.grid_rows[i].remove();
+										}
+									}
+									frm.refresh_field('bill_refund');
+								}
+							}
+							else {
+								ghost_child.refund_amount = deposit_amount;
+								frm.refresh_field('bill_refund');
+							}
+						}
+						else {
+							console.log("masuk di tidak ada ghost child");
+							if (frm.doc.use_deposit == 1) {
+								console.log("masuk ke use_deposit == 1");
+								if (deposit_amount > bill_amount) {
+									console.log("masuk ke deposit amount > bill_amount");
 									frappe.call({
 										method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
-										args: {type: 'against'},
-										callback: (against_resp) => {
-											if (against_resp.message) {
-												account_against = against_resp.message;
-												var new_child = frm.add_child('bill_refund');
-												new_child.refund_description = deposit_description;
-												new_child.refund_amount = deposit_amount;
-												new_child.is_refunded = 0;
-												new_child.account = account;
-												new_child.account_against = account_against;
-												frm.refresh_field('bill_refund');
+										args: {type: 'account'},
+										callback: (account_resp) => {
+											if (account_resp.message) {
+												account = account_resp.message;
+												frappe.call({
+													method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
+													args: {type: 'against'},
+													callback: (against_resp) => {
+														if (against_resp.message) {
+															account_against = against_resp.message;
+															var new_child = frm.add_child('bill_refund');
+															new_child.refund_description = deposit_description;
+															new_child.refund_amount = deposit_amount - bill_amount;
+															new_child.is_refunded = 0;
+															new_child.account = account;
+															new_child.account_against = account_against;
+															frm.refresh_field('bill_refund');
+														}
+													}
+												});
 											}
 										}
 									});
 								}
 							}
-						});
+							else {
+								console.log("masuk ke use_deposit == 0");
+								frappe.call({
+									method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
+									args: {type: 'account'},
+									callback: (account_resp) => {
+										if (account_resp.message) {
+											account = account_resp.message;
+											frappe.call({
+												method: "front_desk.front_desk.doctype.hotel_bill.hotel_bill.deposit_refund_account",
+												args: {type: 'against'},
+												callback: (against_resp) => {
+													if (against_resp.message) {
+														account_against = against_resp.message;
+														var new_child = frm.add_child('bill_refund');
+														new_child.refund_description = deposit_description;
+														new_child.refund_amount = deposit_amount;
+														new_child.is_refunded = 0;
+														new_child.account = account;
+														new_child.account_against = account_against;
+														frm.refresh_field('bill_refund');
+													}
+												}
+											});
+										}
+									}
+								});
+							}
+						}
 					}
 				}
-			}
+			});
 		}
 	});
 }
+
 function set_all_read_only() {
 	cur_frm.set_df_property('use_deposit', 'read_only', 1);
 	cur_frm.get_field("bill_refund").grid.only_sortable();
@@ -335,5 +377,4 @@ function set_all_read_only() {
 	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_reference_no', cur_frm.docname).read_only = true;
 	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_reference_date', cur_frm.docname).read_only = true;
 	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_clearance_date', cur_frm.docname).read_only = true;
-
 }
