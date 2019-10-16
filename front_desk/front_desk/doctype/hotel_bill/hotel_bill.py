@@ -556,7 +556,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 
 		# 4. Deposit as Payment Journal Entry, if Use Deposit is checked
 		if hotel_bill.use_deposit == 1:
-			depo_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '1111.002'})[0].name
+			depo_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 			depo_debit_account_name = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
 			depo_title = 'Hotel Bill Payment (Deposit): ' + hotel_bill.name
 			depo_remark = depo_title + ' - @' + str(hotel_bill.creation)
