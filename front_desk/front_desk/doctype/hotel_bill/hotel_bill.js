@@ -10,13 +10,14 @@ var cash_used_in_hotel_bill_payment = false;
 var need_resave = false;
 
 frappe.ui.form.on('Hotel Bill', {
-	onload: function(frm) {
+	onload: function(frm, cdt, cdn) {
 		frm.get_field("bill_breakdown").grid.only_sortable();
 		if (frm.doc.is_paid == 1) {
 			set_all_read_only();
 			frm.disable_save();
 		}
 		need_resave = false;
+		check_if_payment_cash(frm, frappe.get_doc(cdt, cdn).bill_payments);
 	},
 	onload_post_render(frm, cdt, cdn) {
 		var bp_list = frappe.get_doc(cdt, cdn).bill_payments;
@@ -162,9 +163,10 @@ function calculatePayments(frm, bp_list) {
 	for (i = 0; i < bp_list.length; i++) {
 		total_payment += bp_list[i].payment_amount;
 	}
-
+	console.log("total_payment= " + total_payment);
 	if (frm.doc.use_deposit == 1) {
 		total_payment += frm.doc.bill_deposit_amount;
+		console.log("total payment+deposit= " + total_payment);
 	}
 
 	var diff = total_payment - frm.doc.bill_grand_total;
@@ -377,4 +379,15 @@ function set_all_read_only() {
 	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_reference_no', cur_frm.docname).read_only = true;
 	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_reference_date', cur_frm.docname).read_only = true;
 	frappe.meta.get_docfield('Hotel Bill Payments', 'payment_clearance_date', cur_frm.docname).read_only = true;
+}
+
+function check_if_payment_cash(frm, bp_list) {
+	if (bp_list.length > 0) {
+		var i;
+		for (i = 0; i < bp_list.length; i++) {
+			if (bp_list[i].mode_of_payment == 'Cash') {
+				cash_used_in_hotel_bill_payment = true;
+			}
+		}
+	}
 }
