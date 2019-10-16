@@ -517,7 +517,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 	if float(doc_rbpd.rbpd_rounded_change_amount) > 0:
 		rbpd_change_remark = "Change from " + doc_rbpd.name
 		kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
-		piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+		kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 
 		change_doc_journal_entry = frappe.new_doc('Journal Entry')
 		change_doc_journal_entry.voucher_type = 'Journal Entry'
@@ -528,7 +528,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		change_doc_journal_entry.user_remark = rbpd_change_remark
 
 		change_doc_debit = frappe.new_doc('Journal Entry Account')
-		change_doc_debit.account = piutang_lain2
+		change_doc_debit.account = kas_dp_kamar
 		change_doc_debit.debit = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_debit.party_type = 'Customer'
 		change_doc_debit.party = reservation.customer_id
@@ -554,7 +554,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		change_doc_folio_transaction.amount = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_folio_transaction.amount_after_tax = doc_rbpd.rbpd_rounded_change_amount
 		change_doc_folio_transaction.flag = 'Debit'
-		change_doc_folio_transaction.account_id = piutang_lain2
+		change_doc_folio_transaction.account_id = kas_dp_kamar
 		change_doc_folio_transaction.against_account_id = kas_kecil
 		change_doc_folio_transaction.remark = rbpd_change_remark
 		change_doc_folio_transaction.is_void = 0
