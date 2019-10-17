@@ -513,70 +513,6 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 	#Update the room bill paid remark
 	frappe.db.set_value('Room Bill Paid', doc_rbpd.name, 'rbpd_remark', rbpd_remark)
 
-	# Create Journal Entry for Room Bill Paid Change if there is any Change
-	if float(doc_rbpd.rbpd_rounded_change_amount) > 0:
-		rbpd_change_remark = "Change from " + doc_rbpd.name
-		kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
-		kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
-
-		change_doc_journal_entry = frappe.new_doc('Journal Entry')
-		change_doc_journal_entry.voucher_type = 'Journal Entry'
-		change_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-		change_doc_journal_entry.posting_date = datetime.date.today()
-		change_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-		change_doc_journal_entry.remark = rbpd_change_remark
-		change_doc_journal_entry.user_remark = rbpd_change_remark
-
-		change_doc_debit = frappe.new_doc('Journal Entry Account')
-		change_doc_debit.account = kas_dp_kamar
-		change_doc_debit.debit = doc_rbpd.rbpd_rounded_change_amount
-		change_doc_debit.party_type = 'Customer'
-		change_doc_debit.party = reservation.customer_id
-		change_doc_debit.debit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
-		change_doc_debit.user_remark = rbpd_change_remark
-
-
-		change_doc_credit = frappe.new_doc('Journal Entry Account')
-		change_doc_credit.account = kas_kecil
-		change_doc_credit.credit = doc_rbpd.rbpd_rounded_change_amount
-		change_doc_credit.credit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
-		change_doc_credit.user_remark = rbpd_change_remark
-		change_doc_credit.party_type = 'Customer'
-		change_doc_credit.party = reservation.customer_id
-		change_doc_journal_entry.append('accounts', change_doc_debit)
-		change_doc_journal_entry.append('accounts', change_doc_credit)
-
-		change_doc_journal_entry.save()
-		change_doc_journal_entry.submit()
-
-		change_doc_folio_transaction = frappe.new_doc('Folio Transaction')
-		change_doc_folio_transaction.folio_id = doc_folio.name
-		change_doc_folio_transaction.amount = doc_rbpd.rbpd_rounded_change_amount
-		change_doc_folio_transaction.amount_after_tax = doc_rbpd.rbpd_rounded_change_amount
-		change_doc_folio_transaction.flag = 'Debit'
-		change_doc_folio_transaction.account_id = kas_dp_kamar
-		change_doc_folio_transaction.against_account_id = kas_kecil
-		change_doc_folio_transaction.remark = rbpd_change_remark
-		change_doc_folio_transaction.is_void = 0
-
-		doc_folio.append('transaction_detail', change_doc_folio_transaction)
-
-		frappe.msgprint("is rounded down change = " + doc_rbpd.rbpd_is_rounded_down_change)
-		if int(doc_rbpd.rbpd_is_rounded_down_change) == 1:
-			frappe.msgprint("masuk bikin folio untuk rounded down change")
-			rounded_down_doc_ft = frappe.new_doc('Folio Transaction')
-			rounded_down_doc_ft.folio_id = doc_folio.name
-			rounded_down_doc_ft.amount = doc_rbpd.rbpd_change_rounding_amount
-			rounded_down_doc_ft.amount_after_tax = doc_rbpd.rbpd_change_rounding_amount
-			rounded_down_doc_ft.flag = 'Debit'
-			rounded_down_doc_ft.account_id = kas_pendapatan_kamar
-			rounded_down_doc_ft.against_account_id = kas_dp_kamar
-			rounded_down_doc_ft.remark = "Rounded Down Change Amount from " + doc_rbpd.name
-			rounded_down_doc_ft.is_void = 0
-			doc_folio.append('transaction_detail', rounded_down_doc_ft)
-
-		doc_folio.save()
-
 	# Create Folio Transaction and Journal Entry for all the Room Bill Payment related to current Room Bill Paid Entry
 	for rbp_item in rbp_list:
 		credit_account_name = kas_dp_kamar
@@ -628,6 +564,67 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 			# set the is_paid flag to 1
 			frappe.db.set_value('Room Bill Payments', rbp_item.name, 'room_bill_paid_id', doc_rbpd.name)
 			frappe.db.set_value('Room Bill Payments', rbp_item.name, 'is_paid', 1)
+
+		# Create Journal Entry for Room Bill Paid Change if there is any Change
+		if float(doc_rbpd.rbpd_rounded_change_amount) > 0:
+			rbpd_change_remark = "Change from " + doc_rbpd.name
+			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
+			kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+
+			change_doc_journal_entry = frappe.new_doc('Journal Entry')
+			change_doc_journal_entry.voucher_type = 'Journal Entry'
+			change_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			change_doc_journal_entry.posting_date = datetime.date.today()
+			change_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			change_doc_journal_entry.remark = rbpd_change_remark
+			change_doc_journal_entry.user_remark = rbpd_change_remark
+
+			change_doc_debit = frappe.new_doc('Journal Entry Account')
+			change_doc_debit.account = kas_dp_kamar
+			change_doc_debit.debit = doc_rbpd.rbpd_rounded_change_amount
+			change_doc_debit.party_type = 'Customer'
+			change_doc_debit.party = reservation.customer_id
+			change_doc_debit.debit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
+			change_doc_debit.user_remark = rbpd_change_remark
+
+			change_doc_credit = frappe.new_doc('Journal Entry Account')
+			change_doc_credit.account = kas_kecil
+			change_doc_credit.credit = doc_rbpd.rbpd_rounded_change_amount
+			change_doc_credit.credit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
+			change_doc_credit.user_remark = rbpd_change_remark
+			change_doc_credit.party_type = 'Customer'
+			change_doc_credit.party = reservation.customer_id
+			change_doc_journal_entry.append('accounts', change_doc_debit)
+			change_doc_journal_entry.append('accounts', change_doc_credit)
+
+			change_doc_journal_entry.save()
+			change_doc_journal_entry.submit()
+
+			change_doc_folio_transaction = frappe.new_doc('Folio Transaction')
+			change_doc_folio_transaction.folio_id = doc_folio.name
+			change_doc_folio_transaction.amount = doc_rbpd.rbpd_rounded_change_amount
+			change_doc_folio_transaction.amount_after_tax = doc_rbpd.rbpd_rounded_change_amount
+			change_doc_folio_transaction.flag = 'Debit'
+			change_doc_folio_transaction.account_id = kas_dp_kamar
+			change_doc_folio_transaction.against_account_id = kas_kecil
+			change_doc_folio_transaction.remark = rbpd_change_remark
+			change_doc_folio_transaction.is_void = 0
+
+			doc_folio.append('transaction_detail', change_doc_folio_transaction)
+
+			if int(doc_rbpd.rbpd_is_rounded_down_change) == 1:
+				rounded_down_doc_ft = frappe.new_doc('Folio Transaction')
+				rounded_down_doc_ft.folio_id = doc_folio.name
+				rounded_down_doc_ft.amount = doc_rbpd.rbpd_change_rounding_amount
+				rounded_down_doc_ft.amount_after_tax = doc_rbpd.rbpd_change_rounding_amount
+				rounded_down_doc_ft.flag = 'Debit'
+				rounded_down_doc_ft.account_id = kas_pendapatan_kamar
+				rounded_down_doc_ft.against_account_id = kas_dp_kamar
+				rounded_down_doc_ft.remark = "Rounded Down Change Amount from " + doc_rbpd.name
+				rounded_down_doc_ft.is_void = 0
+				doc_folio.append('transaction_detail', rounded_down_doc_ft)
+
+			doc_folio.save()
 
 	# Calculate the room bill amount that still not paid yet ~ I feel this unnecessary tho
 	for room_stay_item in room_stay_list:
