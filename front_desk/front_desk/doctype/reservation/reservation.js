@@ -607,7 +607,8 @@ frappe.ui.form.on("Room Bill Paid", {
 	print_rbpd_button: function(frm, cdt, cdn) {
 		var w = window.open(frappe.urllib.get_full_url("/printview?"
 			+"doctype="+encodeURIComponent("Room Bill Paid")
-			+"&name="+encodeURIComponent(frappe.get_doc(cdt, cdn).name)
+			+"&name="+encodeURIComponent(cdn)
+			+"&format="+encodeURIComponent("Room Bill Payment Receipt")
 			+"&no_letterhead=0"
 			));
 
