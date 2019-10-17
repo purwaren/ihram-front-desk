@@ -259,7 +259,7 @@ def create_room_charge(reservation_id):
 			add_late_checkout(room_stay.name)
 
 			# create room charge, if today is not departure day yet and the room_stay is not moved at the same day
-			if room_stay.departure > datetime.datetime.today() and not room_is_moved_at_the_same_day:
+			if room_stay.arrival <= datetime.datetime.today() and room_stay.departure > datetime.datetime.today() and not room_is_moved_at_the_same_day:
 				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
 				room_name = room_stay.room_id
 				if not room_stay.discount_percentage:
