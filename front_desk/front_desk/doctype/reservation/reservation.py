@@ -518,7 +518,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		credit_account_name = kas_dp_kamar
 		debit_account_name = get_mode_of_payment_account(rbp_item.mode_of_payment, frappe.get_doc("Global Defaults").default_company)
 		amount = rbp_item.rbp_amount
-		remark = 'Room Bill Payment: ' + rbp_item.name + '(' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
+		remark = 'Room Bill Payment: ' + doc_rbpd.name + ' (' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
 		exist_folio_trx_rbp_item = frappe.db.exists('Folio Transaction',
 											  {'parent': doc_folio.name,
 											   'remark': remark})
