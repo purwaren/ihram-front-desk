@@ -213,6 +213,7 @@ def checkout_reservation(reservation_id):
 		hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
 		# Update room_status dari hotel_room menjadi "Vacant Dirty"
 		hotel_room.room_status = "Vacant Dirty"
+		hotel_room.save()
 		# TODO: Update Status Availability dari Hotem Room pada hari itu saja.
 
 		## Update room booking status

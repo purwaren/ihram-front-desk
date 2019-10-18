@@ -93,13 +93,19 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (reservation.status == 'In House') {
-			frm.page.add_menu_item(("Check Out"), function () {
-				frappe.call({
-					method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",
-					args: {
-						reservation_id: reservation.name
+			frappe.db.get_value('Hotel Bill', {'reservation_id':reservation.name}, 'is_paid', (response) => {
+				if (response.message != undefined) {
+					if (response.message == 1) {
+						frm.page.add_menu_item(("Check Out"), function () {
+							frappe.call({
+								method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",
+								args: {
+									reservation_id: reservation.name
+								}
+							});
+						});
 					}
-				});
+				}
 			});
 		}
 		//enable for manual trigger scheduler release room
