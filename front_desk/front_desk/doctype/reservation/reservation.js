@@ -154,7 +154,7 @@ frappe.ui.form.on('Reservation', {
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
 			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
 			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_room_charge",
+			// 		method: "front_desk.front_desk.doctype.reservation.reservation.trigger_room_charge",
 			// 		args: {
 			// 			reservation_id: reservation.name
 			// 		}

@@ -633,3 +633,61 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 			updated_room_bill_amount = updated_room_bill_amount + room_stay_item.total_bill_amount
 
 	return updated_room_bill_amount
+
+@frappe.whitelist()
+def trigger_room_charge(reservation_id):
+	room_stay_list = frappe.get_all('Room Stay', filters={"reservation_id": reservation_id}, fields=["*"])
+
+	if len(room_stay_list) > 0:
+		for room_stay in room_stay_list:
+			#check if this room_stay is moved, if the moving took part in the same day, do not charge the room
+			room_is_moved_at_the_same_day = False
+			is_moved = frappe.db.exists('Move Room', {'initial_room_stay': room_stay.name})
+			if is_moved and room_stay.departure.date() == room_stay.arrival.date():
+				room_is_moved_at_the_same_day = True
+
+			# add special charge if any
+			add_early_checkin(room_stay.name)
+			add_late_checkout(room_stay.name)
+
+			# create room charge, if today is not departure day yet and the room_stay is not moved at the same day
+			if room_stay.departure > datetime.datetime.today() and not room_is_moved_at_the_same_day:
+				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
+				room_name = room_stay.room_id
+				if not room_stay.discount_percentage:
+					room_stay_discount = 0
+				else:
+					room_stay_discount = float(room_stay.discount_percentage) / 100.0
+				amount_multiplier = 1 - room_stay_discount
+				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
+				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+
+				# define room rate for folio transaction. If room stay discount exist, apply the discount
+				if is_weekday():
+					today_rate = room_rate.rate_weekday * amount_multiplier
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate', room_stay.discount_percentage)
+				else:
+					today_rate = room_rate.rate_weekend * amount_multiplier
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate', room_stay.discount_percentage)
+
+				# Create Folio Transaction of Room Charge
+				folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+				doc_folio = frappe.get_doc('Folio', folio_name)
+
+				doc_folio_transaction = frappe.new_doc('Folio Transaction')
+				doc_folio_transaction.creation =  datetime.datetime.today()
+				doc_folio_transaction.folio_id = doc_folio.name
+				doc_folio_transaction.amount = today_rate
+				doc_folio_transaction.amount_after_tax = today_rate_after_tax
+				doc_folio_transaction.room_stay_id = room_stay.name
+				doc_folio_transaction.room_rate = room_stay.room_rate
+				doc_folio_transaction.flag = 'Debit'
+				doc_folio_transaction.account_id = je_debit_account
+				doc_folio_transaction.against_account_id = je_credit_account
+				doc_folio_transaction.remark = remark
+				doc_folio_transaction.is_void = 0
+				doc_folio_transaction.transaction_detail = room_rate.breakdown_summary
+
+				doc_folio.append('transaction_detail', doc_folio_transaction)
+				doc_folio.save()
