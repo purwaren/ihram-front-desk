@@ -20,6 +20,46 @@ frappe.ui.form.on('Reservation', {
 		MakePaymentButtonStatus(frm, cdt,cdn);
 		frm.get_field("room_bill_paid").grid.only_sortable();
 	},
+	refresh: function(frm) {
+		if (frm.doc.status == 'In House') {
+			frm.page.add_menu_item(("Check Out"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",
+					args: {
+						reservation_id: reservation.name
+					},
+					callback: (r) => {
+						if (r.message != undefined) {
+							if (r.message == 1) {
+								frappe.show_alert(__(" Check Out Process Success.")); return;
+								frm.reload_doc();
+							}
+							else {
+								frappe.confirm(__("Cannot Check Out before the Hotel Bill Payment is complete. Open Hotel Bill Page?"),
+									function() {
+										frappe.call({
+											method: "front_desk.front_desk.doctype.reservation.reservation.get_hotel_bill_url",
+											args: {
+												reservation_id: reservation.name
+											},
+											callback: (r) => {
+												if (r.message) {
+													var w = window.open(r.message, '_self');
+													if (!w) {
+														frappe.msgprint(__("Please enable pop-ups")); return;
+													}
+												}
+											}
+										});
+									}
+								)
+							}
+						}
+					}
+				});
+			});
+		}
+	},
 	onload_post_render: function(frm, cdt, cdn) {
 		$('*[data-fieldname="reservation_detail"]').find('.grid-remove-rows').hide();
 		$('*[data-fieldname="room_stay"]').find('.grid-remove-rows').hide();
@@ -93,19 +133,41 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (reservation.status == 'In House') {
-			frappe.db.get_value('Hotel Bill', {'reservation_id':reservation.name}, 'is_paid', (response) => {
-				if (response.message != undefined) {
-					if (response.message == 1) {
-						frm.page.add_menu_item(("Check Out"), function () {
-							frappe.call({
-								method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",
-								args: {
-									reservation_id: reservation.name
-								}
-							});
-						});
+			frm.page.add_menu_item(("Check Out"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",
+					args: {
+						reservation_id: reservation.name
+					},
+					callback: (r) => {
+						if (r.message != undefined) {
+							if (r.message == 1) {
+								frappe.show_alert(__(" Check Out Process Success.")); return;
+								frm.reload_doc();
+							}
+							else {
+								frappe.confirm(__("Cannot Check Out before the Hotel Bill Payment is complete. Open Hotel Bill Page?"),
+									function() {
+										frappe.call({
+											method: "front_desk.front_desk.doctype.reservation.reservation.get_hotel_bill_url",
+											args: {
+												reservation_id: reservation.name
+											},
+											callback: (r) => {
+												if (r.message) {
+													var w = window.open(r.message, '_self');
+													if (!w) {
+														frappe.msgprint(__("Please enable pop-ups")); return;
+													}
+												}
+											}
+										});
+									}
+								)
+							}
+						}
 					}
-				}
+				});
 			});
 		}
 		//enable for manual trigger scheduler release room
