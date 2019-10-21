@@ -241,7 +241,7 @@ def auto_release_reservation_at_six_pm():
 
 		if arrival_expired:
 			frappe.db.set_value('Reservation', reservation.name, 'status', 'Cancel')
-
+			update_by_reservation(reservation.name)
 
 def auto_room_charge():
 	reservation_list = frappe.get_all('Reservation', {'status': 'In House'})
