@@ -199,27 +199,37 @@ def get_value(room_stay_id, field):
 
 
 def checkout_early_refund(room_stay_id):
+    using_city_ledger = False
     room_stay = frappe.get_doc('Room Stay', room_stay_id)
-    if room_stay.is_need_refund == 1:
-        refund_amount = float(room_stay.old_total_bill_amount) - float(room_stay.total_bill_amount)
 
-        refund_description = 'Checkout Early Refund of Room Stay:' + str(room_stay.name) + ' Reservation: ' + str(room_stay.reservation_id)
-        kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
-        kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-        hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': room_stay.parent})
+    rbp_list = frappe.get_all('Room Bill Payments', filters={'parent':room_stay.reservation_id}, fields=["mode_of_payment"])
 
-        exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
-                                              {'parent': hotel_bill.name,
-                                               'refund_description': refund_description})
-        if not exist_this_refund_item:
-            if refund_amount > 0:
-                refund_item = frappe.new_doc('Hotel Bill Refund')
-                refund_item.naming_series = 'FO-BILL-RFND-.YYYY.-'
-                refund_item.refund_amount = refund_amount
-                refund_item.refund_description = refund_description
-                refund_item.is_refunded = 0
-                refund_item.account = kas_fo
-                refund_item.account_against = kas_dp_kamar
+    for rbp_item in rbp_list:
+        if rbp_item.mode_of_payment == 'City Ledger':
+            using_city_ledger = True
 
-                hotel_bill.append('bill_refund', refund_item)
-                hotel_bill.save()
+    if not using_city_ledger:
+        if room_stay.is_need_refund == 1:
+            refund_amount = float(room_stay.old_total_bill_amount) - float(room_stay.total_bill_amount)
+
+            refund_description = 'Checkout Early Refund of Room Stay:' + str(room_stay.name) + ' Reservation: ' + str(room_stay.reservation_id)
+            kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+            kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+            hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': room_stay.parent})
+
+            exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
+                                                  {'parent': hotel_bill.name,
+                                                   'refund_description': refund_description})
+            if not exist_this_refund_item:
+                if refund_amount > 0:
+                    refund_item = frappe.new_doc('Hotel Bill Refund')
+                    refund_item.naming_series = 'FO-BILL-RFND-.YYYY.-'
+                    refund_item.refund_amount = refund_amount
+                    refund_item.refund_description = refund_description
+                    refund_item.is_refunded = 0
+                    refund_item.account = kas_fo
+                    refund_item.account_against = kas_dp_kamar
+
+                    hotel_bill.append('bill_refund', refund_item)
+                    hotel_bill.save()
+    # TODO: jika menggunakan city ledger maka, cari entry Folio pembayaran city ledger terkait dan ubah amountnya (Bill Adjustment)

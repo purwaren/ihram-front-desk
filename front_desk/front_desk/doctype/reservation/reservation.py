@@ -166,8 +166,6 @@ def get_debit_account(doctype, txt, searchfield, start, page_len, filters):
 @frappe.whitelist()
 def check_out(reservation_id_list):
 	reservation_id_list = json.loads(reservation_id_list)
-	# TODO: Calculate trx and print receipt
-
 
 	for reservation_id in reservation_id_list:
 		checkout_reservation(reservation_id)
@@ -201,6 +199,10 @@ def checkout_reservation(reservation_id):
 	is_bill_paid = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['is_paid'])
 
 	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'In House':
+		if is_using_city_ledger(reservation_id):
+			#TODO: input room charge yang dibutuhkan untuk Entry Pembayaran City Ledger ke Journal Entry
+			pass
+
 		if is_bill_paid == 1:
 			reservation = frappe.get_doc('Reservation', reservation_id)
 			# Update reservation status to "FINISH"
@@ -217,7 +219,6 @@ def checkout_reservation(reservation_id):
 			# Update room_status dari hotel_room menjadi "Vacant Dirty"
 			hotel_room.room_status = "Vacant Dirty"
 			hotel_room.save()
-			# TODO: Update Status Availability dari Hotem Room pada hari itu saja.
 
 			## Update room booking status
 			update_by_reservation(reservation_id)
@@ -530,29 +531,30 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 											  {'parent': doc_folio.name,
 											   'remark': remark})
 		if not exist_folio_trx_rbp_item:
-			doc_journal_entry = frappe.new_doc('Journal Entry')
-			doc_journal_entry.voucher_type = 'Journal Entry'
-			doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-			doc_journal_entry.posting_date = datetime.date.today()
-			doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-			doc_journal_entry.remark = remark
-			doc_journal_entry.user_remark = remark
-			doc_debit = frappe.new_doc('Journal Entry Account')
-			doc_debit.account = debit_account_name
-			doc_debit.debit = amount
-			doc_debit.debit_in_account_currency = amount
-			doc_debit.user_remark = remark
+			if rbp_item.mode_of_payment != 'City Ledger':
+				doc_journal_entry = frappe.new_doc('Journal Entry')
+				doc_journal_entry.voucher_type = 'Journal Entry'
+				doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+				doc_journal_entry.posting_date = datetime.date.today()
+				doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+				doc_journal_entry.remark = remark
+				doc_journal_entry.user_remark = remark
+				doc_debit = frappe.new_doc('Journal Entry Account')
+				doc_debit.account = debit_account_name
+				doc_debit.debit = amount
+				doc_debit.debit_in_account_currency = amount
+				doc_debit.user_remark = remark
 
-			doc_credit = frappe.new_doc('Journal Entry Account')
-			doc_credit.account = credit_account_name
-			doc_credit.credit = amount
-			doc_credit.credit_in_account_currency = amount
-			doc_credit.user_remark = remark
-			doc_journal_entry.append('accounts', doc_debit)
-			doc_journal_entry.append('accounts', doc_credit)
+				doc_credit = frappe.new_doc('Journal Entry Account')
+				doc_credit.account = credit_account_name
+				doc_credit.credit = amount
+				doc_credit.credit_in_account_currency = amount
+				doc_credit.user_remark = remark
+				doc_journal_entry.append('accounts', doc_debit)
+				doc_journal_entry.append('accounts', doc_credit)
 
-			doc_journal_entry.save()
-			doc_journal_entry.submit()
+				doc_journal_entry.save()
+				doc_journal_entry.submit()
 
 			doc_folio_transaction = frappe.new_doc('Folio Transaction')
 			doc_folio_transaction.folio_id = doc_folio.name
@@ -697,3 +699,54 @@ def trigger_room_charge(reservation_id):
 
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
+
+def is_using_city_ledger(reservation_id):
+	city_ledger_flag = False
+	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': reservation_id},
+							  fields=["mode_of_payment"])
+
+	for rbp_item in rbp_list:
+		if rbp_item.mode_of_payment == 'City Ledger':
+			city_ledger_flag = True
+
+	return city_ledger_flag
+
+
+def input_city_ledger_payment_to_journal_entry(reservation_id):
+	doc_folio = frappe.get_doc('Folio', frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name']))
+	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': reservation_id, 'mode_of_payment': 'City Ledger'},
+							  fields=["*"])
+	for rbp_item in rbp_list:
+		credit_account_name = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+		debit_account_name = get_mode_of_payment_account(rbp_item.mode_of_payment,
+														 frappe.get_doc("Global Defaults").default_company)
+		# TODO: perlukah double check amount dengan bill adjustment?
+		amount = rbp_item.rbp_amount
+		remark = 'City Ledger Payment: ' + ' Reservation: ' + reservation_id
+		exist_folio_trx_rbp_item = frappe.db.exists('Folio Transaction',
+													{'parent': doc_folio.name,
+													 'remark': remark})
+
+		doc_journal_entry = frappe.new_doc('Journal Entry')
+		doc_journal_entry.voucher_type = 'Journal Entry'
+		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+		doc_journal_entry.posting_date = datetime.date.today()
+		doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+		doc_journal_entry.remark = remark
+		doc_journal_entry.user_remark = remark
+		doc_debit = frappe.new_doc('Journal Entry Account')
+		doc_debit.account = debit_account_name
+		doc_debit.debit = amount
+		doc_debit.debit_in_account_currency = amount
+		doc_debit.user_remark = remark
+
+		doc_credit = frappe.new_doc('Journal Entry Account')
+		doc_credit.account = credit_account_name
+		doc_credit.credit = amount
+		doc_credit.credit_in_account_currency = amount
+		doc_credit.user_remark = remark
+		doc_journal_entry.append('accounts', doc_debit)
+		doc_journal_entry.append('accounts', doc_credit)
+
+		doc_journal_entry.save()
+		doc_journal_entry.submit()
