@@ -475,8 +475,17 @@ def calculate_room_bill_amount(doc, method):
 	room_stay = doc.get('room_stay')
 	if len(room_stay) > 0:
 		for rs_item in room_stay:
-			if not rs_item.room_bill_paid_id:
+			# Exist Move Room
+			if frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']):
+				move_room = frappe.get_doc('Move Room', frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']))
+				initial_rs = frappe.get_doc('Room Stay', move_room.initial_room_stay)
+				replacement_rs = frappe.get_doc('Room Stay', move_room.replacement_room_stay)
+				if replacement_rs.room_bill_paid_id is None:
+					room_bill_amount = room_bill_amount + (initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
+			# Default condition, no move room yet
+			elif not rs_item.room_bill_paid_id:
 				room_bill_amount = room_bill_amount + rs_item.total_bill_amount
+
 
 	doc.room_bill_amount = room_bill_amount
 

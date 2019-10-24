@@ -53,6 +53,7 @@ frappe.ui.form.on('Room Stay', {
 		field.hidden = 1;
 
 		child.room_bill_paid_id = initial_room_stay.room_bill_paid_id;
+
 		console.log(child);
 		if (guest_request == 0) {
 			child.room_rate = initial_room_stay.room_rate;

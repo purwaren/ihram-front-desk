@@ -214,23 +214,23 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
-			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.reservation.reservation.trigger_room_charge",
-			// 		args: {
-			// 			reservation_id: reservation.name
-			// 		}
-			// 	});
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
-			// 		args: {
-			// 			reservation_id: reservation.name
-			// 		}
-			// 	});
-			// 	frappe.call({
-			// 		method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
-			// 	});
-			// });
+			frm.add_custom_button(__("Trigger Auto Charges"), function () {
+				frappe.call({
+					method: "front_desk.front_desk.doctype.reservation.reservation.trigger_room_charge",
+					args: {
+						reservation_id: reservation.name
+					}
+				});
+				// frappe.call({
+				// 	method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
+				// 	args: {
+				// 		reservation_id: reservation.name
+				// 	}
+				// });
+				// frappe.call({
+				// 	method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
+				// });
+			});
 
 			// frm.add_custom_button(__("Print Receipt"), function() {
     		// 	frappe.call({
@@ -981,13 +981,16 @@ function MakePaymentButtonStatus(frm, cdt, cdn) {
 			}
 		}
 	}
+	console.log("reservation.room_bill_amount: " + reservation.room_bill_amount);
+	console.log("exist_rbp_not_paid: " + exist_rbp_not_paid);
 
 	if (reservation.room_bill_amount > 0 && exist_rbp_not_paid) {
 		frm.set_df_property('make_payment_section_break', 'hidden', 0);
 		frm.set_df_property('make_payment', 'hidden', 0);
-
+		console.log("show make payment");
 	} else {
 		frm.set_df_property('make_payment_section_break', 'hidden', 1);
 		frm.set_df_property('make_payment', 'hidden', 1);
+		console.log("hide make payment");
 	}
 }
