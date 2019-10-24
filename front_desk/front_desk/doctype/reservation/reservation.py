@@ -490,6 +490,24 @@ def calculate_room_bill_amount(doc, method):
 	doc.room_bill_amount = room_bill_amount
 
 @frappe.whitelist()
+def recalculate_room_bill_amount_after_guest_requested_move_room(reservation_id):
+	reservation = frappe.get_doc('Reservation', reservation_id)
+	room_bill_amount = 0.0
+	room_stay = reservation.get('room_stay')
+	if len(room_stay) > 0:
+		for rs_item in room_stay:
+			# Exist Move Room
+			if frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']):
+				move_room = frappe.get_doc('Move Room', frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']))
+				initial_rs = frappe.get_doc('Room Stay', move_room.initial_room_stay)
+				replacement_rs = frappe.get_doc('Room Stay', move_room.replacement_room_stay)
+				if replacement_rs.room_bill_paid_id is None:
+					room_bill_amount = room_bill_amount + (initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
+
+	reservation.room_bill_amount = room_bill_amount
+	reservation.save()
+
+@frappe.whitelist()
 def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_amount, is_round_down_checked, change_rounding_amount, change_amount, rounded_change_amount):
 	updated_room_bill_amount = 0
 	reservation = frappe.get_doc('Reservation', reservation_id)

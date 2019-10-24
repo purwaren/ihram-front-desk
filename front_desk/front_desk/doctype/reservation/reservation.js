@@ -214,14 +214,14 @@ frappe.ui.form.on('Reservation', {
 		}
 
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
-			frm.add_custom_button(__("Trigger Auto Charges"), function () {
-				frappe.call({
-					method: "front_desk.front_desk.doctype.reservation.reservation.trigger_room_charge",
-					args: {
-						reservation_id: reservation.name
-					}
-				});
-				// frappe.call({
+			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
+			// 	frappe.call({
+			// 		method: "front_desk.front_desk.doctype.reservation.reservation.trigger_room_charge",
+			// 		args: {
+			// 			reservation_id: reservation.name
+			// 		}
+			// 	});
+			// 	// frappe.call({
 				// 	method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
 				// 	args: {
 				// 		reservation_id: reservation.name
@@ -230,7 +230,7 @@ frappe.ui.form.on('Reservation', {
 				// frappe.call({
 				// 	method: "front_desk.front_desk.doctype.folio.folio.copy_all_trx_from_sales_invoice_to_folio",
 				// });
-			});
+			// });
 
 			// frm.add_custom_button(__("Print Receipt"), function() {
     		// 	frappe.call({

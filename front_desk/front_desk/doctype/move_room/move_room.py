@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 import front_desk.front_desk.doctype.room_stay.room_stay as room_stay
+import front_desk.front_desk.doctype.reservation.reservation as reservation
 
 class MoveRoom(Document):
 	pass
@@ -37,7 +38,7 @@ def process_move_room(initial_room_stay_name):
 		diff = replacement_room_stay_bill_amount + new_initial_room_stay_bill_amount - old__initial_room_stay_bill_amount
 
 		if diff > 0:
-			frappe.db.set_value('Room Stay', replacement_room_stay_name, 'room_bill_paid_id', None)
+			replacement_room_stay.room_bill_paid_id = None
 
 	replacement_room_stay.parent = replacement_room_stay.reservation_id
 	replacement_room_stay.parenttype = 'Reservation'
@@ -45,3 +46,7 @@ def process_move_room(initial_room_stay_name):
 	replacement_room_stay.save()
 
 	frappe.db.sql('UPDATE `tabMove Room` SET replacement_room_stay=%s WHERE name=%s', (replacement_room_stay_name, move_room_name))
+
+	if is_guest_request == 1 and diff > 0:
+		# trigger recalculate_room_bill_amount
+		reservation.recalculate_room_bill_amount_after_guest_requested_move_room(initial_room_stay.reservation_id)
