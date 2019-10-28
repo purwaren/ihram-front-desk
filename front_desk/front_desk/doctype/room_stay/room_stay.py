@@ -232,4 +232,26 @@ def checkout_early_refund(room_stay_id):
 
                     hotel_bill.append('bill_refund', refund_item)
                     hotel_bill.save()
-    # TODO: jika menggunakan city ledger maka, cari entry Folio pembayaran city ledger terkait dan ubah amountnya (Bill Adjustment)
+    else:
+        folio_name = frappe.db.get_value('Folio', {'reservation_id': room_stay.reservation_id}, ['name'])
+        remark = 'Room Bill Payment: ' + room_stay.room_bill_paid_id + ' (City Ledger) - Reservation: ' + room_stay.reservation_id
+        exist_folio_trx_of_city_ledger_payment = frappe.db.exists('Folio Transaction', {'parent': folio_name, 'remark': remark})
+        if exist_folio_trx_of_city_ledger_payment:
+            diff = float(room_stay.old_total_bill_amount) - float(room_stay.total_bill_amount)
+            if diff > 0:
+                # Update Folio Transaction
+                folio_need_updated = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['name'])
+                frappe.db.set_value("Folio Transaction", folio_need_updated, "amount", room_stay.total_bill_amount)
+                frappe.db.set_value("Folio Transaction", folio_need_updated, "amount_after_tax", room_stay.total_bill_amount)
+                # Update Room Bill Payment - NEED RECHECK
+                room_bill_payment = frappe.db.get_value('Room Bill Payments', {'parent': room_stay.reservation_id, 'mode_of_payment': 'City Ledger'}, ['name'])
+                old_rbp_amount = frappe.db.get_value('Room Bill Payments', {'name': room_bill_payment}, ['rbp_amount'])
+                new_rbp_amount = float(old_rbp_amount) - diff
+                frappe.db.set_value("Room Bill Payments", room_bill_payment, "rbp_amount", new_rbp_amount)
+                # Update Room Bill Paid - NEED RECHECK
+                room_bill_paid = frappe.get_doc('Room Bill Paid', room_stay.room_bill_paid_id)
+                new_rbpd_bill_amount = float(room_bill_paid.rbpd_bill_amount) - diff
+                new_rbpd_paid_bill_amount = float(room_bill_paid.rbpd_paid_bill_amount) - diff
+                room_bill_paid.rbpd_bill_amount = new_rbpd_bill_amount
+                room_bill_paid.rbpd_paid_bill_amount = new_rbpd_paid_bill_amount
+                room_bill_paid.save()

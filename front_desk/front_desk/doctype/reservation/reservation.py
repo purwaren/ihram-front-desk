@@ -200,8 +200,7 @@ def checkout_reservation(reservation_id):
 
 	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'In House':
 		if is_using_city_ledger(reservation_id):
-			#TODO: input room charge yang dibutuhkan untuk Entry Pembayaran City Ledger ke Journal Entry
-			pass
+			input_city_ledger_payment_to_journal_entry(reservation_id)
 
 		if is_bill_paid == 1:
 			reservation = frappe.get_doc('Reservation', reservation_id)
@@ -740,19 +739,15 @@ def is_using_city_ledger(reservation_id):
 
 
 def input_city_ledger_payment_to_journal_entry(reservation_id):
-	doc_folio = frappe.get_doc('Folio', frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name']))
 	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': reservation_id, 'mode_of_payment': 'City Ledger'},
 							  fields=["*"])
 	for rbp_item in rbp_list:
 		credit_account_name = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 		debit_account_name = get_mode_of_payment_account(rbp_item.mode_of_payment,
 														 frappe.get_doc("Global Defaults").default_company)
-		# TODO: perlukah double check amount dengan bill adjustment?
-		amount = rbp_item.rbp_amount
-		remark = 'City Ledger Payment: ' + ' Reservation: ' + reservation_id
-		exist_folio_trx_rbp_item = frappe.db.exists('Folio Transaction',
-													{'parent': doc_folio.name,
-													 'remark': remark})
+		remark = 'Room Bill Payment: ' + rbp_item.room_bill_paid_id + ' (' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
+		folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+		amount = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['amount_after_tax'])
 
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.voucher_type = 'Journal Entry'

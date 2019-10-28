@@ -641,8 +641,10 @@ frappe.ui.form.on("Room Bill Payments", {
 			}
 		}
 		else {
-			calculateRoomBillPayments(frm, rbp_list);
-			roomBillCashCount(frm, rbp_list);
+			if (child.rbp_amount > 0) {
+				calculateRoomBillPayments(frm, rbp_list);
+				roomBillCashCount(frm, rbp_list);
+			}
 		}
 	},
 	rbp_amount: function (frm, cdt, cdn) {
