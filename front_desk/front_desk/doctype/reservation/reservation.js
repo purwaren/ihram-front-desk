@@ -21,6 +21,13 @@ frappe.ui.form.on('Reservation', {
 		frm.get_field("room_bill_paid").grid.only_sortable();
 	},
 	refresh: function(frm) {
+		if (cur_frm.doc.deposit > 0) {
+			has_deposit = true;
+		}
+		if (has_deposit) {
+			frm.set_df_property('deposit', 'set_only_once', 1);
+			frm.set_df_property('payment_method', 'set_only_once', 1);
+		}
 		if (frm.doc.status == 'In House') {
 			frm.page.add_menu_item(("Check Out"), function () {
 				frappe.call({
@@ -403,9 +410,28 @@ frappe.ui.form.on('Reservation Detail', {
 	},
 	expected_arrival: function(frm, cdt, cdn) {
 		manage_filter('expected_arrival', 'reservation_detail');
+		let child = locals[cdt][cdn];
+		if (child.expected_arrival < frappe.datetime.get_today()) {
+			child.expected_arrival = frappe.datetime.now_datetime();
+			frm.refresh_field('reservation_detail');
+			frappe.msgprint("Arrival date must be greater today.");
+		}
 	},
 	expected_departure: function(frm, cdt, cdn) {
 		manage_filter('expected_departure', 'reservation_detail');
+		let child = locals[cdt][cdn];
+		if (child.__islocal == 1) {
+			if (child.expected_departure < frappe.datetime.get_today()) {
+				child.expected_departure = null;
+				frm.refresh_field('reservation_detail');
+				frappe.msgprint("Departure date must be greater than today.");
+			}
+			else if (child.expected_departure < child.expected_arrival) {
+				child.expected_departure = null;
+				frm.refresh_field('reservation_detail');
+				frappe.msgprint("Departure date must be greater than Arrival date.");
+			}
+		}
 	},
 	allow_smoke: function(frm, cdt, cdn) {
 		manage_filter('allow_smoke', 'reservation_detail');
@@ -461,7 +487,7 @@ frappe.ui.form.on('Room Stay', {
 			if (child.departure < frappe.datetime.get_today()) {
 				child.departure = null;
 				frm.refresh_field('room_stay');
-				frappe.msgprint("Arrival date must be greater than today.");
+				frappe.msgprint("Departure date must be greater than today.");
 			}
 			else if (child.departure < child.arrival) {
 				child.departure = null;
