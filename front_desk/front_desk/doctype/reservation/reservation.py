@@ -200,33 +200,36 @@ def cancel_reservation(reservation_id):
 @frappe.whitelist()
 def checkout_reservation(reservation_id):
 	is_bill_paid = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['is_paid'])
-
+	reservation = frappe.get_doc('Reservation', reservation_id)
 	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'In House':
 		if is_using_city_ledger(reservation_id):
 			input_city_ledger_payment_to_journal_entry(reservation_id)
 
-		if is_bill_paid == 1:
-			reservation = frappe.get_doc('Reservation', reservation_id)
-			# Update reservation status to "FINISH"
-			reservation.status = "Finish"
+		if float(reservation.room_bill_amount) == 0:
+			if is_bill_paid == 1:
+				reservation = frappe.get_doc('Reservation', reservation_id)
+				# Update reservation status to "FINISH"
+				reservation.status = "Finish"
 
-			room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
-			# Update departure time in room stay
-			room_stay.departure = frappe.utils.now()
-			# room_stay.save()
+				room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
+				# Update departure time in room stay
+				room_stay.departure = frappe.utils.now()
+				# room_stay.save()
 
-			reservation.save()
+				reservation.save()
 
-			hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
-			# Update room_status dari hotel_room menjadi "Vacant Dirty"
-			hotel_room.room_status = "Vacant Dirty"
-			hotel_room.save()
+				hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
+				# Update room_status dari hotel_room menjadi "Vacant Dirty"
+				hotel_room.room_status = "Vacant Dirty"
+				hotel_room.save()
 
-			## Update room booking status
-			update_by_reservation(reservation_id)
-			return 1
+				## Update room booking status
+				update_by_reservation(reservation_id)
+				return 1
+			else:
+				return 0
 		else:
-			return 0
+			return 2
 
 @frappe.whitelist()
 def auto_release_reservation_at_six_pm():

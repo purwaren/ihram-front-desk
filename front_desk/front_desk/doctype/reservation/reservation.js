@@ -41,7 +41,7 @@ frappe.ui.form.on('Reservation', {
 								frappe.show_alert(__(" Check Out Process Success.")); return;
 								frm.reload_doc();
 							}
-							else {
+							else if (r.message == 0) {
 								frappe.confirm(__("Cannot Check Out before the Hotel Bill Payment is complete. Open Hotel Bill Page?"),
 									function() {
 										frappe.call({
@@ -60,6 +60,9 @@ frappe.ui.form.on('Reservation', {
 										});
 									}
 								)
+							}
+							else if (r.message == 2) {
+								frappe.msgprint("Cannot Check Out, there are still room bills that haven't been paid yet.")
 							}
 						}
 					}
