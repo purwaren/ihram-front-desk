@@ -189,6 +189,8 @@ function book_dialog(room_id, date, current_status) {
 					date: date
 				},
 				callback: (resp) => {
+					console.log(resp);
+					console.log(date);
 					dialog = new frappe.ui.Dialog({
 						'title': 'Book Room ' + room_id,
 						'fields': [
@@ -196,7 +198,8 @@ function book_dialog(room_id, date, current_status) {
 							{'label': 'End', 'fieldname': 'end', 'fieldtype': 'Date', 'default': resp.message[0][2]},
 							{'label': 'Availability', 'fieldname': 'availability', 'fieldtype': 'Select', 'options': ['OU', 'HU', 'OO', 'UC'], 'default': resp.message[0][3]},
 							{'label': 'Description', 'fieldname': 'description', 'fieldtype': 'Small Text', 'default': resp.message[0][4]},
-							{'label': __('Cancel Booking'), 'fieldname': 'cancel_booking', 'fieldtype': 'Button'}
+							{'label': __('Cancel Booking'), 'fieldname': 'cancel_booking', 'fieldtype': 'Button'},
+							{'label': __('Done'), 'fieldname': 'done_booking', 'fieldtype': 'Button'}
 						],
 						primary_action: function() {
 							var form = dialog.get_values();
@@ -220,6 +223,19 @@ function book_dialog(room_id, date, current_status) {
 							search(doc);
 							dialog.hide();
 							frappe.msgprint(__('Success cancel book room ' + room_id));
+						})
+					}
+					dialog.fields_dict['done_booking'].input.onclick = function() {
+						frappe.db.set_value('Room Booking', resp.message[0][0], {
+							status: 'Finished'
+						}).then(r => {
+							frappe.db.set_value('Hotel Room', room_id, {
+							room_status: 'Vacant Dirty'
+							}).then(r => {
+								search(doc);
+								dialog.hide();
+								frappe.msgprint(__('Room Booking of Room No. ' + room_id + ' Finished.'));
+							})
 						})
 					}
 					dialog.show();
