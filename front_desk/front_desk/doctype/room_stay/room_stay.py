@@ -202,7 +202,7 @@ def checkout_early_refund(room_stay_id):
     using_city_ledger = False
     room_stay = frappe.get_doc('Room Stay', room_stay_id)
 
-    rbp_list = frappe.get_all('Room Bill Payments', filters={'parent':room_stay.reservation_id}, fields=["mode_of_payment"])
+    rbp_list = frappe.get_all('Room Bill Payments', filters={'parent':room_stay.reservation_id}, fields=["name", "mode_of_payment"])
 
     for rbp_item in rbp_list:
         if rbp_item.mode_of_payment == 'City Ledger':
@@ -236,12 +236,33 @@ def checkout_early_refund(room_stay_id):
         folio_name = frappe.db.get_value('Folio', {'reservation_id': room_stay.reservation_id}, ['name'])
         remark = 'Room Bill Payment: ' + room_stay.room_bill_paid_id + ' (City Ledger) - Reservation: ' + room_stay.reservation_id
         exist_folio_trx_of_city_ledger_payment = frappe.db.exists('Folio Transaction', {'parent': folio_name, 'remark': remark})
-        if exist_folio_trx_of_city_ledger_payment:
-            diff = float(room_stay.old_total_bill_amount) - float(room_stay.total_bill_amount)
-            if diff > 0:
-                # Update Folio Transaction
-                folio_need_updated = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['name'])
-                new_folio_amount = float(folio_need_updated.amount) - diff
-                frappe.db.set_value("Folio Transaction", folio_need_updated, "amount", new_folio_amount)
-                frappe.db.set_value("Folio Transaction", folio_need_updated, "amount_after_tax", new_folio_amount)
+        room_bill_payment = frappe.db.get_value('Room Bill Payments',
+                                                {'parent': room_stay.reservation_id, 'mode_of_payment': 'City Ledger'},
+                                                ['name'])
+        bill_adjustment_remark = 'City Ledger Bill Adjustment for Room Bill Payment: ' + room_bill_payment
+        exist_room_bill_adjustment = frappe.db.exists('Room Bill Adjustment', {'parent': room_stay.reservation_id,
+                                                                               'adjustment_remark': bill_adjustment_remark,
+                                                                               'room_bill_paid_id': room_stay.room_bill_paid_id,
+                                                                               'room_bill_payments_id': room_bill_payment})
+        if not exist_room_bill_adjustment:
+            bill_adjustment = frappe.new_doc('Room Bill Adjustment')
+            bill_adjustment.naming_series = 'FO-BILL-ADJ-.YYYY.-'
+            bill_adjustment.adjustment_amount = float(room_stay.old_total_bill_amount) - float(room_stay.total_bill_amount)
+            bill_adjustment.parent = room_stay.reservation_id
+            bill_adjustment.parentfield = 'room_bill_adjustment'
+            bill_adjustment.parenttype = 'Reservation'
+            bill_adjustment.adjustment_remark = bill_adjustment_remark
+            bill_adjustment.room_bill_paid_id = room_stay.room_bill_paid_id
+            bill_adjustment.room_bill_payments_id = room_bill_payment
+            bill_adjustment.save()
+
+            if exist_folio_trx_of_city_ledger_payment:
+                diff = float(room_stay.old_total_bill_amount) - float(room_stay.total_bill_amount)
+                if diff > 0:
+                    # Update Folio Transaction
+                    folio_need_updated = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['name'])
+                    folio_need_updated_amount = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['amount'])
+                    new_folio_amount = float(folio_need_updated_amount) - diff
+                    frappe.db.set_value("Folio Transaction", folio_need_updated, "amount", new_folio_amount)
+                    frappe.db.set_value("Folio Transaction", folio_need_updated, "amount_after_tax", new_folio_amount)
 
