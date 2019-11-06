@@ -672,6 +672,24 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 		if not room_stay_item.room_bill_paid_id:
 			updated_room_bill_amount = updated_room_bill_amount + room_stay_item.total_bill_amount
 
+	# AR City Ledger
+	if is_using_city_ledger(reservation_id):
+		total_amount = 0.0
+		for rbp_item in rbp_list:
+			if rbp_item.mode_of_payment == 'City Ledger':
+				total_amount = total_amount + float(rbp_item.rbp_amount)
+
+		doc_ar_city_ledger = frappe.new_doc('AR City Ledger')
+		doc_ar_city_ledger.naming_series = 'FO-AR-CL-.YYYY.-'
+		doc_ar_city_ledger.is_paid = 0
+		doc_ar_city_ledger.reservation_id = reservation_id
+		doc_ar_city_ledger.customer_name = reservation.customer_id
+		doc_ar_city_ledger.hotel_order_channel = reservation.hotel_order_channel
+		doc_ar_city_ledger.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+		doc_ar_city_ledger.is_room_charge_only = 1
+		doc_ar_city_ledger.total_amount = total_amount
+		doc_ar_city_ledger.save()
+
 	return updated_room_bill_amount
 
 @frappe.whitelist()
