@@ -34,13 +34,15 @@ def is_this_weekday(the_date):
 def add_early_checkin(room_stay_id):
     room_stay = frappe.get_doc('Room Stay', room_stay_id)
 
+    exist_folio_trx_ec = frappe.db.exists('Folio Transaction', {'parent': get_folio_name(room_stay.reservation_id),
+                                                              'remark': ("like",
+                                                                         'Early Check In Room ' + room_stay.room_id + '%')})
     if room_stay.is_early_checkin == 1:
         ec_percentage = frappe.db.get_value('Early Check In Percentage',
                                             {'early_checkin_name': room_stay.early_checkin_rate},
                                             ['early_checkin_percentage'])
         ec_remark = 'Early Check In Room ' + room_stay.room_id + ": " + room_stay.early_checkin_rate + " ( " + str(
             ec_percentage) + "% of Room Rate)"
-        exist_folio_trx_ec = frappe.db.exists('Folio Transaction', {'parent':get_folio_name(room_stay.reservation_id), 'remark': ec_remark})
         if not exist_folio_trx_ec:
             je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
             je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
@@ -49,38 +51,7 @@ def add_early_checkin(room_stay_id):
             if is_this_weekday(room_stay.arrival):
                 special_charge_amount = room_rate_doc.rate_weekday * ec_percentage/100.0
             else:
-                special_charge_amount = room_rate_doc.rate_weekend * ec_percentage/100.0
-            doc_journal_entry = frappe.new_doc('Journal Entry')
-            doc_journal_entry.title = ec_remark
-            doc_journal_entry.voucher_type = 'Journal Entry'
-            doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-            doc_journal_entry.posting_date = datetime.date.today()
-            doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-            doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-            doc_journal_entry.remark = ec_remark
-            doc_journal_entry.user_remark = ec_remark
-
-            doc_debit = frappe.new_doc('Journal Entry Account')
-            doc_debit.account = je_debit_account
-            doc_debit.debit = special_charge_amount
-            doc_debit.party_type = 'Customer'
-            doc_debit.party = cust_name
-            doc_debit.debit_in_account_currency = special_charge_amount
-            doc_debit.user_remark = ec_remark
-
-            doc_credit = frappe.new_doc('Journal Entry Account')
-            doc_credit.account = je_credit_account
-            doc_credit.credit = special_charge_amount
-            doc_credit.party_type = 'Customer'
-            doc_credit.party = cust_name
-            doc_credit.credit_in_account_currency = special_charge_amount
-            doc_credit.user_remark = ec_remark
-
-            doc_journal_entry.append('accounts', doc_debit)
-            doc_journal_entry.append('accounts', doc_credit)
-
-            doc_journal_entry.save()
-            doc_journal_entry.submit()
+                special_charge_amount = room_rate_doc.rate_weekend * ec_percentage/100.
 
             folio_name = get_folio_name(room_stay.reservation_id)
             doc_folio = frappe.get_doc('Folio', folio_name)
@@ -98,17 +69,98 @@ def add_early_checkin(room_stay_id):
             doc_folio.append('transaction_detail', doc_folio_transaction)
             doc_folio.save()
 
+            doc_journal_entry = frappe.new_doc('Journal Entry')
+            doc_journal_entry.title = "JE " + doc_folio_transaction.name
+            doc_journal_entry.voucher_type = 'Journal Entry'
+            doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+            doc_journal_entry.posting_date = datetime.date.today()
+            doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+            doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+            doc_journal_entry.remark = doc_folio_transaction.name + "-" + ec_remark
+            doc_journal_entry.user_remark = doc_folio_transaction.name + "-" + ec_remark
+
+            doc_debit = frappe.new_doc('Journal Entry Account')
+            doc_debit.account = je_debit_account
+            doc_debit.debit = special_charge_amount
+            doc_debit.party_type = 'Customer'
+            doc_debit.party = cust_name
+            doc_debit.debit_in_account_currency = special_charge_amount
+            doc_debit.user_remark = doc_folio_transaction.name + "-" + ec_remark
+
+            doc_credit = frappe.new_doc('Journal Entry Account')
+            doc_credit.account = je_credit_account
+            doc_credit.credit = special_charge_amount
+            doc_credit.party_type = 'Customer'
+            doc_credit.party = cust_name
+            doc_credit.credit_in_account_currency = special_charge_amount
+            doc_credit.user_remark = doc_folio_transaction.name + "-" + ec_remark
+
+            doc_journal_entry.append('accounts', doc_debit)
+            doc_journal_entry.append('accounts', doc_credit)
+
+            doc_journal_entry.save()
+            doc_journal_entry.submit()
+
+    else:
+        if exist_folio_trx_ec:
+            folio_trx_ec = frappe.get_doc('Folio Transaction',
+                                          {'parent': get_folio_name(room_stay.reservation_id),
+                                           'remark': ("like",
+                                                      'Early Check In Room ' + room_stay.room_id + '%')})
+            if frappe.db.exists('Journal Entry', {'title': 'JE ' + folio_trx_ec.name}):
+                doc_je = frappe.get_doc('Journal Entry', {'title': 'JE ' + folio_trx_ec.name})
+                doc_debit_je = frappe.get_doc('Journal Entry Account', {'parent': doc_je.name, 'credit': 0.0})
+                doc_credit_je = frappe.get_doc('Journal Entry Account', {'parent': doc_je.name, 'debit': 0.0})
+                doc_hotel_bill_breakdown = frappe.get_doc('Hotel Bill Breakdown',
+                                                          {'billing_folio_trx_id': folio_trx_ec.name})
+
+                doc_journal_entry = frappe.new_doc('Journal Entry')
+                doc_journal_entry.title = "Flip " + doc_je.title
+                doc_journal_entry.voucher_type = 'Journal Entry'
+                doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+                doc_journal_entry.posting_date = datetime.date.today()
+                doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+                doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+                doc_journal_entry.remark = "Flip " + doc_je.remark
+                doc_journal_entry.user_remark = "Flip " + doc_je.user_remark
+
+                doc_debit = frappe.new_doc('Journal Entry Account')
+                doc_debit.account = doc_credit_je.account
+                doc_debit.debit = doc_debit_je.debit
+                doc_debit.party_type = 'Customer'
+                doc_debit.party = doc_debit_je.party
+                doc_debit.debit_in_account_currency = doc_debit_je.debit_in_account_currency
+                doc_debit.user_remark = "Flip " + doc_debit_je.user_remark
+
+                doc_credit = frappe.new_doc('Journal Entry Account')
+                doc_credit.account = doc_debit_je.account
+                doc_credit.credit = doc_credit_je.credit
+                doc_credit.party_type = 'Customer'
+                doc_credit.party = doc_credit_je.party
+                doc_credit.credit_in_account_currency = doc_credit_je.credit_in_account_currency
+                doc_credit.user_remark = "Flip " + doc_credit_je.user_remark
+
+                doc_journal_entry.append('accounts', doc_debit)
+                doc_journal_entry.append('accounts', doc_credit)
+
+                doc_journal_entry.save()
+                doc_journal_entry.submit()
+
+                frappe.delete_doc("Folio Transaction", folio_trx_ec.name)
+                frappe.delete_doc("Hotel Bill Breakdown", doc_hotel_bill_breakdown.name)
+
 @frappe.whitelist()
 def add_late_checkout(room_stay_id):
     room_stay = frappe.get_doc('Room Stay', room_stay_id)
-
+    exist_folio_trx_lc = frappe.db.exists('Folio Transaction', {'parent': get_folio_name(room_stay.reservation_id),
+                                                              'remark': ("like",
+                                                                         'Late Check Out Room ' + room_stay.room_id + '%')})
     if room_stay.is_late_checkout == 1:
         lc_percentage = frappe.db.get_value('Late Check Out Percentage',
                                             {'late_checkout_name': room_stay.late_checkout_rate},
                                             ['late_checkout_percentage'])
         lc_remark = 'Late Check Out Room ' + room_stay.room_id + ": " + room_stay.late_checkout_rate + " ( " + str(
             lc_percentage) + "% of Room Rate)"
-        exist_folio_trx_lc = frappe.db.exists('Folio Transaction', {'parent':get_folio_name(room_stay.reservation_id), 'remark': lc_remark})
         if not exist_folio_trx_lc:
             je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
             je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
@@ -119,38 +171,6 @@ def add_late_checkout(room_stay_id):
                 special_charge_amount = room_rate_doc.rate_weekday * lc_percentage / 100.0
             else:
                 special_charge_amount = room_rate_doc.rate_weekend * lc_percentage / 100.0
-
-            doc_journal_entry = frappe.new_doc('Journal Entry')
-            doc_journal_entry.title = lc_remark
-            doc_journal_entry.voucher_type = 'Journal Entry'
-            doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-            doc_journal_entry.posting_date = datetime.date.today()
-            doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-            doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-            doc_journal_entry.remark = lc_remark
-            doc_journal_entry.user_remark = lc_remark
-
-            doc_debit = frappe.new_doc('Journal Entry Account')
-            doc_debit.account = je_debit_account
-            doc_debit.debit = special_charge_amount
-            doc_debit.party_type = 'Customer'
-            doc_debit.party = cust_name
-            doc_debit.debit_in_account_currency = special_charge_amount
-            doc_debit.user_remark = lc_remark
-
-            doc_credit = frappe.new_doc('Journal Entry Account')
-            doc_credit.account = je_credit_account
-            doc_credit.credit = special_charge_amount
-            doc_credit.party_type = 'Customer'
-            doc_credit.party = cust_name
-            doc_credit.credit_in_account_currency = special_charge_amount
-            doc_credit.user_remark = lc_remark
-
-            doc_journal_entry.append('accounts', doc_debit)
-            doc_journal_entry.append('accounts', doc_credit)
-
-            doc_journal_entry.save()
-            doc_journal_entry.submit()
 
             folio_name = get_folio_name(room_stay.reservation_id)
             doc_folio = frappe.get_doc('Folio', folio_name)
@@ -167,6 +187,84 @@ def add_late_checkout(room_stay_id):
 
             doc_folio.append('transaction_detail', doc_folio_transaction)
             doc_folio.save()
+
+            doc_journal_entry = frappe.new_doc('Journal Entry')
+            doc_journal_entry.title = "JE " + doc_folio_transaction.name
+            doc_journal_entry.voucher_type = 'Journal Entry'
+            doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+            doc_journal_entry.posting_date = datetime.date.today()
+            doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+            doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+            doc_journal_entry.remark = doc_folio_transaction.name + "-" + lc_remark
+            doc_journal_entry.user_remark = doc_folio_transaction.name + "-" + lc_remark
+
+            doc_debit = frappe.new_doc('Journal Entry Account')
+            doc_debit.account = je_debit_account
+            doc_debit.debit = special_charge_amount
+            doc_debit.party_type = 'Customer'
+            doc_debit.party = cust_name
+            doc_debit.debit_in_account_currency = special_charge_amount
+            doc_debit.user_remark = doc_folio_transaction.name + "-" + lc_remark
+
+            doc_credit = frappe.new_doc('Journal Entry Account')
+            doc_credit.account = je_credit_account
+            doc_credit.credit = special_charge_amount
+            doc_credit.party_type = 'Customer'
+            doc_credit.party = cust_name
+            doc_credit.credit_in_account_currency = special_charge_amount
+            doc_credit.user_remark = doc_folio_transaction.name + "-" + lc_remark
+
+            doc_journal_entry.append('accounts', doc_debit)
+            doc_journal_entry.append('accounts', doc_credit)
+
+            doc_journal_entry.save()
+            doc_journal_entry.submit()
+    else:
+        if exist_folio_trx_lc:
+            folio_trx_lc = frappe.get_doc('Folio Transaction',
+                                                  {'parent': get_folio_name(room_stay.reservation_id),
+                                                   'remark': ("like",
+                                                              'Late Check Out Room ' + room_stay.room_id + '%')})
+            if frappe.db.exists('Journal Entry', {'title': 'JE ' + folio_trx_lc.name}):
+                doc_je = frappe.get_doc('Journal Entry', {'title': 'JE ' + folio_trx_lc.name})
+                doc_debit_je = frappe.get_doc('Journal Entry Account', {'parent': doc_je.name, 'credit': 0.0})
+                doc_credit_je = frappe.get_doc('Journal Entry Account', {'parent': doc_je.name, 'debit': 0.0})
+                doc_hotel_bill_breakdown = frappe.get_doc('Hotel Bill Breakdown', {'billing_folio_trx_id': folio_trx_lc.name})
+
+                doc_journal_entry = frappe.new_doc('Journal Entry')
+                doc_journal_entry.title = "Flip " + doc_je.title
+                doc_journal_entry.voucher_type = 'Journal Entry'
+                doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+                doc_journal_entry.posting_date = datetime.date.today()
+                doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+                doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+                doc_journal_entry.remark = "Flip " + doc_je.remark
+                doc_journal_entry.user_remark = "Flip " + doc_je.user_remark
+
+                doc_debit = frappe.new_doc('Journal Entry Account')
+                doc_debit.account = doc_credit_je.account
+                doc_debit.debit = doc_debit_je.debit
+                doc_debit.party_type = 'Customer'
+                doc_debit.party = doc_debit_je.party
+                doc_debit.debit_in_account_currency = doc_debit_je.debit_in_account_currency
+                doc_debit.user_remark = "Flip " + doc_debit_je.user_remark
+
+                doc_credit = frappe.new_doc('Journal Entry Account')
+                doc_credit.account = doc_debit_je.account
+                doc_credit.credit = doc_credit_je.credit
+                doc_credit.party_type = 'Customer'
+                doc_credit.party = doc_credit_je.party
+                doc_credit.credit_in_account_currency = doc_credit_je.credit_in_account_currency
+                doc_credit.user_remark = "Flip " + doc_credit_je.user_remark
+
+                doc_journal_entry.append('accounts', doc_debit)
+                doc_journal_entry.append('accounts', doc_credit)
+
+                doc_journal_entry.save()
+                doc_journal_entry.submit()
+
+                frappe.delete_doc("Folio Transaction", folio_trx_lc.name)
+                frappe.delete_doc("Hotel Bill Breakdown", doc_hotel_bill_breakdown.name)
 
 def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):
@@ -202,7 +300,7 @@ def checkout_early_refund(room_stay_id):
     using_city_ledger = False
     room_stay = frappe.get_doc('Room Stay', room_stay_id)
 
-    rbp_list = frappe.get_all('Room Bill Payments', filters={'parent':room_stay.reservation_id}, fields=["name", "mode_of_payment"])
+    rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': room_stay.reservation_id}, fields=["name", "mode_of_payment"])
 
     for rbp_item in rbp_list:
         if rbp_item.mode_of_payment == 'City Ledger':
