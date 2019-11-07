@@ -29,6 +29,25 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('payment_method', 'set_only_once', 1);
 		}
 		if (frm.doc.status == 'In House') {
+			if (frm.doc.type == 'INDIVIDUAL') {
+				frm.page.add_menu_item(("Cancel"), function () {
+					let today = frappe.datetime.nowdate();
+					console.log(frm.doc.name);
+					frappe.confirm(__("You are about to Cancel the Reservation. Are you sure?"), function() {
+						frappe.call({
+							method: "front_desk.front_desk.doctype.reservation.reservation.cancel_individual_reservation",
+							args: {
+								reservation_id: reservation.name,
+							},
+							callback: (r) => {
+								if (r.message == 1) {
+									frappe.show_alert(__("Reservation Cancellation Success.")); return;
+								}
+							}
+						});
+					});
+				});
+			}
 			frm.page.add_menu_item(("Check Out"), function () {
 				frappe.call({
 					method: "front_desk.front_desk.doctype.reservation.reservation.checkout_reservation",

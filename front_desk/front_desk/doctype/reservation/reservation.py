@@ -796,3 +796,24 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 
 		doc_journal_entry.save()
 		doc_journal_entry.submit()
+
+@frappe.whitelist()
+def cancel_individual_reservation(reservation_id):
+	reservation = frappe.get_doc('Reservation', reservation_id)
+	room_stay_list = frappe.get_all('Room Stay', filters={'reservation_id': reservation_id}, order_by="arrival asc",
+										fields=['*'])
+	arrival_date = room_stay_list[0].arrival.date()
+	cancel_date = datetime.datetime.now().date()
+
+	# Cancellation date must be greater or equals than arrival date
+	if cancel_date < arrival_date:
+		frappe.msgprint("Cannot Cancel Room Stay that not yet happened.")
+	else:
+		# Cancellation with room charge exist
+		if arrival_date < cancel_date:
+			pass
+			# cancellation fee = 50% of One Day Room Charge
+		# Cancellation without room charge exist
+		else:
+			pass
+			# cancellation fee = 50% of Total Room Bill
