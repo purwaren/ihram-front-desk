@@ -59,11 +59,7 @@ def get_account(account_type, pos_profile, is_checkout=False):
 	return account_name
 
 def get_folio_name(reservation_id):
-	return frappe.db.get_list('Folio',
-		filters={
-			'reservation_id': reservation_id
-		}
-	)[0].name
+	return frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 
 @frappe.whitelist()
 def get_total_folio_transaction(reservation_id):
@@ -231,7 +227,6 @@ def finalize_sales_invoice_from_folio(reservation_id):
 
 			sales_invoice_found.status = 'Paid'
 			sales_invoice_found.save()
-
 
 def get_deposit_amount(reservation_id):
 	deposit = 0

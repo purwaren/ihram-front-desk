@@ -14,6 +14,7 @@ from front_desk.front_desk.doctype.hotel_bill.hotel_bill import get_mode_of_paym
 from front_desk.front_desk.doctype.room_stay.room_stay import add_early_checkin
 from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
 from front_desk.front_desk.doctype.room_stay.room_stay import get_rate_after_tax
+from front_desk.front_desk.doctype.room_stay.room_stay import calculate_room_stay_bill
 
 class Reservation(Document):
 	pass
@@ -800,6 +801,24 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 @frappe.whitelist()
 def cancel_individual_reservation(reservation_id):
 	reservation = frappe.get_doc('Reservation', reservation_id)
+	cust_name = frappe.get_doc('Customer', reservation.customer_id).name
+	folio = frappe.get_doc('Folio', {'reservation_id': reservation_id})
+	hotel_bill = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
+	remark = "Cancellation Fee - Reservation: " + reservation_id
+	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+	piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+
+	total_rbpd = 0.0
+	rbpd_list = reservation.get('room_bill_paid')
+	for rbpd_item in rbpd_list:
+		total_rbpd += rbpd_item.rbpd_bill_amount
+
+	total_room_charge = 0.0
+	folio_trx_list = folio.get('transaction_detail')
+	for folio_trx_item in folio_trx_list:
+		if 'Auto Room Charge:' in folio_trx_item.remark:
+			total_room_charge += folio_trx_item.amount_after_tax
+
 	room_stay_list = frappe.get_all('Room Stay', filters={'reservation_id': reservation_id}, order_by="arrival asc",
 										fields=['*'])
 	arrival_date = room_stay_list[0].arrival.date()
@@ -811,9 +830,98 @@ def cancel_individual_reservation(reservation_id):
 	else:
 		# Cancellation with room charge exist
 		if arrival_date < cancel_date:
-			pass
 			# cancellation fee = 50% of One Day Room Charge
+			cancellation_fee = calculate_room_stay_bill(room_stay_list[0].arrival,
+														room_stay_list[0].arrival + datetime.timedelta(days=1),
+														room_stay_list[0].room_rate,
+														room_stay_list[0].discount_percentage) * 0.5
+			# room refund
+			refund_amount = total_rbpd - cancellation_fee
 		# Cancellation without room charge exist
 		else:
-			pass
 			# cancellation fee = 50% of Total Room Bill
+			cancellation_fee = total_rbpd * 0.5
+			# room refund
+			refund_amount = total_rbpd - total_room_charge - cancellation_fee
+
+		# Cancellation Fee Folio Transaction
+		fee_folio_trx = frappe.new_doc('Folio Transaction')
+		fee_folio_trx.folio_id = folio.name
+		fee_folio_trx.amount = cancellation_fee
+		fee_folio_trx.flag = 'Debit'
+		fee_folio_trx.amount_after_tax = cancellation_fee
+		fee_folio_trx.account_id = piutang_lain2
+		fee_folio_trx.against_account_id = kas_pendapatan_kamar
+		fee_folio_trx.remark = remark
+		fee_folio_trx.is_additional_charge = 1
+		fee_folio_trx.is_void = 0
+		folio.append('transaction_detail', fee_folio_trx)
+		folio.save()
+
+		# Cancellation Fee Journal Entry
+		doc_journal_entry = frappe.new_doc('Journal Entry')
+		doc_journal_entry.title = fee_folio_trx + remark
+		doc_journal_entry.voucher_type = 'Journal Entry'
+		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+		doc_journal_entry.posting_date = datetime.date.today()
+		doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+		doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+		doc_journal_entry.remark = remark
+		doc_journal_entry.user_remark = remark
+
+		doc_debit = frappe.new_doc('Journal Entry Account')
+		doc_debit.account = piutang_lain2
+		doc_debit.debit = cancellation_fee
+		doc_debit.debit_in_account_currency = cancellation_fee
+		doc_debit.party_type = 'Customer'
+		doc_debit.party = cust_name
+		doc_debit.user_remark = remark
+
+		doc_credit = frappe.new_doc('Journal Entry Account')
+		doc_credit.account = kas_pendapatan_kamar
+		doc_credit.credit = cancellation_fee
+		doc_credit.credit_in_account_currency = cancellation_fee
+		doc_credit.party_type = 'Customer'
+		doc_credit.party = cust_name
+		doc_credit.user_remark = remark
+
+		doc_journal_entry.append('accounts', doc_debit)
+		doc_journal_entry.append('accounts', doc_credit)
+
+		doc_journal_entry.save()
+		doc_journal_entry.submit()
+
+		# Cancellation Fee Hotel Bill Breakdown - Apakah Sebaiknya dipindah di Hotel Bill aja biar jadi satu?
+		fee_bill_breakdown = frappe.new_doc('Hotel Bill Breakdown')
+		fee_bill_breakdown.is_tax_item = 0
+		fee_bill_breakdown.is_folio_trx_pairing = 1
+		fee_bill_breakdown.billing_folio_trx_id = fee_folio_trx.name
+		fee_bill_breakdown.breakdown_description = remark
+		fee_bill_breakdown.breakdown_net_total = cancellation_fee
+		fee_bill_breakdown.breakdown_grand_total = cancellation_fee
+		fee_bill_breakdown.breakdown_account = kas_pendapatan_kamar
+		fee_bill_breakdown.breakdown_account_against = piutang_lain2
+		hotel_bill.append('bill_breakdown', fee_bill_breakdown)
+		hotel_bill.save()
+
+		# Cancellation Hotel Bill Refund
+		refund_description = 'Cancellation Refund of Reservation: ' + reservation_id
+		kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
+		kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+
+		exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
+												  {'parent': hotel_bill.name,
+												   'refund_description': refund_description})
+		if not exist_this_refund_item:
+			refund_item = frappe.new_doc('Hotel Bill Refund')
+			refund_item.naming_series = 'FO-BILL-RFND-.YYYY.-'
+			refund_item.refund_amount = refund_amount
+			refund_item.refund_description = refund_description
+			refund_item.is_refunded = 0
+			refund_item.account = kas_fo
+			refund_item.account_against = kas_dp_kamar
+
+			hotel_bill.append('bill_refund', refund_item)
+			hotel_bill.save()
+
+		return 1
