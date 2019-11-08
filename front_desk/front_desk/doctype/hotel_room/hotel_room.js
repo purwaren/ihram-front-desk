@@ -52,8 +52,12 @@ frappe.ui.form.on("Hotel Room", {
 					for (i = 0; i < dots.length; i++) {\
 						dots[i].className = dots[i].className.replace(" active", "");\
 					}\
-					slides[slideIndex-1].style.display = "block";\
-					dots[slideIndex-1].className += " active";\
+					if (slides.length > 0) {\
+						slides[slideIndex-1].style.display = "block";\
+					}\
+					if (dots.length > 0) {\
+						dots[slideIndex-1].className += " active";\
+					}\
 				}\
 				</script>'
 			
@@ -65,16 +69,21 @@ frappe.ui.form.on("Hotel Room", {
 					room_type: hotel_room.room_type
 				},
 				callback: (response) => {
-					for (let i = 0; i < response.message.length; i++) {
-						var is_viewable = frappe.utils.is_image_file(response.message[i].file_url);
-						if (is_viewable) {
-							html = html + '<div class="mySlides"><img src="' + response.message[i].file_url + '" style="width:100%"></div>'
+					if (response.message != undefined) {
+						for (let i = 0; i < response.message.length; i++) {
+							var is_viewable = frappe.utils.is_image_file(response.message[i].file_url);
+							if (is_viewable) {
+								html = html + '<div class="mySlides"><img src="' + response.message[i].file_url + '" style="width:100%"></div>'
+							}
 						}
-					}
 
-					html = html + '<a class="prev" onclick="plusSlides(-1)">&#10094;</a><a class="next" onclick="plusSlides(1)">&#10095;</a></div>' + script + '</body></html>';
-					wrapper.html(html);
-					frm.toggle_display("preview_html", true);
+						html = html + '<a class="prev" onclick="plusSlides(-1)">&#10094;</a><a class="next" onclick="plusSlides(1)">&#10095;</a></div>' + script + '</body></html>';
+						wrapper.html(html);
+						frm.toggle_display("preview_html", true);
+					}
+					else {
+						frm.toggle_display("preview_html", false);
+					}
 				}
 			});	
 		} else {
@@ -131,8 +140,12 @@ frappe.ui.form.on("Hotel Room", {
 					for (i = 0; i < dots.length; i++) {\
 						dots[i].className = dots[i].className.replace(" active", "");\
 					}\
-					slides[slideIndex-1].style.display = "block";\
-					dots[slideIndex-1].className += " active";\
+					if (slides.length > 0) {\
+						slides[slideIndex-1].style.display = "block";\
+					}\
+					if (dots.length > 0) {\
+						dots[slideIndex-1].className += " active";\
+					}\
 				}\
 				</script>'
 			
@@ -144,20 +157,45 @@ frappe.ui.form.on("Hotel Room", {
 					room_type: hotel_room.room_type
 				},
 				callback: (response) => {
-					for (let i = 0; i < response.message.length; i++) {
-						var is_viewable = frappe.utils.is_image_file(response.message[i].file_url);
-						if (is_viewable) {
-							html = html + '<div class="mySlides"><img src="' + response.message[i].file_url + '" style="width:100%"></div>'
+					if (response.message != undefined) {
+						for (let i = 0; i < response.message.length; i++) {
+							var is_viewable = frappe.utils.is_image_file(response.message[i].file_url);
+							if (is_viewable) {
+								html = html + '<div class="mySlides"><img src="' + response.message[i].file_url + '" style="width:100%"></div>'
+							}
 						}
-					}
 
-					html = html + '<a class="prev" onclick="plusSlides(-1)">&#10094;</a><a class="next" onclick="plusSlides(1)">&#10095;</a></div>' + script + '</body></html>';
-					wrapper.html(html);
-					frm.toggle_display("preview_html", true);
+						html = html + '<a class="prev" onclick="plusSlides(-1)">&#10094;</a><a class="next" onclick="plusSlides(1)">&#10095;</a></div>' + script + '</body></html>';
+						wrapper.html(html);
+						frm.toggle_display("preview_html", true);
+					}
+					else {
+						frm.toggle_display("preview_html", false);
+					}
 				}
 			});	
 		} else {
 			frm.toggle_display("preview_html", false);
 		}
+	},
+	amenities_template: function (frm) {
+		frappe.call({
+			method: "front_desk.front_desk.doctype.hotel_room.hotel_room.copy_amenities_template",
+			args: {
+				amenities_type_id: frm.doc.amenities_template
+			},
+			callback: (response) => {
+				if (response.message) {
+					frm.set_value('amenities', []);
+					$.each(response.message, function (i, d) {
+						var item = frm.add_child('amenities');
+						item.item = d.item;
+						item.item_name = d.item_name;
+						item.qty = d.qty;
+					});
+				}
+				refresh_field('amenities');
+			}
+		})
 	}
 });

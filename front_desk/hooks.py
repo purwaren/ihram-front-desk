@@ -98,6 +98,9 @@ doc_events = {
 	"Reservation": {
 		"validate": "front_desk.front_desk.doctype.reservation.reservation.calculate_room_bill_amount",
 	},
+	"Hotel Room": {
+		"validate": "front_desk.front_desk.doctype.hotel_room.hotel_room.calculate_total_amenities_cost"
+	},
 }
 
 # Scheduled Tasks
