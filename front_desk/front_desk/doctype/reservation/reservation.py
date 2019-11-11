@@ -925,3 +925,12 @@ def cancel_individual_reservation(reservation_id):
 			hotel_bill.save()
 
 		return 1
+
+@frappe.whitelist()
+def get_all_reservation_by_order_channel(hotel_order_channel):
+	return_list = []
+	list =  frappe.get_all('Reservation', filters={"hotel_order_channel": hotel_order_channel}, fields=["name"])
+	for item in list:
+		return_list.append(item.name)
+
+	return return_list
