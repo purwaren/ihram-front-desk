@@ -803,7 +803,9 @@ def cancel_individual_reservation(reservation_id):
 	reservation = frappe.get_doc('Reservation', reservation_id)
 	cust_name = frappe.get_doc('Customer', reservation.customer_id).name
 	folio = frappe.get_doc('Folio', {'reservation_id': reservation_id})
-	hotel_bill = frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name'])
+	if not frappe.db.exists('Hotel Bill', {'reservation_id': reservation_id}):
+		create_hotel_bill(reservation_id)
+	hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_id})
 	remark = "Cancellation Fee - Reservation: " + reservation_id
 	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 	piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
@@ -860,7 +862,7 @@ def cancel_individual_reservation(reservation_id):
 
 		# Cancellation Fee Journal Entry
 		doc_journal_entry = frappe.new_doc('Journal Entry')
-		doc_journal_entry.title = fee_folio_trx + remark
+		doc_journal_entry.title = fee_folio_trx.name + remark
 		doc_journal_entry.voucher_type = 'Journal Entry'
 		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
 		doc_journal_entry.posting_date = datetime.date.today()
