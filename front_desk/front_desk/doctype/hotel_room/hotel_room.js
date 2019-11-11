@@ -179,7 +179,8 @@ frappe.ui.form.on("Hotel Room", {
 		}
 	},
 	amenities_template: function (frm) {
-		frappe.call({
+		if (frm.doc.amenities_template) {
+			frappe.call({
 			method: "front_desk.front_desk.doctype.hotel_room.hotel_room.copy_amenities_template",
 			args: {
 				amenities_type_id: frm.doc.amenities_template
@@ -197,5 +198,6 @@ frappe.ui.form.on("Hotel Room", {
 				refresh_field('amenities');
 			}
 		})
+		}
 	}
 });
