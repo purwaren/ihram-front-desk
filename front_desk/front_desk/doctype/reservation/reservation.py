@@ -901,6 +901,7 @@ def cancel_individual_reservation(reservation_id):
 		fee_bill_breakdown.breakdown_description = remark
 		fee_bill_breakdown.breakdown_net_total = cancellation_fee
 		fee_bill_breakdown.breakdown_grand_total = cancellation_fee
+		fee_bill_breakdown.breakdown_tax_amount = 0
 		fee_bill_breakdown.breakdown_account = kas_pendapatan_kamar
 		fee_bill_breakdown.breakdown_account_against = piutang_lain2
 		hotel_bill.append('bill_breakdown', fee_bill_breakdown)
