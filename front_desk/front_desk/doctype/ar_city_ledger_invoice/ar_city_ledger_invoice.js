@@ -55,6 +55,28 @@ frappe.ui.form.on('AR City Ledger Invoice', {
 	},
 	round_down_change: function (frm) {
 		calculate_payments(frm, frm.doc.payment_details);
+	},
+	make_payment: function (frm, cdt, cdn) {
+		if (frm.doc.__unsaved != undefined && frm.doc.unsaved == 1) {
+			frappe.msgprint("The AR City Ledger Invoice has been modified. Please click Save and reload the page, before making payment entry");
+		}
+		else {
+			frappe.call({
+				method: "front_desk.front_desk.doctype.ar_city_ledger_invoice.ar_city_ledger_invoice.make_payment_ar_city_ledger_invoice",
+				args: {
+					ar_city_ledger_invoice_id: cdn,
+					latest_outstanding_amount: frm.doc.outstanding_amount
+				},
+				callback: (r) => {
+					if (r.message){
+						if (r.message == 1) {
+							frm.set_intro(__('This AR City Ledger Invoice successfully finalized. You cannot change it anymore.'));
+							frm.reload_doc();
+						}
+					}
+				}
+			})
+		}
 	}
 });
 
