@@ -241,7 +241,11 @@ frappe.ui.form.on('Reservation', {
 				});
 			});
 		}
-
+		// frm.add_custom_button(__("populate"), function () {
+		// 	frappe.call({
+		// 		method: "front_desk.front_desk.doctype.reservation.reservation.populate_ba_of_all_folio"
+		// 	})
+		// });
 		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
 			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
 			// 	frappe.call({
@@ -250,7 +254,7 @@ frappe.ui.form.on('Reservation', {
 			// 			reservation_id: reservation.name
 			// 		}
 			// 	});
-			// 	// frappe.call({
+			 	// frappe.call({
 				// 	method: "front_desk.front_desk.doctype.reservation.reservation.create_additional_charge",
 				// 	args: {
 				// 		reservation_id: reservation.name

@@ -101,6 +101,9 @@ doc_events = {
 	"Hotel Room": {
 		"validate": "front_desk.front_desk.doctype.hotel_room.hotel_room.calculate_total_amenities_cost"
 	},
+	"AR City Ledger Invoice": {
+		"validate": "front_desk.front_desk.doctype.ar_city_ledger_invoice.ar_city_ledger_invoice.calculate_outstanding_amount"
+	},
 }
 
 # Scheduled Tasks

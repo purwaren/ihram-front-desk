@@ -224,8 +224,27 @@ def checkout_reservation(reservation_id):
 				hotel_room.room_status = "Vacant Dirty"
 				hotel_room.save()
 
-				## Update room booking status
+				# Update room booking status
 				update_by_reservation(reservation_id)
+
+				# Update Room Bill Amount and Hotel Bill Amount
+				rba = 0.0
+				hba = 0.0
+
+				folio = frappe.get_doc('Folio', {'reservation_id': reservation_id})
+				folio_trx = folio.get('transaction_detail')
+				for ft_item in folio_trx:
+					if "Auto Room Charge:" in ft_item.remark:
+						rba += ft_item.amount_after_tax
+
+				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_id})
+				bill_breakdown = hotel_bill.get('bill_breakdown')
+				for bb_item in bill_breakdown:
+					if bb_item.is_folio_trx_pairing == 1 and bb_item.is_tax_item == 0 and bb_item.is_excluded == 0:
+						hba += bb_item.breakdown_grand_total
+
+				frappe.db.set_value('Folio', folio.name, 'room_bill_amount', rba)
+				frappe.db.set_value('Folio', folio.name, 'hotel_bill_amount', hba)
 				return 1
 			else:
 				return 0
@@ -932,8 +951,38 @@ def cancel_individual_reservation(reservation_id):
 @frappe.whitelist()
 def get_all_reservation_by_order_channel(hotel_order_channel):
 	return_list = []
-	list =  frappe.get_all('Reservation', filters={"hotel_order_channel": hotel_order_channel}, fields=["name"])
+	list = frappe.get_all('Reservation', filters=[
+												['hotel_order_channel', '=', hotel_order_channel],
+												['status', '=', 'Finish']
+												], fields=["name"])
 	for item in list:
 		return_list.append(item.name)
 
 	return return_list
+
+# Kalo butuh populate rba
+@frappe.whitelist()
+def populate_ba_of_all_folio():
+	folio_list = frappe.get_all('Folio')
+	if len(folio_list) > 0:
+		for item in folio_list:
+			polio = frappe.get_doc('Folio', item.name)
+			ft_list = polio.get('transaction_detail')
+			rba = 0
+			hba = 0
+			if ft_list:
+				for ft_item in ft_list:
+					if "Auto Room Charge:" in ft_item.remark:
+						rba += ft_item.amount_after_tax
+			polio.room_bill_amount = 0.0 + rba
+
+			hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': polio.reservation_id})
+			bill_breakdown = hotel_bill.get('bill_breakdown')
+			for bb_item in bill_breakdown:
+				if bb_item.is_folio_trx_pairing == 1 and bb_item.is_tax_item == 0 and bb_item.is_excluded == 0:
+					hba += bb_item.breakdown_grand_total
+
+			frappe.db.set_value('Folio', polio.name, 'room_bill_amount', rba)
+			frappe.db.set_value('Folio', polio.name, 'hotel_bill_amount', hba)
+
+	frappe.msgprint("Folio's Room Biil Amount & Hotel Bill Amount populated")
