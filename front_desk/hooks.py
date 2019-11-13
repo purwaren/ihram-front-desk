@@ -102,7 +102,9 @@ doc_events = {
 		"validate": "front_desk.front_desk.doctype.hotel_room.hotel_room.calculate_total_amenities_cost"
 	},
 	"AR City Ledger Invoice": {
-		"validate": "front_desk.front_desk.doctype.ar_city_ledger_invoice.ar_city_ledger_invoice.calculate_outstanding_amount"
+		"validate": ["front_desk.front_desk.doctype.ar_city_ledger_invoice.ar_city_ledger_invoice.calculate_outstanding_amount",
+					 "front_desk.front_desk.doctype.ar_city_ledger_invoice.ar_city_ledger_invoice.add_ar_invoice_id_to_folio",
+					 "front_desk.front_desk.doctype.ar_city_ledger_invoice.ar_city_ledger_invoice.remove_ar_invoice_id_from_folio",]
 	},
 }
 

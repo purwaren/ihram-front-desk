@@ -237,3 +237,9 @@ def get_deposit_amount(reservation_id):
 		deposit = deposit + item.amount
 
 	return deposit
+
+@frappe.whitelist()
+def set_ar_city_ledger_invoice_id_to_null(folio_id):
+	folio = frappe.get_doc('Folio', folio_id)
+	if folio.ar_city_ledger_invoice_id is not None:
+		frappe.db.set_value('Folio', folio_id, 'ar_city_ledger_invoice_id', None)

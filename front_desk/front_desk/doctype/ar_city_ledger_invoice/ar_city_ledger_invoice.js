@@ -85,6 +85,18 @@ frappe.ui.form.on('Folio to be Collected', {
 		if (frm.doc.hotel_order_channel == undefined) {
 			frappe.msgprint("Please fill & choose Channel first.")
 		}
+	},
+	before_folio_remove: function (frm, cdt, cdn) {
+		let child = locals[cdt][cdn];
+		if (child.folio_id) {
+			console.log("diremove = " + child.folio_id);
+			frappe.call({
+				method: "front_desk.front_desk.doctype.folio.folio.set_ar_city_ledger_invoice_id_to_null",
+				args: {
+					folio_id: child.folio_id,
+				},
+			});
+		}
 	}
 });
 
@@ -124,7 +136,9 @@ function get_folio_by_order_channel(frm) {
 						return {
 							filters: [
 								['Folio', 'reservation_id', 'in', r.message],
-								['Folio', 'room_bill_amount', '!=', 0]
+								['Folio', 'room_bill_amount', '!=', 0],
+								['Folio', 'ar_city_ledger_invoice_id', '!=', null],
+								['Folio', 'city_ledger_payment_final', '=', 0],
 							],
 						}
 					}

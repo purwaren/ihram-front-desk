@@ -18,6 +18,31 @@ def calculate_outstanding_amount(doc, method):
 			amount += item.amount
 	doc.total_amount = amount
 
+def add_ar_invoice_id_to_folio(doc, method):
+	folio_list = doc.get('folio')
+	if len(folio_list) > 0:
+		for item in folio_list:
+			frappe.db.set_value('Folio', item.folio_id, 'ar_city_ledger_invoice_id', doc.name)
+
+def remove_ar_invoice_id_from_folio(doc, method):
+	folio_list = doc.get('folio')
+	folio_list_from_db = frappe.get_all('Folio', filters={'ar_city_ledger_invoice_id': doc.name}, fields=['name'])
+	list_from_invoice = []
+	list_from_db = []
+	diff = []
+
+	for item in folio_list:
+		list_from_invoice.append(item.folio_id)
+	for item2 in folio_list_from_db:
+		list_from_db.append(item2.name)
+
+	if len(list_from_db) > len(list_from_invoice):
+		diff = list(set(list_from_db).difference(list_from_invoice))
+
+	if len(diff) > 0:
+		for folio_item in diff:
+			frappe.db.set_value('Folio', item.folio_id, 'ar_city_ledger_invoice_id', None)
+
 def get_mode_of_payment_account(mode_of_payment_id, company_name):
 	return frappe.db.get_value('Mode of Payment Account', {'parent': mode_of_payment_id, 'company': company_name}, "default_account")
 
@@ -25,6 +50,7 @@ def get_mode_of_payment_account(mode_of_payment_id, company_name):
 def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outstanding_amount):
 	acli = frappe.get_doc('AR City Ledger Invoice', ar_city_ledger_invoice_id)
 	acli_payment_details = acli.get('payment_details')
+	acli_folio = acli.get('folio')
 
 	if float(latest_outstanding_amount) > 0:
 		frappe.msgprint("There are still outstanding amount needed to be paid")
@@ -109,4 +135,8 @@ def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outsta
 			change_journal_entry.submit()
 
 		frappe.db.set_value('AR City Ledger Invoice', ar_city_ledger_invoice_id, 'is_paid', 1)
+
+		for acli_item in acli_folio:
+			frappe.db.set_value('Folio', acli_item.folio_id, 'city_ledger_payment_final', 1)
+
 		return 1
