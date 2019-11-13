@@ -59,8 +59,6 @@ def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outsta
 			piutang_city_ledger = frappe.db.get_list('Account', filters={'account_number': '1132.002'})[0].name
 			debit_account_name = get_mode_of_payment_account(payment_item.mode_of_payment,
 															 frappe.get_doc("Global Defaults").default_company)
-			frappe.msgprint(piutang_city_ledger)
-			frappe.msgprint(debit_account_name)
 			title = 'AR City Ledger Payment (' + str(payment_item.mode_of_payment) + '): ' + payment_item.name
 			remark = title + ' -@' + str(payment_item.creation)
 
@@ -138,5 +136,7 @@ def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outsta
 
 		for acli_item in acli_folio:
 			frappe.db.set_value('Folio', acli_item.folio_id, 'city_ledger_payment_final', 1)
-
+			ar_city_ledger_id = frappe.db.get_value('AR City Ledger', {'folio_id': acli_item.folio_id}, ['name'])
+			if ar_city_ledger_invoice_id is not None:
+				frappe.db.set_value('AR City Ledger', ar_city_ledger_id, 'is_paid', 1)
 		return 1

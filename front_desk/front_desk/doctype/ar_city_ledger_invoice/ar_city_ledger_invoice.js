@@ -132,13 +132,14 @@ function get_folio_by_order_channel(frm) {
 			},
 			callback: (r) => {
 				if (r.message) {
+					console.log(r.message);
 					field.get_query = function () {
 						return {
 							filters: [
 								['Folio', 'reservation_id', 'in', r.message],
 								['Folio', 'room_bill_amount', '!=', 0],
-								['Folio', 'ar_city_ledger_invoice_id', '!=', null],
-								['Folio', 'city_ledger_payment_final', '=', 0],
+								// ['Folio', 'ar_city_ledger_invoice_id', '!=', null],
+								// ['Folio', 'city_ledger_payment_final', '=', 0],
 							],
 						}
 					}
