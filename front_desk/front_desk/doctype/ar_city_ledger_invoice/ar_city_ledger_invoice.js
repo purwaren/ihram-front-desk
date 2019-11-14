@@ -83,7 +83,7 @@ frappe.ui.form.on('AR City Ledger Invoice', {
 frappe.ui.form.on('Folio to be Collected', {
 	folio_add: function (frm) {
 		if (frm.doc.hotel_order_channel == undefined) {
-			frappe.msgprint("Please fill & choose Channel first.")
+			frappe.msgprint("Please fill & choose Channel first.");
 		}
 	},
 	before_folio_remove: function (frm, cdt, cdn) {
