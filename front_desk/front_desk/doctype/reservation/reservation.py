@@ -916,6 +916,7 @@ def cancel_individual_reservation(reservation_id):
 		fee_bill_breakdown = frappe.new_doc('Hotel Bill Breakdown')
 		fee_bill_breakdown.is_tax_item = 0
 		fee_bill_breakdown.is_folio_trx_pairing = 1
+		fee_bill_breakdown.is_excluded = 1
 		fee_bill_breakdown.billing_folio_trx_id = fee_folio_trx.name
 		fee_bill_breakdown.breakdown_description = remark
 		fee_bill_breakdown.breakdown_net_total = cancellation_fee
@@ -927,7 +928,7 @@ def cancel_individual_reservation(reservation_id):
 		hotel_bill.save()
 
 		# Cancellation Hotel Bill Refund
-		refund_description = 'Cancellation Refund of Reservation: ' + reservation_id
+		refund_description = 'Refund Room Payment of Reservation: ' + reservation_id
 		kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 		kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
 
