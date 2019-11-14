@@ -126,7 +126,7 @@ function get_folio_by_order_channel(frm) {
 	let field = frm.fields_dict['folio'].grid.fields_map['folio_id'];
 	if (frm.doc.hotel_order_channel) {
 		frappe.call({
-			method: 'front_desk.front_desk.doctype.reservation.reservation.get_all_reservation_by_order_channel',
+			method: 'front_desk.front_desk.doctype.ar_city_ledger.ar_city_ledger.get_folio_list_by_order_channel',
 			args: {
 				hotel_order_channel: frm.doc.hotel_order_channel
 			},
@@ -136,10 +136,10 @@ function get_folio_by_order_channel(frm) {
 					field.get_query = function () {
 						return {
 							filters: [
-								['Folio', 'reservation_id', 'in', r.message],
+								['Folio', 'name', 'in', r.message],
 								['Folio', 'room_bill_amount', '!=', 0],
-								// ['Folio', 'ar_city_ledger_invoice_id', '!=', null],
-								// ['Folio', 'city_ledger_payment_final', '=', 0],
+								['Folio', 'ar_city_ledger_invoice_id', '!=', null],
+								['Folio', 'city_ledger_payment_final', '=', 0],
 							],
 						}
 					}
