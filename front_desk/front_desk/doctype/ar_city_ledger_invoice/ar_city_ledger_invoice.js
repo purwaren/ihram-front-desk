@@ -18,7 +18,7 @@ frappe.ui.form.on('AR City Ledger Invoice', {
 			frm.set_df_property('make_payment_section_break', 'hidden', 1);
 		}
 		else {
-			if (frm.doc.folio.length <= 0) {
+			if (frm.doc.folio == undefined || frm.doc.folio.length <= 0) {
 				frm.set_df_property('payment_detail_section_break', 'hidden', 1);
 				frm.set_df_property('payment_section_break', 'hidden', 1);
 			}
@@ -42,11 +42,11 @@ frappe.ui.form.on('AR City Ledger Invoice', {
 		if (frm.doc.hotel_order_channel) {
 			get_folio_by_order_channel(frm);
 		}
-		if (frm.doc.folio.length > 0) {
+		if (frm.doc.folio != undefined && frm.doc.folio.length > 0) {
 			frm.set_df_property('payment_detail_section_break', 'hidden', 0);
 			frm.set_df_property('payment_section_break', 'hidden', 0);
 		}
-		if (frm.doc.payment_details.length > 0) {
+		if (frm.doc.payment_details != undefined && frm.doc.payment_details.length > 0) {
 			frm.set_df_property('make_payment_section_break', 'hidden', 0);
 		}
 	},
@@ -164,37 +164,39 @@ function set_all_read_only() {
 
 function calculate_payments(frm, payment_list) {
 	var total_payment = 0;
-	for (var key in payment_list) {
-		total_payment += payment_list[key].payment_amount;
-	}
-	var diff = total_payment - frm.doc.total_amount;
-	if (diff < 0) {
-		frm.set_value('outstanding_amount', diff*-1);
-		if (cash_used) {
-			frm.set_value('change_rounding_amount', 0);
-			frm.set_value('change_amount', 0);
-			frm.set_value('rounded_change_amount', 0);
+	if (payment_list != undefined && payment_list.length > 0) {
+		for (var key in payment_list) {
+			total_payment += payment_list[key].payment_amount;
 		}
-	}
-	else {
-		frm.set_value('outstanding_amount', 0);
-		if (cash_used) {
-			frm.set_value('change_amount', diff);
-			var roundedChange = Math.floor(diff / 100) * 100;
-			if (frm.doc.round_down_change == 1) {
-				frm.set_value('change_rounding_amount', diff - roundedChange);
-				frm.set_value('rounded_change_amount', roundedChange);
-			}
-			else {
+		var diff = total_payment - frm.doc.total_amount;
+		if (diff < 0) {
+			frm.set_value('outstanding_amount', diff*-1);
+			if (cash_used) {
 				frm.set_value('change_rounding_amount', 0);
-				frm.set_value('rounded_change_amount', diff);
+				frm.set_value('change_amount', 0);
+				frm.set_value('rounded_change_amount', 0);
+			}
+		}
+		else {
+			frm.set_value('outstanding_amount', 0);
+			if (cash_used) {
+				frm.set_value('change_amount', diff);
+				var roundedChange = Math.floor(diff / 100) * 100;
+				if (frm.doc.round_down_change == 1) {
+					frm.set_value('change_rounding_amount', diff - roundedChange);
+					frm.set_value('rounded_change_amount', roundedChange);
+				}
+				else {
+					frm.set_value('change_rounding_amount', 0);
+					frm.set_value('rounded_change_amount', diff);
+				}
 			}
 		}
 	}
 }
 
 function check_if_payment_cash(frm, payment_list) {
-	if (payment_list.length > 0) {
+	if (payment_list != undefined && payment_list.length > 0) {
 		var i;
 		for (var key in payment_list) {
 			if (payment_list[key].mode_of_payment == 'Cash') {
