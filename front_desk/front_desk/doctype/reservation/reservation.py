@@ -793,7 +793,7 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 		folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 		amount = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['amount_after_tax'])
 		cust_name = frappe.get_doc('Reservation', reservation_id).customer_id
-
+		
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.voucher_type = 'Journal Entry'
 		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
@@ -817,7 +817,7 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 		doc_credit.user_remark = remark
 		doc_credit.party_type = 'Customer'
 		doc_credit.party = cust_name
-		
+
 		doc_journal_entry.append('accounts', doc_debit)
 		doc_journal_entry.append('accounts', doc_credit)
 
