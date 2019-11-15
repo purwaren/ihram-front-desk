@@ -792,6 +792,7 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 		remark = 'Room Bill Payment: ' + rbp_item.room_bill_paid_id + ' (' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
 		folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 		amount = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['amount_after_tax'])
+		cust_name = frappe.get_doc('Reservation', reservation_id).customer_id
 
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.voucher_type = 'Journal Entry'
@@ -800,17 +801,23 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 		doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
 		doc_journal_entry.remark = remark
 		doc_journal_entry.user_remark = remark
+
 		doc_debit = frappe.new_doc('Journal Entry Account')
 		doc_debit.account = debit_account_name
 		doc_debit.debit = amount
 		doc_debit.debit_in_account_currency = amount
 		doc_debit.user_remark = remark
+		doc_debit.party_type = 'Customer'
+		doc_debit.party = cust_name
 
 		doc_credit = frappe.new_doc('Journal Entry Account')
 		doc_credit.account = credit_account_name
 		doc_credit.credit = amount
 		doc_credit.credit_in_account_currency = amount
 		doc_credit.user_remark = remark
+		doc_credit.party_type = 'Customer'
+		doc_credit.party = cust_name
+		
 		doc_journal_entry.append('accounts', doc_debit)
 		doc_journal_entry.append('accounts', doc_credit)
 
