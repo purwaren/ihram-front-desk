@@ -19,6 +19,9 @@ frappe.ui.form.on('Reservation', {
 		});
 		MakePaymentButtonStatus(frm, cdt,cdn);
 		frm.get_field("room_bill_paid").grid.only_sortable();
+		if (frm.doc.__islocal != 1) {
+			copy_reservation_detail_to_room_stay(frm, cdt, cdn);
+		}
 	},
 	refresh: function(frm) {
 		if (cur_frm.doc.deposit > 0) {
@@ -1048,4 +1051,42 @@ function MakePaymentButtonStatus(frm, cdt, cdn) {
 		frm.set_df_property('make_payment', 'hidden', 1);
 		console.log("hide make payment");
 	}
+}
+
+function copy_reservation_detail_to_room_stay(frm, cdt, cdn) {
+	reservation = frappe.get_doc(cdt, cdn);
+	var rd_list = reservation.reservation_detail;
+	var rs_list = reservation.room_stay;
+	if (rd_list.length > 0 && rs_list.length == 0) {
+		frm.set_value('room_stay', []);
+		$.each(rd_list, function (i, d) {
+			var now_date = new Date();
+			var departure = new Date(d.expected_departure);
+			var arrival = new Date(d.expected_arrival);
+			var arrivalString = arrival.getFullYear() + '-' + ('0' + (arrival.getMonth()+1)).slice(-2) + '-' + ('0' + arrival.getDate()).slice(-2) + ' ' + ('0' + now_date.getHours()).slice(-2) + ':' + ('0' + now_date.getMinutes()).slice(-2) + ':00';
+			var departureString = departure.getFullYear() + '-' + ('0' + (departure.getMonth()+1)).slice(-2) + '-' + ('0' + departure.getDate()).slice(-2) + ' ' + ('0' + now_date.getHours()).slice(-2) + ':' + ('0' + now_date.getMinutes()).slice(-2) + ':00';
+
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: arrivalString,
+					departure: departureString,
+					room_rate_id: d.room_rate,
+					discount: 0,
+				},
+				callback: (response) => {
+					var item = frm.add_child('room_stay');
+					item.reservation_id = cdn;
+					item.arrival = arrivalString;
+					item.departure = departureString;
+					item.room_type = d.room_type;
+					item.bed_type = d.bed_type;
+					item.room_id = d.room_id;
+					item.room_rate = d.room_rate;
+					item.total_bill_amount = response.message;
+				}
+			});
+		})
+	}
+	frm.refresh_field('room_stay');
 }
