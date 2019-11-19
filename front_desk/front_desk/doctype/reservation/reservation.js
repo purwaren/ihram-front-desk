@@ -946,7 +946,8 @@ function get_available(child_field, doc_field) {
 				'parent': cur_frm.doc.name,
 				'allow_smoke': child.allow_smoke,
 				'room_type': child.room_type,
-				'bed_type': child.bed_type
+				'bed_type': child.bed_type,
+				'doc_field': doc_field
 			}
 		}
 	}
@@ -1064,7 +1065,8 @@ function copy_reservation_detail_to_room_stay(frm, cdt, cdn) {
 	var rs_list = reservation.room_stay;
 	if (rd_list.length > 0 && rs_list.length == 0) {
 		frm.set_value('room_stay', []);
-		$.each(rd_list, function (i, d) {
+		$.each(rd_list.slice().reverse(), function (i, d) {
+		    console.log(d.idx);
 			var now_date = new Date();
 			var departure = new Date(d.expected_departure);
 			var arrival = new Date(d.expected_arrival);
@@ -1080,15 +1082,25 @@ function copy_reservation_detail_to_room_stay(frm, cdt, cdn) {
 					discount: 0,
 				},
 				callback: (response) => {
-					var item = frm.add_child('room_stay');
-					item.reservation_id = cdn;
-					item.arrival = arrivalString;
-					item.departure = departureString;
-					item.room_type = d.room_type;
-					item.bed_type = d.bed_type;
-					item.room_id = d.room_id;
-					item.room_rate = d.room_rate;
-					item.total_bill_amount = response.message;
+                    frappe.call({
+                        method: 'front_desk.front_desk.doctype.hotel_room.hotel_room.get_room_status',
+                        args: {
+                            room_id: d.room_id
+                        },
+                        callback: (resp) => {
+                            var item = frm.add_child('room_stay');
+                            item.reservation_id = cdn;
+                            item.arrival = arrivalString;
+                            item.departure = departureString;
+                            item.room_type = d.room_type;
+                            item.bed_type = d.bed_type;
+                            if (resp.message == 'Vacant Ready') {
+                                item.room_id = d.room_id;
+                            }
+                            item.room_rate = d.room_rate;
+                            item.total_bill_amount = response.message;
+                        }
+                    })
 				}
 			});
 		})

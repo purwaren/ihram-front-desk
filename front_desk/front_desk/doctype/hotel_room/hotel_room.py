@@ -70,3 +70,8 @@ def calculate_total_amenities_cost(doc, method):
 		total_cost += float(item_price) * float(item.qty)
 
 	doc.total_amenities_cost = total_cost
+
+
+@frappe.whitelist()
+def get_room_status(room_id):
+	return frappe.db.get_value('Hotel Room', {'name': room_id}, "room_status")
