@@ -87,18 +87,30 @@ def get_room_book_list(filters):
 @frappe.whitelist()
 def get_room_available(doctype, txt, searchfield, start, page_len, filters):
 	room_list = []
-
-	if filters.get('start') and filters.get('end'):
-		if filters.get('allow_smoke'):
-			if filters.get('room_type'):
-				if filters.get('bed_type'):
-					room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s and bed_type = %s", (filters.get('allow_smoke'), filters.get('room_type'), filters.get('bed_type'))))
+	if filters.get('doc_field') == 'room_stay':
+		if filters.get('start') and filters.get('end'):
+			if filters.get('allow_smoke'):
+				if filters.get('room_type'):
+					if filters.get('bed_type'):
+						room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where room_status = 'Vacant Ready' and allow_smoke = %s and room_type = %s and bed_type = %s", (filters.get('allow_smoke'), filters.get('room_type'), filters.get('bed_type'))))
+					else:
+						room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where room_status = 'Vacant Ready' and allow_smoke = %s and room_type = %s", (filters.get('allow_smoke'), filters.get('room_type'))))
 				else:
-					room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s", (filters.get('allow_smoke'), filters.get('room_type'))))
+					room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where room_status = 'Vacant Ready' and allow_smoke = %s", (filters.get('allow_smoke'))))
 			else:
-				room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s", (filters.get('allow_smoke'))))
-		else:
-			room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room`"))
+				room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where room_status = 'Vacant Ready'"))
+	else:
+		if filters.get('start') and filters.get('end'):
+			if filters.get('allow_smoke'):
+				if filters.get('room_type'):
+					if filters.get('bed_type'):
+						room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s and bed_type = %s", (filters.get('allow_smoke'), filters.get('room_type'), filters.get('bed_type'))))
+					else:
+						room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s and room_type = %s", (filters.get('allow_smoke'), filters.get('room_type'))))
+				else:
+					room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room` where allow_smoke = %s", (filters.get('allow_smoke'))))
+			else:
+				room_list = list(frappe.db.sql("select name, room_type, bed_type, allow_smoke from `tabHotel Room`"))
 	
 	room_book_list = get_room_book_list(filters)
 
