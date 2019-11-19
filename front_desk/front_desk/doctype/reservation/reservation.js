@@ -871,13 +871,16 @@ function manage_filter(child_field, doc_field) {
 			get_available('room_id', doc_field);
 	
 		} else if (child_field == 'room_id') {
-			
+			let old_room_type = child.room_type;
+			let old_bed_type = child.bed_type;
 			if (child.room_id != undefined) {
 				frappe.db.get_value('Hotel Room', {'name': child.room_id}, ['room_type', 'bed_type'], function(response) {
 					child.room_type = response.room_type;
 					child.bed_type = response.bed_type;
 					if (guest_request == 1) {
-						child.room_rate = undefined;
+						if (old_room_type != child.room_type) {
+							child.room_rate = undefined;
+						}
 					}
 	
 					cur_frm.refresh_field(doc_field);
@@ -886,11 +889,13 @@ function manage_filter(child_field, doc_field) {
 					get_available('bed_type', doc_field);
 					get_available('room_id', doc_field);
 					if (guest_request == 1) {
-						get_room_rate(doc_field);
+						if (old_room_type != child.room_type) {
+							get_room_rate(doc_field);
+						}
 					}
 				});
 			}
-	
+
 		} else {
 			cur_frm.refresh_field(doc_field);
 
