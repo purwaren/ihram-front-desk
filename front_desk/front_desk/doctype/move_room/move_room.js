@@ -314,23 +314,25 @@ function get_available(child_field, doc_field, child) {
 		}
 	}
 }
-
 function get_room_rate(child) {
+	var start_date = child.arrival;
 	var	grid_row = cur_frm.fields_dict['room_stay'].grid.grid_rows_by_docname[child.name];
 	var field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
 
 	if (child.room_type != undefined) {
 		frappe.db.get_value('Reservation', initial_room_stay.reservation_id, 'customer_id', (reservation) => {
 			frappe.db.get_value("Customer", reservation.customer_id, "customer_group", (customer) => {
+				let customer_group_list = ['All Customer Groups'];
+				customer_group_list.push(customer.customer_group);
 				field.get_query = function () {
 					return {
-						filters: {
-							'room_type': child.room_type
-						},
-						or_filters: [
-							{'customer_group': 'All Customer Groups'},
-							{'customer_group': customer.customer_group}
-						]
+						filters: [
+						['Room Rate', 'room_type', '=', child.room_type],
+						['Room Rate', 'is_disabled', '=', 0],
+						['Room Rate', 'customer_group', 'in', customer_group_list],
+						['Room Rate', 'from_date', '<=', start_date],
+						['Room Rate', 'to_date', '>=', start_date],
+					]
 					}
 				}
 			});

@@ -966,7 +966,9 @@ function get_room_rate(child_field, start_date) {
 					filters: [
 						['Room Rate', 'room_type', '=', child.room_type],
 						['Room Rate', 'is_disabled', '=', 0],
-						['Room Rate', 'customer_group', 'in', customer_group_list]
+						['Room Rate', 'customer_group', 'in', customer_group_list],
+						['Room Rate', 'from_date', '<=', start_date],
+						['Room Rate', 'to_date', '>=', start_date],
 					]
 				}
 			}
