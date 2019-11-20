@@ -436,11 +436,11 @@ frappe.ui.form.on('Reservation Detail', {
 		child = locals[cdt][cdn];
 
 		manage_form_render('reservation_detail');
-		manage_filter('', 'reservation_detail');
+		manage_filter('', 'reservation_detail', child.expected_arrival);
 	},
 	expected_arrival: function(frm, cdt, cdn) {
-		manage_filter('expected_arrival', 'reservation_detail');
-		let child = locals[cdt][cdn];
+        let child = locals[cdt][cdn];
+        manage_filter('expected_arrival', 'reservation_detail', child.expected_arrival);
 		if (child.expected_arrival < frappe.datetime.get_today()) {
 			child.expected_arrival = frappe.datetime.now_datetime();
 			frm.refresh_field('reservation_detail');
@@ -448,8 +448,8 @@ frappe.ui.form.on('Reservation Detail', {
 		}
 	},
 	expected_departure: function(frm, cdt, cdn) {
-		manage_filter('expected_departure', 'reservation_detail');
-		let child = locals[cdt][cdn];
+        let child = locals[cdt][cdn];
+        manage_filter('expected_departure', 'reservation_detail', child.expected_arrival);
 		if (child.__islocal == 1) {
 			if (child.expected_departure < frappe.datetime.get_today()) {
 				child.expected_departure = null;
@@ -464,16 +464,16 @@ frappe.ui.form.on('Reservation Detail', {
 		}
 	},
 	allow_smoke: function(frm, cdt, cdn) {
-		manage_filter('allow_smoke', 'reservation_detail');
+		manage_filter('allow_smoke', 'reservation_detail', locals[cdt][cdn].expected_arrival);
 	},
 	room_type: function(frm, cdt, cdn) {
-		manage_filter('room_type', 'reservation_detail');
+		manage_filter('room_type', 'reservation_detail', locals[cdt][cdn].expected_arrival);
 	},
 	bed_type: function(frm, cdt, cdn) {
-		manage_filter('bed_type', 'reservation_detail');
+		manage_filter('bed_type', 'reservation_detail', locals[cdt][cdn].expected_arrival);
 	},
 	room_id: function(frm, cdt, cdn) {
-		manage_filter('room_id', 'reservation_detail');
+		manage_filter('room_id', 'reservation_detail', locals[cdt][cdn].expected_arrival);
 	},
 	before_reservation_detail_remove: function(frm, cdt, cdn) {
 		if (child.__islocal != 1) {
@@ -494,7 +494,7 @@ frappe.ui.form.on('Room Stay', {
 		child = locals[cdt][cdn];
 
 		manage_form_render('room_stay');
-		manage_filter('', 'room_stay');
+		manage_filter('', 'room_stay', child.arrival);
 		if (child.__islocal == 1) {
 			frappe.meta.get_docfield('Room Stay', 'section_break_2', reservation.name).hidden = true;
 		}
@@ -503,8 +503,8 @@ frappe.ui.form.on('Room Stay', {
 		}
 	},
 	arrival: function (frm, cdt, cdn) {
-		manage_filter('arrival', 'room_stay');
-		let child = locals[cdt][cdn];
+        let child = locals[cdt][cdn];
+        manage_filter('arrival', 'room_stay', child.arrival);
 		if (child.arrival < frappe.datetime.get_today()) {
 			child.arrival = frappe.datetime.now_datetime();
 			frm.refresh_field('room_stay');
@@ -603,16 +603,16 @@ frappe.ui.form.on('Room Stay', {
 		});
 	},
 	allow_smoke: function(frm, cdt, cdn) {
-		manage_filter('allow_smoke', 'room_stay');
+		manage_filter('allow_smoke', 'room_stay', locals[cdt][cdn].arrival);
 	},
 	room_type: function(frm, cdt, cdn) {
-		manage_filter('room_type', 'room_stay');
+		manage_filter('room_type', 'room_stay', locals[cdt][cdn].arrival);
 	},
 	bed_type: function(frm, cdt, cdn) {
-		manage_filter('bed_type', 'room_stay');
+		manage_filter('bed_type', 'room_stay', locals[cdt][cdn].arrival);
 	},
 	room_id: function (frm, cdt, cdn) {
-		manage_filter('room_id', 'room_stay');
+		manage_filter('room_id', 'room_stay', locals[cdt][cdn].arrival);
 	},
 	issue_card: function(frm, cdt, cdn) {
 		frm.set_value('status', 'In House');
@@ -828,7 +828,7 @@ function set_all_field_read_only(doc_field, flag) {
 	cur_frm.refresh_field(doc_field);
 }
 
-function manage_filter(child_field, doc_field) {
+function manage_filter(child_field, doc_field, start_date) {
 	if (!after_remove) {
 		if (child_field == 'expected_arrival' || child_field == 'expected_departure' || child_field == 'arrival' || child_field == 'departure' || child_field == 'allow_smoke') {
 
@@ -845,7 +845,7 @@ function manage_filter(child_field, doc_field) {
 			get_available('bed_type', doc_field);
 			get_available('room_id', doc_field);
 			if (guest_request == 1) {
-				get_room_rate(doc_field);
+				get_room_rate(doc_field, start_date);
 			}
 	
 		} else if (child_field == 'room_type') {
@@ -861,7 +861,7 @@ function manage_filter(child_field, doc_field) {
 			get_available('bed_type', doc_field);
 			get_available('room_id', doc_field);
 			if (guest_request == 1) {
-				get_room_rate(doc_field);
+				get_room_rate(doc_field, start_date);
 			}
 	
 		} else if (child_field == 'bed_type') {
@@ -890,7 +890,7 @@ function manage_filter(child_field, doc_field) {
 					get_available('room_id', doc_field);
 					if (guest_request == 1) {
 						if (old_room_type != child.room_type) {
-							get_room_rate(doc_field);
+							get_room_rate(doc_field, start_date);
 						}
 					}
 				});
@@ -903,7 +903,7 @@ function manage_filter(child_field, doc_field) {
 			get_available('bed_type', doc_field);
 			get_available('room_id', doc_field);
 			if (guest_request == 1) {
-				get_room_rate(doc_field);
+				get_room_rate(doc_field, start_date);
 			}
 		}
 	}
@@ -953,20 +953,20 @@ function get_available(child_field, doc_field) {
 	}
 }
 
-function get_room_rate(child_field) {
+function get_room_rate(child_field, start_date) {
 	var field = cur_frm.fields_dict[child_field].grid.fields_map['room_rate'];
 
 	if (child.room_type != undefined) {
 		frappe.db.get_value("Customer", cur_frm.doc.customer_id, "customer_group", (customer) => {
+			let customer_group_list = ['All Customer Groups'];
+			customer_group_list.push(customer.customer_group);
+			console.log(customer_group_list);
 			field.get_query = function () {
 				return {
-					filters: {
-						'room_type': child.room_type,
-						'is_disabled': 0
-					},
-					or_filters: [
-						{'customer_group': 'All Customer Groups'},
-						{'customer_group': customer.customer_group}
+					filters: [
+						['Room Rate', 'room_type', '=', child.room_type],
+						['Room Rate', 'is_disabled', '=', 0],
+						['Room Rate', 'customer_group', 'in', customer_group_list]
 					]
 				}
 			}
