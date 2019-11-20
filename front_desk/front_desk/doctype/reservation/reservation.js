@@ -19,7 +19,7 @@ frappe.ui.form.on('Reservation', {
 		});
 		MakePaymentButtonStatus(frm, cdt,cdn);
 		frm.get_field("room_bill_paid").grid.only_sortable();
-		if (frm.doc.__islocal != 1) {
+		if (frm.doc.__islocal != 1 && frm.doc.status == 'Confirmed') {
 			copy_reservation_detail_to_room_stay(frm, cdt, cdn);
 		}
 	},
