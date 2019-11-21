@@ -30,7 +30,8 @@ function search(doc) {
 		var css = 	'<style>\
 						#room-calendar {\
 							font-size:12px;\
-							height:300px;\
+							height:100%;\
+							max-height:600px;\
 							overflow-y:scroll;\
 						}\
 					</style>';
