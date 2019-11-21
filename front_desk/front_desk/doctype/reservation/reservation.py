@@ -16,16 +16,19 @@ from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
 from front_desk.front_desk.doctype.room_stay.room_stay import get_rate_after_tax
 from front_desk.front_desk.doctype.room_stay.room_stay import calculate_room_stay_bill
 
+
 class Reservation(Document):
 	pass
+
 
 def is_weekday():
 	weekno = datetime.datetime.today().weekday()
 
-	if weekno<5:
+	if weekno < 5:
 		return True
 	else:
 		return False
+
 
 @frappe.whitelist()
 def check_in(reservation_id_list):
@@ -45,24 +48,28 @@ def check_in(reservation_id_list):
 
 	return url_list
 
+
 @frappe.whitelist()
 def get_folio_url(reservation_id):
 	return frappe.utils.get_url_to_form('Folio', frappe.db.get_value('Folio',
-															{'reservation_id': reservation_id},
-															['name'])
+																	 {'reservation_id': reservation_id},
+																	 ['name'])
 										)
+
 
 @frappe.whitelist()
 def get_hotel_bill_url(reservation_id):
 	create_hotel_bill(reservation_id)
-	return frappe.utils.get_url_to_form('Hotel Bill', frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name']))
+	return frappe.utils.get_url_to_form('Hotel Bill',
+										frappe.db.get_value('Hotel Bill', {'reservation_id': reservation_id}, ['name']))
+
 
 @frappe.whitelist()
 def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 	credit_account_name = get_credit_account_name()
 	folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 	remark = 'Deposit ' + reservation_id
-	exist_deposit_folio_trx =frappe.db.exists('Folio Transaction', {'parent': folio_name, 'remark': remark})
+	exist_deposit_folio_trx = frappe.db.exists('Folio Transaction', {'parent': folio_name, 'remark': remark})
 
 	if not exist_deposit_folio_trx:
 		doc_journal_entry = frappe.new_doc('Journal Entry')
@@ -109,63 +116,66 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 
 def get_credit_account_name():
 	temp = frappe.db.get_list('Account',
-		filters={
-			'account_number': '1172.000'
-		}
-	)
+							  filters={
+								  'account_number': '1172.000'
+							  }
+							  )
 
 	if len(temp) > 0:
 		return temp[0].name
 	else:
 		return ''
 
+
 @frappe.whitelist()
 def get_debit_account_name_list():
 	debit_account_name_list = []
 
 	temp = frappe.db.get_list('Account',
-		filters={
-			'account_number': '1111.003'
-		}
-	)
+							  filters={
+								  'account_number': '1111.003'
+							  }
+							  )
 
 	if len(temp) > 0:
 		debit_account_name_list.append(temp[0].name)
 
 	temp = frappe.db.get_list('Account',
-		filters={
-			'account_number': ['like', '1121.0%'], 'account_type': 'Bank'
-		}
-	)
+							  filters={
+								  'account_number': ['like', '1121.0%'], 'account_type': 'Bank'
+							  }
+							  )
 
 	for t in temp:
 		debit_account_name_list.append(t.name)
 
 	return debit_account_name_list
 
+
 @frappe.whitelist()
 def get_debit_account(doctype, txt, searchfield, start, page_len, filters):
 	debit_account = []
 
 	temp = frappe.db.get_list('Account',
-		filters={
-			'account_number': '1111.003'
-		}
-	)
+							  filters={
+								  'account_number': '1111.003'
+							  }
+							  )
 
 	if len(temp) > 0:
 		debit_account.append([temp[0].name])
-	
+
 	temp = frappe.db.get_list('Account',
-		filters={
-			'account_number': ['like', '1121.0%'], 'account_type': 'Bank'
-		}
-	)
+							  filters={
+								  'account_number': ['like', '1121.0%'], 'account_type': 'Bank'
+							  }
+							  )
 
 	for t in temp:
 		debit_account.append([t.name])
 
 	return debit_account
+
 
 @frappe.whitelist()
 def check_out(reservation_id_list):
@@ -174,12 +184,14 @@ def check_out(reservation_id_list):
 	for reservation_id in reservation_id_list:
 		checkout_reservation(reservation_id)
 
+
 @frappe.whitelist()
 def cancel(reservation_id_list):
 	reservation_id_list = json.loads(reservation_id_list)
 
 	for reservation_id in reservation_id_list:
 		cancel_reservation(reservation_id)
+
 
 @frappe.whitelist()
 def get_status(reservation_id_list):
@@ -188,6 +200,7 @@ def get_status(reservation_id_list):
 		reservation = frappe.get_doc('Reservation', reservation_id, fields=['status'])
 	return reservation.status
 
+
 @frappe.whitelist()
 def cancel_reservation(reservation_id):
 	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Created':
@@ -195,8 +208,9 @@ def cancel_reservation(reservation_id):
 		reservation.status = "Cancel"
 		reservation.save()
 
-		#update room booking status
+		# update room booking status
 		update_by_reservation(reservation_id)
+
 
 @frappe.whitelist()
 def checkout_reservation(reservation_id):
@@ -251,11 +265,13 @@ def checkout_reservation(reservation_id):
 		else:
 			return 2
 
+
 @frappe.whitelist()
 def auto_release_reservation_at_six_pm():
 	reservation_list = frappe.get_all('Reservation', {'status': 'Created', 'is_guaranteed': 0})
 	for reservation in reservation_list:
-		reservation_detail_list = frappe.get_all('Reservation Detail', filters={'parent': reservation.name}, fields=['expected_arrival'])
+		reservation_detail_list = frappe.get_all('Reservation Detail', filters={'parent': reservation.name},
+												 fields=['expected_arrival'])
 		arrival_expired = False
 		for rd in reservation_detail_list:
 			if rd.expected_arrival < datetime.datetime.today().date():
@@ -264,15 +280,16 @@ def auto_release_reservation_at_six_pm():
 				if room_booking_id:
 					frappe.db.set_value('Room Booking', room_booking_id, 'status', 'Canceled')
 
-
 		if arrival_expired:
 			frappe.db.set_value('Reservation', reservation.name, 'status', 'Cancel')
 			update_by_reservation(reservation.name)
+
 
 def auto_room_charge():
 	reservation_list = frappe.get_all('Reservation', {'status': 'In House'})
 	for reservation in reservation_list:
 		create_room_charge(reservation.name)
+
 
 @frappe.whitelist()
 def create_room_charge(reservation_id):
@@ -281,7 +298,7 @@ def create_room_charge(reservation_id):
 
 	if len(room_stay_list) > 0:
 		for room_stay in room_stay_list:
-			#check if this room_stay is moved, if the moving took part in the same day, do not charge the room
+			# check if this room_stay is moved, if the moving took part in the same day, do not charge the room
 			room_is_moved_at_the_same_day = False
 			is_moved = frappe.db.exists('Move Room', {'initial_room_stay': room_stay.name})
 			if is_moved and room_stay.departure.date() == room_stay.arrival.date():
@@ -293,14 +310,15 @@ def create_room_charge(reservation_id):
 
 			# create room charge, if today is not departure day yet and the room_stay is not moved at the same day
 			if room_stay.arrival <= datetime.datetime.today() and room_stay.departure > datetime.datetime.today() and not room_is_moved_at_the_same_day:
-				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
+				room_rate = frappe.get_doc('Room Rate', {'name': room_stay.room_rate})
 				room_name = room_stay.room_id
 				if not room_stay.discount_percentage:
 					room_stay_discount = 0
 				else:
 					room_stay_discount = float(room_stay.discount_percentage) / 100.0
 				amount_multiplier = 1 - room_stay_discount
-				room_rate_breakdown = frappe.get_all('Room Rate Breakdown', filters={'parent':room_stay.room_rate}, fields=['*'])
+				room_rate_breakdown = frappe.get_all('Room Rate Breakdown', filters={'parent': room_stay.room_rate},
+													 fields=['*'])
 				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
@@ -308,10 +326,12 @@ def create_room_charge(reservation_id):
 				# define room rate for folio transaction. If room stay discount exist, apply the discount
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
-					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate', room_stay.discount_percentage)
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate',
+															  room_stay.discount_percentage)
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
-					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate', room_stay.discount_percentage)
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate',
+															  room_stay.discount_percentage)
 				# !!IMPORTANTE!! sepertinya masukin ke journal entry ketika billing selesai saja. pas saat ini cukup create folio transaction yang sesuai jumlahnya after tax
 				# for rrbd_item in room_rate_breakdown:
 				# 	rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
@@ -398,7 +418,7 @@ def create_room_charge(reservation_id):
 				doc_folio = frappe.get_doc('Folio', folio_name)
 
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
-				doc_folio_transaction.creation =  datetime.datetime.today()
+				doc_folio_transaction.creation = datetime.datetime.today()
 				doc_folio_transaction.folio_id = doc_folio.name
 				doc_folio_transaction.amount = today_rate
 				doc_folio_transaction.amount_after_tax = today_rate_after_tax
@@ -414,6 +434,7 @@ def create_room_charge(reservation_id):
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
 
+
 @frappe.whitelist()
 def create_special_charge(reservation_id):
 	room_stay_list = frappe.get_all('Room Stay',
@@ -425,10 +446,12 @@ def create_special_charge(reservation_id):
 			add_early_checkin(room_stay.name)
 			add_late_checkout(room_stay.name)
 
+
 def auto_additional_charge():
 	reservation_list = frappe.get_all('Reservation', {'status': 'In House'})
 	for reservation in reservation_list:
 		create_additional_charge(reservation.name)
+
 
 @frappe.whitelist()
 def create_additional_charge(reservation_id):
@@ -495,6 +518,7 @@ def create_additional_charge(reservation_id):
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
 
+
 def calculate_room_bill_amount(doc, method):
 	room_bill_amount = 0.0
 	room_stay = doc.get('room_stay')
@@ -502,17 +526,20 @@ def calculate_room_bill_amount(doc, method):
 		for rs_item in room_stay:
 			# Exist Move Room
 			if frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']):
-				move_room = frappe.get_doc('Move Room', frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']))
+				move_room = frappe.get_doc('Move Room',
+										   frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name},
+															   ['name']))
 				initial_rs = frappe.get_doc('Room Stay', move_room.initial_room_stay)
 				replacement_rs = frappe.get_doc('Room Stay', move_room.replacement_room_stay)
 				if replacement_rs.room_bill_paid_id is None:
-					room_bill_amount = room_bill_amount + (initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
+					room_bill_amount = room_bill_amount + (
+								initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
 			# Default condition, no move room yet
 			elif not rs_item.room_bill_paid_id:
 				room_bill_amount = room_bill_amount + rs_item.total_bill_amount
 
-
 	doc.room_bill_amount = room_bill_amount
+
 
 @frappe.whitelist()
 def recalculate_room_bill_amount_after_guest_requested_move_room(reservation_id):
@@ -523,23 +550,28 @@ def recalculate_room_bill_amount_after_guest_requested_move_room(reservation_id)
 		for rs_item in room_stay:
 			# Exist Move Room
 			if frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']):
-				move_room = frappe.get_doc('Move Room', frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name}, ['name']))
+				move_room = frappe.get_doc('Move Room',
+										   frappe.db.get_value('Move Room', {'replacement_room_stay': rs_item.name},
+															   ['name']))
 				initial_rs = frappe.get_doc('Room Stay', move_room.initial_room_stay)
 				replacement_rs = frappe.get_doc('Room Stay', move_room.replacement_room_stay)
 				if replacement_rs.room_bill_paid_id is None:
-					room_bill_amount = room_bill_amount + (initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
+					room_bill_amount = room_bill_amount + (
+								initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
 
 	reservation.room_bill_amount = room_bill_amount
 	reservation.save()
 
+
 @frappe.whitelist()
-def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_amount, is_round_down_checked, change_rounding_amount, change_amount, rounded_change_amount):
+def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_amount, is_round_down_checked,
+								   change_rounding_amount, change_amount, rounded_change_amount):
 	updated_room_bill_amount = 0
 	reservation = frappe.get_doc('Reservation', reservation_id)
 	folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 	doc_folio = frappe.get_doc('Folio', folio_name)
 	rbpd_remark = "Payment for: \n"
-	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent':reservation_id, 'is_paid': 0}, fields=["*"])
+	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': reservation_id, 'is_paid': 0}, fields=["*"])
 	room_stay_list = frappe.get_all('Room Stay', filters={'reservation_id': reservation_id}, fields=["*"])
 	kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
@@ -570,18 +602,19 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 			room_remark = " - Room Stay: " + room_stay_item.name + " - Room No. " + room_stay_item.room_id + "\n"
 			rbpd_remark = rbpd_remark + room_remark
 
-	#Update the room bill paid remark
+	# Update the room bill paid remark
 	frappe.db.set_value('Room Bill Paid', doc_rbpd.name, 'rbpd_remark', rbpd_remark)
 
 	# Create Folio Transaction and Journal Entry for all the Room Bill Payment related to current Room Bill Paid Entry
 	for rbp_item in rbp_list:
 		credit_account_name = kas_dp_kamar
-		debit_account_name = get_mode_of_payment_account(rbp_item.mode_of_payment, frappe.get_doc("Global Defaults").default_company)
+		debit_account_name = get_mode_of_payment_account(rbp_item.mode_of_payment,
+														 frappe.get_doc("Global Defaults").default_company)
 		amount = rbp_item.rbp_amount
 		remark = 'Room Bill Payment: ' + doc_rbpd.name + ' (' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
 		exist_folio_trx_rbp_item = frappe.db.exists('Folio Transaction',
-											  {'parent': doc_folio.name,
-											   'remark': remark})
+													{'parent': doc_folio.name,
+													 'remark': remark})
 		if not exist_folio_trx_rbp_item:
 			if rbp_item.mode_of_payment != 'City Ledger':
 				doc_journal_entry = frappe.new_doc('Journal Entry')
@@ -712,13 +745,14 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 
 	return updated_room_bill_amount
 
+
 @frappe.whitelist()
 def trigger_room_charge(reservation_id):
 	room_stay_list = frappe.get_all('Room Stay', filters={"reservation_id": reservation_id}, fields=["*"])
 
 	if len(room_stay_list) > 0:
 		for room_stay in room_stay_list:
-			#check if this room_stay is moved, if the moving took part in the same day, do not charge the room
+			# check if this room_stay is moved, if the moving took part in the same day, do not charge the room
 			room_is_moved_at_the_same_day = False
 			is_moved = frappe.db.exists('Move Room', {'initial_room_stay': room_stay.name})
 			if is_moved and room_stay.departure.date() == room_stay.arrival.date():
@@ -730,7 +764,7 @@ def trigger_room_charge(reservation_id):
 
 			# create room charge, if today is not departure day yet and the room_stay is not moved at the same day
 			if room_stay.departure > datetime.datetime.today() and not room_is_moved_at_the_same_day:
-				room_rate = frappe.get_doc('Room Rate', {'name':room_stay.room_rate})
+				room_rate = frappe.get_doc('Room Rate', {'name': room_stay.room_rate})
 				room_name = room_stay.room_id
 				if not room_stay.discount_percentage:
 					room_stay_discount = 0
@@ -744,17 +778,19 @@ def trigger_room_charge(reservation_id):
 				# define room rate for folio transaction. If room stay discount exist, apply the discount
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
-					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate', room_stay.discount_percentage)
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate',
+															  room_stay.discount_percentage)
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
-					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate', room_stay.discount_percentage)
+					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate',
+															  room_stay.discount_percentage)
 
 				# Create Folio Transaction of Room Charge
 				folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 				doc_folio = frappe.get_doc('Folio', folio_name)
 
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
-				doc_folio_transaction.creation =  datetime.datetime.today()
+				doc_folio_transaction.creation = datetime.datetime.today()
 				doc_folio_transaction.folio_id = doc_folio.name
 				doc_folio_transaction.amount = today_rate
 				doc_folio_transaction.amount_after_tax = today_rate_after_tax
@@ -770,6 +806,7 @@ def trigger_room_charge(reservation_id):
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
 
+
 def is_using_city_ledger(reservation_id):
 	city_ledger_flag = False
 	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': reservation_id},
@@ -783,7 +820,8 @@ def is_using_city_ledger(reservation_id):
 
 
 def input_city_ledger_payment_to_journal_entry(reservation_id):
-	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': reservation_id, 'mode_of_payment': 'City Ledger'},
+	rbp_list = frappe.get_all('Room Bill Payments',
+							  filters={'parent': reservation_id, 'mode_of_payment': 'City Ledger'},
 							  fields=["*"])
 	for rbp_item in rbp_list:
 		credit_account_name = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
@@ -791,9 +829,10 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 														 frappe.get_doc("Global Defaults").default_company)
 		remark = 'Room Bill Payment: ' + rbp_item.room_bill_paid_id + ' (' + rbp_item.mode_of_payment + ') - Reservation: ' + reservation_id
 		folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
-		amount = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark}, ['amount_after_tax'])
+		amount = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark},
+									 ['amount_after_tax'])
 		cust_name = frappe.get_doc('Reservation', reservation_id).customer_id
-		
+
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.voucher_type = 'Journal Entry'
 		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
@@ -824,6 +863,7 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 		doc_journal_entry.save()
 		doc_journal_entry.submit()
 
+
 @frappe.whitelist()
 def cancel_individual_reservation(reservation_id):
 	reservation = frappe.get_doc('Reservation', reservation_id)
@@ -848,7 +888,7 @@ def cancel_individual_reservation(reservation_id):
 			total_room_charge += folio_trx_item.amount_after_tax
 
 	room_stay_list = frappe.get_all('Room Stay', filters={'reservation_id': reservation_id}, order_by="arrival asc",
-										fields=['*'])
+									fields=['*'])
 	arrival_date = room_stay_list[0].arrival.date()
 	cancel_date = datetime.datetime.now().date()
 
@@ -859,10 +899,11 @@ def cancel_individual_reservation(reservation_id):
 		# Cancellation with room charge exist
 		if arrival_date < cancel_date:
 			# cancellation fee = 50% of One Day Room Charge
-			cancellation_fee = calculate_room_stay_bill(room_stay_list[0].arrival,
-														room_stay_list[0].arrival + datetime.timedelta(days=1),
-														room_stay_list[0].room_rate,
-														room_stay_list[0].discount_percentage) * 0.5
+			cancellation_fee = calculate_room_stay_bill(
+				datetime.datetime.strftime(room_stay_list[0].arrival, "%Y-%m-%d %H:%M:%S"),
+				datetime.datetime.strftime(room_stay_list[0].arrival + datetime.timedelta(days=1), "%Y-%m-%d %H:%M:%S"),
+				room_stay_list[0].room_rate,
+				room_stay_list[0].discount_percentage) * 0.5
 			# room refund
 			refund_amount = total_rbpd - cancellation_fee
 		# Cancellation without room charge exist
@@ -955,6 +996,7 @@ def cancel_individual_reservation(reservation_id):
 			hotel_bill.save()
 
 		return 1
+
 
 # Kalo butuh populate rba
 @frappe.whitelist()
