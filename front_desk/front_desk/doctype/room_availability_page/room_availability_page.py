@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+	# -*- coding: utf-8 -*-
 # Copyright (c) 2019, PMM and contributors
 # For license information, please see license.txt
 
@@ -16,7 +16,7 @@ def get_room_availability(room_id, date):
 	if len(room_stay) > 0:
 		return 'RS'
 	else:
-		availability = frappe.db.sql('SELECT room_availability FROM `tabRoom Booking` WHERE status = "Booked" AND room_id = %s AND %s >= start AND %s < end', (room_id, date, date))
+		availability = frappe.db.sql('SELECT room_availability FROM `tabRoom Booking` WHERE room_id = %s AND %s >= start AND %s < end', (room_id, date, date))
 		
 		if len(availability) > 0:
 			return availability

@@ -229,12 +229,16 @@ function book_dialog(room_id, date, current_status) {
 						frappe.db.set_value('Room Booking', resp.message[0][0], {
 							status: 'Finished'
 						}).then(r => {
-							frappe.db.set_value('Hotel Room', room_id, {
-							room_status: 'Vacant Dirty'
+							frappe.db.set_value('Room Booking', resp.message[0][0], {
+							end: date
 							}).then(r => {
-								search(doc);
-								dialog.hide();
-								frappe.msgprint(__('Room Booking of Room No. ' + room_id + ' Finished.'));
+								frappe.db.set_value('Hotel Room', room_id, {
+								room_status: 'Vacant Dirty'
+								}).then(r => {
+									search(doc);
+									dialog.hide();
+									frappe.msgprint(__('Room Booking of Room No. ' + room_id + ' Finished.'));
+								})
 							})
 						})
 					}
