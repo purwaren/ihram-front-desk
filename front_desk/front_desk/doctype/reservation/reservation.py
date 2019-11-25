@@ -206,6 +206,7 @@ def cancel_reservation(reservation_id):
 	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Created':
 		reservation = frappe.get_doc('Reservation', reservation_id)
 		reservation.status = "Cancel"
+		# TODO: free room in tabRoom Booking
 		reservation.save()
 
 		# update room booking status
