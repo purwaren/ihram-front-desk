@@ -138,8 +138,8 @@ function get_folio_by_order_channel(frm) {
 							filters: [
 								['Folio', 'name', 'in', r.message],
 								['Folio', 'room_bill_amount', '!=', 0],
-								['Folio', 'ar_city_ledger_invoice_id', '!=', null],
-								['Folio', 'city_ledger_payment_final', '=', 0],
+								// ['Folio', 'ar_city_ledger_invoice_id', '!=', null],
+								// ['Folio', 'city_ledger_payment_final', '=', 0],
 							],
 						}
 					}
