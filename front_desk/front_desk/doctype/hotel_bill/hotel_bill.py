@@ -107,6 +107,7 @@ def create_additional_charge(reservation_id):
 				doc_folio_transaction.flag = 'Debit'
 				doc_folio_transaction.account_id = je_debit_account
 				doc_folio_transaction.against_account_id = je_credit_account
+				doc_folio_transaction.room_stay_id = ac_item.room_stay_id
 				doc_folio_transaction.remark = remark
 				doc_folio_transaction.is_additional_charge = 1
 				doc_folio_transaction.is_void = 0
