@@ -1093,6 +1093,7 @@ function copy_reservation_detail_to_room_stay(frm, cdt, cdn) {
                         },
                         callback: (resp) => {
                             var item = frm.add_child('room_stay');
+                            item.guest_name = d.guest_name;
                             item.reservation_id = cdn;
                             item.arrival = arrivalString;
                             item.departure = departureString;
