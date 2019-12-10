@@ -365,3 +365,7 @@ def checkout_early_refund(room_stay_id):
                         new_folio_amount = float(folio_need_updated_amount) - diff
                         frappe.db.set_value("Folio Transaction", folio_need_updated, "amount", new_folio_amount)
                         frappe.db.set_value("Folio Transaction", folio_need_updated, "amount_after_tax", new_folio_amount)
+
+@frappe.whitelist()
+def get_room_stay_id_by_room_id(reservation_id, room_id_blah):
+    return frappe.get_doc('Room Stay', {'reservation_id': reservation_id, 'room_id': room_id_blah})

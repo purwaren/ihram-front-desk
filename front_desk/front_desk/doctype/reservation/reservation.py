@@ -1025,3 +1025,13 @@ def populate_ba_of_all_folio():
 			frappe.db.set_value('Folio', polio.name, 'hotel_bill_amount', hba)
 
 	frappe.msgprint("Folio's Room Biil Amount & Hotel Bill Amount populated")
+
+@frappe.whitelist()
+def get_all_room_id_in_reservation(reservation_id):
+	return_list = []
+
+	room_stay_list = frappe.get_doc('Reservation', reservation_id).get('room_stay')
+	for item in room_stay_list:
+		return_list.append(item.room_id)
+
+	return return_list

@@ -22,6 +22,9 @@ frappe.ui.form.on('Reservation', {
 		if (frm.doc.__islocal != 1 && frm.doc.status == 'Confirmed') {
 			copy_reservation_detail_to_room_stay(frm, cdt, cdn);
 		}
+		if (frm.doc.additional_charge.length > 0) {
+			filter_room_id_in_additional_charge(frm);
+		}
 	},
 	refresh: function(frm) {
 		if (cur_frm.doc.deposit > 0) {
@@ -744,6 +747,16 @@ frappe.ui.form.on("Room Bill Paid", {
 	},
 });
 
+frappe.ui.form.on("Additional Charge", {
+	additional_charge_add: function(frm) {
+		filter_room_id_in_additional_charge(frm);
+	},
+	room_id: function (frm, cdt,cdn) {
+		populate_room_stay_id_by_room_id_in_additional_charge(locals[cdt][cdn]);
+		frm.refresh_field('additional_charge');
+	}
+});
+
 function make_pin(length) {
 	var result           = '';
 	var characters       = '0123456789';
@@ -1111,4 +1124,45 @@ function copy_reservation_detail_to_room_stay(frm, cdt, cdn) {
 		})
 	}
 	frm.refresh_field('room_stay');
+}
+
+function filter_room_id_in_additional_charge(frm) {
+	let field = frm.fields_dict['additional_charge'].grid.fields_map['room_id'];
+	if ((frm.doc.status == 'in House' || frm.doc.status == 'Confirmed') && frm.doc.room_stay.length > 0) {
+		frappe.call({
+			method: 'front_desk.front_desk.doctype.reservation.reservation.get_all_room_id_in_reservation',
+			args: {
+				reservation_id: frm.doc.name
+			},
+			callback: (r) => {
+				if (r.message) {
+					console.log(r.message);
+					field.get_query = function () {
+						return {
+							filters: [
+								['Hotel Room', 'name', 'in', r.message],
+							],
+						}
+					}
+				}
+			}
+		});
+	}
+}
+
+function populate_room_stay_id_by_room_id_in_additional_charge(child) {
+	console.log('populate_room_stay_id_by_room_id_in_additional_charge ' + child.room_id);
+	frappe.call({
+		method: 'front_desk.front_desk.doctype.room_stay.room_stay.get_room_stay_id_by_room_id',
+		args: {
+			reservation_id: cur_frm.doc.name,
+			room_id_blah: child.room_id
+		},
+		callback: (r) => {
+			if (r.message) {
+				console.log(r.message.name);
+				child.room_stay_id = r.message.name;
+			}
+		}
+	});
 }
