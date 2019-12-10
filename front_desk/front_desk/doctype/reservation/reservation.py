@@ -512,6 +512,7 @@ def create_additional_charge(reservation_id):
 				doc_folio_transaction.flag = 'Debit'
 				doc_folio_transaction.account_id = je_debit_account
 				doc_folio_transaction.against_account_id = je_credit_account
+				doc_folio_transaction.room_stay_id = ac_item.room_stay_id
 				doc_folio_transaction.remark = remark
 				doc_folio_transaction.is_additional_charge = 1
 				doc_folio_transaction.is_void = 0
@@ -922,6 +923,7 @@ def cancel_individual_reservation(reservation_id):
 		fee_folio_trx.amount_after_tax = cancellation_fee
 		fee_folio_trx.account_id = piutang_lain2
 		fee_folio_trx.against_account_id = kas_pendapatan_kamar
+		fee_folio_trx.room_stay_id = room_stay_list[0].name
 		fee_folio_trx.remark = remark
 		fee_folio_trx.is_additional_charge = 1
 		fee_folio_trx.is_void = 0

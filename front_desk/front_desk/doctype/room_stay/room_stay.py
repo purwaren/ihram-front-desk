@@ -62,6 +62,7 @@ def add_early_checkin(room_stay_id):
             doc_folio_transaction.flag = 'Debit'
             doc_folio_transaction.account_id = je_debit_account
             doc_folio_transaction.against_account_id = je_credit_account
+            doc_folio_transaction.room_stay_id = room_stay.name
             doc_folio_transaction.remark = ec_remark
             doc_folio_transaction.is_special_charge = 1
             doc_folio_transaction.is_void = 0
@@ -181,6 +182,7 @@ def add_late_checkout(room_stay_id):
             doc_folio_transaction.flag = 'Debit'
             doc_folio_transaction.account_id = je_debit_account
             doc_folio_transaction.against_account_id = je_credit_account
+            doc_folio_transaction.room_stay_id = room_stay.name
             doc_folio_transaction.remark = lc_remark
             doc_folio_transaction.is_special_charge = 1
             doc_folio_transaction.is_void = 0

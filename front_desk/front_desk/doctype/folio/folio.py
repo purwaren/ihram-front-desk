@@ -110,6 +110,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 				if not frappe.db.exists('Folio Transaction', {'sales_invoice_id': sales_invoice.name}):
 					doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 					doc = frappe.new_doc('Folio Transaction')
+					# TODO: room_stay_id in folio_trx
 					doc.folio_id = folio_id
 					doc.amount = sales_invoice.total
 					doc.amount_after_tax = sales_invoice.grand_total
@@ -141,6 +142,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 			if not frappe.db.exists('Folio Transaction', {'sales_invoice_id': sales_invoice.name}):
 				doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 				doc = frappe.new_doc('Folio Transaction')
+				# TODO: room_stay_id in folio_trx
 				doc.folio_id = folio_id
 				doc.amount = sales_invoice.total
 				doc.amount_after_tax = sales_invoice.grand_total
