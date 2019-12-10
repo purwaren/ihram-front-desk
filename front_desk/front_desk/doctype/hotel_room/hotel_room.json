@@ -594,7 +594,7 @@
  "issingle": 0,
  "istable": 0,
  "max_attachments": 0,
- "modified": "2019-12-05 16:00:56.495847",
+ "modified": "2019-12-10 13:47:37.906621",
  "modified_by": "Administrator",
  "module": "Front Desk",
  "name": "Hotel Room",
@@ -678,7 +678,7 @@
    "write": 0
   }
  ],
- "quick_entry": 1,
+ "quick_entry": 0,
  "read_only": 0,
  "read_only_onload": 0,
  "route": "/room",
