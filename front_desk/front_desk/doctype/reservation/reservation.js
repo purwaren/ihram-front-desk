@@ -639,6 +639,19 @@ frappe.ui.form.on('Room Stay', {
 			frappe.msgprint(__("Please enable pop-ups")); return;
 		}
 	},
+	room_stay_folio: function(frm, cdt, cdn) {
+		let w = window.open(frappe.urllib.get_full_url("/printview?"
+				+"doctype="+encodeURIComponent("Room Stay")
+				+"&name="+encodeURIComponent(cdn)
+				+"&format="+encodeURIComponent("Room Stay Folio")
+				+"&no_letterhead=0"
+				));
+
+			if (!w) {
+				frappe.msgprint(__("Please enable pop-ups")); return;
+			}
+
+	},
 	discount_percentage: function(frm, cdt, cdn) {
 		if (child.discount_percentage >= max_discount) {
 			frappe.msgprint("Discount Limit of "  + max_discount+ "% Exceeded. Please input lower Discount Rate.");
