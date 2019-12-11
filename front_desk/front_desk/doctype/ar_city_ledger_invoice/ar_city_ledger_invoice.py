@@ -62,6 +62,7 @@ def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outsta
 			title = 'AR City Ledger Payment (' + str(payment_item.mode_of_payment) + '): ' + payment_item.name
 			remark = title + ' -@' + str(payment_item.creation)
 
+			# JOURNAL ENTRY CREATION: AR CITY LEDGER PAYMENT
 			payment_journal_entry = frappe.new_doc('Journal Entry')
 			payment_journal_entry.title = title
 			payment_journal_entry.voucher_type = 'Journal Entry'
@@ -100,6 +101,7 @@ def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outsta
 			change_title = 'AR City Ledger Change: ' + acli.name
 			change_remark = change_title + ' -@' + str(acli.creation)
 
+			# JOURNAL ENTRY CREATION: AR CITY LEDGER CHANGE
 			change_journal_entry = frappe.new_doc('Journal Entry')
 			change_journal_entry.title = change_title
 			change_journal_entry.voucher_type = 'Journal Entry'

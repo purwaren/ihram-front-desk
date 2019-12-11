@@ -70,6 +70,7 @@ def add_early_checkin(room_stay_id):
             doc_folio.append('transaction_detail', doc_folio_transaction)
             doc_folio.save()
 
+            # JOURNAL ENTRY CREATION: EARLY CHECKIN
             doc_journal_entry = frappe.new_doc('Journal Entry')
             doc_journal_entry.title = "JE " + doc_folio_transaction.name
             doc_journal_entry.voucher_type = 'Journal Entry'
@@ -115,6 +116,7 @@ def add_early_checkin(room_stay_id):
                 doc_hotel_bill_breakdown = frappe.get_doc('Hotel Bill Breakdown',
                                                           {'billing_folio_trx_id': folio_trx_ec.name})
 
+                # JOURNAL ENTRY CREATION: FLIP EARLY CHECKIN JOURNAL ENTRY: LIKELY WILL NOT BE USED
                 doc_journal_entry = frappe.new_doc('Journal Entry')
                 doc_journal_entry.title = "Flip " + doc_je.title
                 doc_journal_entry.voucher_type = 'Journal Entry'
@@ -189,7 +191,7 @@ def add_late_checkout(room_stay_id):
 
             doc_folio.append('transaction_detail', doc_folio_transaction)
             doc_folio.save()
-
+            # JOURNAL ENTRY CREATION: LATE CHECKOUT
             doc_journal_entry = frappe.new_doc('Journal Entry')
             doc_journal_entry.title = "JE " + doc_folio_transaction.name
             doc_journal_entry.voucher_type = 'Journal Entry'
@@ -233,6 +235,7 @@ def add_late_checkout(room_stay_id):
                 doc_credit_je = frappe.get_doc('Journal Entry Account', {'parent': doc_je.name, 'debit': 0.0})
                 doc_hotel_bill_breakdown = frappe.get_doc('Hotel Bill Breakdown', {'billing_folio_trx_id': folio_trx_lc.name})
 
+                # JOURNAL ENTRY CREATION: FLIP LATE CHECKOUT. LIKELY WILL NOT BE USED
                 doc_journal_entry = frappe.new_doc('Journal Entry')
                 doc_journal_entry.title = "Flip " + doc_je.title
                 doc_journal_entry.voucher_type = 'Journal Entry'

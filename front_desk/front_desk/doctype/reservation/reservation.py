@@ -72,6 +72,7 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 	exist_deposit_folio_trx = frappe.db.exists('Folio Transaction', {'parent': folio_name, 'remark': remark})
 
 	if not exist_deposit_folio_trx:
+		# JOURNAL ENTRY CREATION: DEPOSIT
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.voucher_type = 'Journal Entry'
 		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
@@ -473,6 +474,7 @@ def create_additional_charge(reservation_id):
 												  {'parent': doc_folio.name,
 												   'remark': remark})
 			if not exist_folio_trx_ac:
+				# JOURNAL ENTRY CREATION: ADDITIONAL CHARGE
 				doc_journal_entry = frappe.new_doc('Journal Entry')
 				doc_journal_entry.title = ac_item.name + " Additional Charge of Reservation: " + reservation_id
 				doc_journal_entry.voucher_type = 'Journal Entry'
@@ -619,6 +621,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 													 'remark': remark})
 		if not exist_folio_trx_rbp_item:
 			if rbp_item.mode_of_payment != 'City Ledger':
+				# JOURNAL ENTRY CREATION: ROOM BILL PAYMENT
 				doc_journal_entry = frappe.new_doc('Journal Entry')
 				doc_journal_entry.voucher_type = 'Journal Entry'
 				doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
@@ -667,6 +670,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
 			kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 
+			# JOURNAL ENTRY CREATION ROOM BILL PAID CHANGE
 			change_doc_journal_entry = frappe.new_doc('Journal Entry')
 			change_doc_journal_entry.voucher_type = 'Journal Entry'
 			change_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
@@ -834,7 +838,7 @@ def input_city_ledger_payment_to_journal_entry(reservation_id):
 		amount = frappe.db.get_value('Folio Transaction', {'parent': folio_name, 'remark': remark},
 									 ['amount_after_tax'])
 		cust_name = frappe.get_doc('Reservation', reservation_id).customer_id
-
+		# JOURNAL ENTRY CREATION: CITY LEDGER PAYMENT. LIKELY WLL NOT BE USED
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.voucher_type = 'Journal Entry'
 		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
@@ -931,6 +935,7 @@ def cancel_individual_reservation(reservation_id):
 		folio.save()
 
 		# Cancellation Fee Journal Entry
+		# JOURNAL ENTRY CREATION: CANCELLATION FEE
 		doc_journal_entry = frappe.new_doc('Journal Entry')
 		doc_journal_entry.title = fee_folio_trx.name + remark
 		doc_journal_entry.voucher_type = 'Journal Entry'

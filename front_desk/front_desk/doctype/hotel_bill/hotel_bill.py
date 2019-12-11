@@ -68,6 +68,7 @@ def create_additional_charge(reservation_id):
 												  {'parent': doc_folio.name,
 												   'remark': remark})
 			if not exist_folio_trx_ac:
+				# JOURNAL ENTRY CREATION: ADDITIONAL CHARGE
 				doc_journal_entry = frappe.new_doc('Journal Entry')
 				doc_journal_entry.title = ac_item.name + " Additional Charge of Reservation: " + reservation_id
 				doc_journal_entry.voucher_type = 'Journal Entry'
@@ -392,6 +393,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 				bb_title = 'Hotel Bill Breakdown: ' + bb_item.breakdown_description + ' - ' + bb_item.name
 				bb_remark = bb_title + '. @ ' + str(bb_item.creation)
 
+				# JOURNAL ENTRY CREATION: BILL BREAKDOWN
 				bb_doc_journal_entry = frappe.new_doc('Journal Entry')
 				bb_doc_journal_entry.title = bb_title
 				bb_doc_journal_entry.voucher_type = 'Journal Entry'
@@ -433,6 +435,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 				bb_tax_title = 'Hotel Bill Breakdown Tax: ' + bb_item.breakdown_description + ' - ' + bb_item.name
 				bb_tax_remark = bb_tax_title + '. @ ' + str(bb_item.creation)
 
+				# JOURNAL ENTRY CREATION: BILL BREAKDOWN TAX
 				bb_tax_doc_journal_entry = frappe.new_doc('Journal Entry')
 				bb_tax_doc_journal_entry.title = bb_tax_title
 				bb_tax_doc_journal_entry.voucher_type = 'Journal Entry'
@@ -473,6 +476,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 			br_title = 'Hotel Bill Refund: ' + br_item.refund_description + ' - ' + br_item.name
 			br_remark = br_title + '. @ ' + str(br_item.creation)
 
+			# JOURNAL ENTRY CREATION: HOTEL BILL REFUND
 			br_doc_journal_entry = frappe.new_doc('Journal Entry')
 			br_doc_journal_entry.title = br_title
 			br_doc_journal_entry.voucher_type = 'Journal Entry'
@@ -519,6 +523,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 			bp_title = 'Hotel Bill Payment (' + str(bp_item.mode_of_payment) + '): ' + str(bp_item.parent) + ' - ' + bp_item.name
 			bp_remark = bp_title + ' - @' + str(bp_item.creation)
 
+			# JOURNAL ENTRY CREATION: HOTEL BILL PAYMENT
 			bp_doc_journal_entry = frappe.new_doc('Journal Entry')
 			bp_doc_journal_entry.title = bp_title
 			bp_doc_journal_entry.voucher_type = 'Journal Entry'
@@ -571,6 +576,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 			else:
 				deposit_used_amount = hotel_bill.bill_deposit_amount
 
+			# JOURNAL ENTRY CREATION: DEPOSIT AS PAYMENT
 			depo_doc_journal_entry = frappe.new_doc('Journal Entry')
 			depo_doc_journal_entry.title = depo_title
 			depo_doc_journal_entry.voucher_type = 'Journal Entry'
@@ -613,6 +619,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 			change_title = 'Hotel Bill Change: ' + hotel_bill.name
 			change_remark = change_title + ' - @' + str(hotel_bill.creation)
 
+			# JOURNAL ENTRY CREATION: HOTEL BILL CHANGE
 			change_doc_journal_entry = frappe.new_doc('Journal Entry')
 			change_doc_journal_entry.title = change_title
 			change_doc_journal_entry.voucher_type = 'Journal Entry'

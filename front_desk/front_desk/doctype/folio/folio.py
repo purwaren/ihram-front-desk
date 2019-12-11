@@ -157,7 +157,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 				doc_folio.append('transaction_detail', doc)
 				doc_folio.save()
 
-
+# FUNCTION NOT USED
 def copy_trx_from_folio_transaction_to_journal_entry(reservation_id):
 	# copy the folio transactions which not have entry yet in General Ledger. i.e: Room charge transactions
 
@@ -193,6 +193,7 @@ def copy_trx_from_folio_transaction_to_journal_entry(reservation_id):
 			doc_journal_entry.save()
 			doc_journal_entry.submit()
 
+# FUNCTION NOT USED
 def finalize_sales_invoice_from_folio(reservation_id):
 	folio_id = frappe.get_doc('Folio', {"reservation_id": reservation_id}).name
 	folio_trx_list = frappe.get_all('Folio Transaction', filters={'folio_id': folio_id}, fields=["*"])
