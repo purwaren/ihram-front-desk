@@ -645,5 +645,8 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 			change_doc_journal_entry.submit()
 		# 6. Set Hotel Bill is_paid = 1
 		frappe.db.set_value('Hotel Bill', hotel_bill_id, 'is_paid', 1)
+		# 7. Set Reservation related is_frozen status to 1
+		frappe.db.set_value('Reservation', hotel_bill.reservation_id, 'is_frozen', 1)
+
 
 		return 1
