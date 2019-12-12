@@ -1189,7 +1189,7 @@ function freeze_reservation() {
 		cur_frm.set_df_property('type', 'read_only', 1);
 		cur_frm.set_df_property('hotel_order_channel', 'read_only', 1);
 		cur_frm.set_df_property('is_guaranteed', 'read_only', 1);
-		cur_frm.set_df_property('is_round_down_change_amount', 'read_only', 1);
+		cur_frm.set_df_property('is_round_change_amount', 'read_only', 1);
 
 		cur_frm.get_field("reservation_detail").grid.only_sortable();
 		cur_frm.get_field("room_stay").grid.only_sortable();
