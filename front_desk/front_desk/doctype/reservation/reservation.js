@@ -12,6 +12,7 @@ var max_discount = 90;
 
 frappe.ui.form.on('Reservation', {
 	onload: function(frm, cdt, cdn) {
+		freeze_reservation();
 		frm.set_query('payment_method', () => {
 			return {
 				query: 'front_desk.front_desk.doctype.reservation.reservation.get_debit_account'
@@ -26,7 +27,8 @@ frappe.ui.form.on('Reservation', {
 			filter_room_id_in_additional_charge(frm);
 		}
 	},
-	refresh: function(frm) {
+	refresh: function(frm, cdt, cdn) {
+		freeze_reservation();
 		if (cur_frm.doc.deposit > 0) {
 			has_deposit = true;
 		}
@@ -1178,4 +1180,24 @@ function populate_room_stay_id_by_room_id_in_additional_charge(child) {
 			}
 		}
 	});
+}
+
+function freeze_reservation() {
+	if (cur_frm.doc.is_frozen == 1) {
+		console.log("freeze!");
+		cur_frm.disable_save();
+		cur_frm.set_df_property('type', 'read_only', 1);
+		cur_frm.set_df_property('hotel_order_channel', 'read_only', 1);
+		cur_frm.set_df_property('is_guaranteed', 'read_only', 1);
+		cur_frm.set_df_property('is_round_down_change_amount', 'read_only', 1);
+
+		cur_frm.get_field("reservation_detail").grid.only_sortable();
+		cur_frm.get_field("room_stay").grid.only_sortable();
+		cur_frm.get_field("additional_charge").grid.only_sortable();
+		cur_frm.get_field("room_bill_payments").grid.only_sortable();
+		cur_frm.get_field("room_bill_adjustment").grid.only_sortable();
+
+		cur_frm.set_intro(__('This Reservation\'s Hotel Bill has been paid. You cannot make a change anymore.'));
+		cur_frm.set_footnote(__('This Reservation\'s Hotel Bill has been paid. You cannot make a change anymore.'));
+	}
 }

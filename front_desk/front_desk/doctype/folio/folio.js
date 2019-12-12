@@ -9,10 +9,8 @@ frappe.ui.form.on('Folio', {
 				+"&format="+encodeURIComponent("Print by Type")
 				+"&no_letterhead=0"
 				));
-
-			if (!w) {
-				frappe.msgprint(__("Please enable pop-ups")); return;
-			}
-
+		if (!w) {
+			frappe.msgprint(__("Please enable pop-ups")); return;
+		}
 	},
 });
