@@ -47,6 +47,7 @@ function search(doc) {
 							border: 1px solid #d1d8dd;\
 							text-align: center; \
     						font-weight: bold;\
+    						background-color:#f7fafc;\
 						}\
 					</style>';
 
@@ -62,7 +63,7 @@ function search(doc) {
 		while (start <= end) {
 			var th = document.createElement('th');
 			th.className = 'grid-static-col';
-			th.innerHTML = formatDate(start);
+			th.innerHTML = formatDate(start).split("-").reverse().join("-");
 			document.getElementById('table-calendar-title').appendChild(th);
 		
 			start.setDate(start.getDate() + 1);
