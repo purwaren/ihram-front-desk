@@ -10,6 +10,20 @@ frappe.ui.form.on('Room Availability Page', {
 	},
 	onload: function (frm) {
 		frm.disable_save();
+	},
+	start: function(frm) {
+		if (frm.doc.end != null && (frm.doc.end < frm.doc.start)) {
+			frm.doc.start = null;
+			frappe.msgprint(__("End date must be greater than Start date"));
+			frm.refresh();
+		}
+	},
+	end: function (frm) {
+		if (frm.doc.start != null && (frm.doc.end < frm.doc.start)) {
+			frm.doc.end = null;
+			frappe.msgprint(__("End date must be greater than Start date"));
+			frm.refresh();
+		}
 	}
 });
 
@@ -56,9 +70,9 @@ function search(doc) {
 		var start = new Date(doc.start);
 		var	end = new Date(doc.end);
 
-		if (start > end) {
-			frappe.msgprint(__("Start > End")); return;
-		}
+		// if (start > end) {
+		// 	frappe.msgprint(__("End date must be greater than Start date")); return;
+		// }
 
 		while (start <= end) {
 			var th = document.createElement('th');
