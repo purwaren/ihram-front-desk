@@ -7,6 +7,9 @@ frappe.ui.form.on('Room Availability Page', {
 	search_button: function(frm, cdt, cdn) {
 		doc = locals[cdt][cdn];
 		search(doc);
+	},
+	onload: function (frm) {
+		frm.disable_save();
 	}
 });
 
