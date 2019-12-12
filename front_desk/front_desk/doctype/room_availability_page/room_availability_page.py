@@ -11,13 +11,25 @@ class RoomAvailabilityPage(Document):
 
 @frappe.whitelist()
 def get_room_availability(room_id, date):
-	room_stay = frappe.db.sql('SELECT name FROM `tabRoom Stay` WHERE room_id=%s AND %s >= CONVERT(arrival, DATE) AND %s < CONVERT(departure, DATE)', (room_id, date, date))
+	room_stay = frappe.db.sql(
+		'SELECT name '
+		'FROM `tabRoom Stay` '
+		'WHERE room_id=%s '
+		'AND %s >= CONVERT(arrival, DATE) '
+		'AND %s < CONVERT(departure, DATE)',
+		(room_id, date, date))
 
 	if len(room_stay) > 0:
 		return 'RS'
 	else:
-		availability = frappe.db.sql('SELECT room_availability FROM `tabRoom Booking` WHERE room_id = %s AND %s >= start AND %s < end', (room_id, date, date))
-		
+		availability = frappe.db.sql(
+			'SELECT room_availability '
+			'FROM `tabRoom Booking` '
+			'WHERE status != "Canceled" '
+			'AND room_id = %s '
+			'AND %s >= start '
+			'AND %s < end',
+			(room_id, date, date))
 		if len(availability) > 0:
 			return availability
 		else:
