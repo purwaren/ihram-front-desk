@@ -20,7 +20,7 @@ function search(doc) {
 		var html =	'<div id="room-calendar">\
 						<table class="form-grid" id="table-calendar">\
 							<tr class="grid-heading-row" id="table-calendar-title">\
-								<th class="grid-static-col">Room Number</th>\
+								<th class="frozen">Room Number</th>\
 								<th class="grid-static-col">Room Type</th>\
 								<th class="grid-static-col">Bed Type</th>\
 								<th class="grid-static-col">Smoking</th>\
@@ -36,6 +36,17 @@ function search(doc) {
 							height:100%;\
 							max-height:600px;\
 							overflow-y:scroll;\
+							margin-left:90px;\
+						}\
+						.frozen{\
+							position: absolute;\
+							left:0;\
+							width: 100px;\
+							height: 55px;\
+							padding: 10px 15px;\
+							border: 1px solid #d1d8dd;\
+							text-align: center; \
+    						font-weight: bold;\
 						}\
 					</style>';
 
@@ -65,7 +76,7 @@ function search(doc) {
 					tr.className = 'grid-row';
 					
 					var td = document.createElement('td');
-					td.className = 'grid-static-col';
+					td.className = 'frozen';
 					td.innerHTML = elm.name;
 					tr.appendChild(td);
 
