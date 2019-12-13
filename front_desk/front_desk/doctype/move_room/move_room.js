@@ -26,6 +26,7 @@ frappe.ui.form.on('Move Room', {
 	},
 	guest_request: function(frm, cdt, cdn) {
 		guest_request = locals[cdt][cdn].guest_request;
+		frm.refresh_field('room_stay');
 	},
 	after_save: function(frm) {
 		frappe.call({
@@ -41,28 +42,41 @@ frappe.ui.form.on('Room Stay', {
 	form_render: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
 		child.reservation_id = initial_room_stay.reservation_id;
+		child.guest_name = initial_room_stay.guest_name;
 
 		var	grid_row = frm.fields_dict['room_stay'].grid.grid_rows_by_docname[child.name];
-		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "reservation_id"})[0];
-		field.hidden = 1;
-		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "is_early_checkin"})[0];
-		field.hidden = 1;
-		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "is_late_checkout"})[0];
-		field.hidden = 1;
-		var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "section_break_1"})[0];
-		field.hidden = 1;
+		frappe.utils.filter_dict(grid_row.docfields, {fieldname: "reservation_id"})[0].hidden = 1;
+		frappe.utils.filter_dict(grid_row.docfields, {fieldname: "is_early_checkin"})[0].hidden = 1;
+		frappe.utils.filter_dict(grid_row.docfields, {fieldname: "is_late_checkout"})[0].hidden = 1;
+		frappe.utils.filter_dict(grid_row.docfields, {fieldname: "section_break_1"})[0].hidden = 1;
 
 		child.room_bill_paid_id = initial_room_stay.room_bill_paid_id;
 
 		console.log(child);
 		if (guest_request == 0) {
 			child.room_rate = initial_room_stay.room_rate;
-			var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
-			field.read_only = 1;
+			child.override_rate = initial_room_stay.override_rate;
+			child.weekday_rate = initial_room_stay.weekday_rate;
+			child.actual_weekday_rate = initial_room_stay.actual_weekday_rate;
+			child.weekend_rate = initial_room_stay.weekend_rate;
+			child.actual_weekend_rate = initial_room_stay.actual_weekend_rate;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0].read_only = 1;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "override_rate"})[0].read_only = 1;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "actual_weekday_rate"})[0].read_only = 1;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "actual_weekend_rate"})[0].read_only = 1;
+
 		} else {
 			child.room_rate = undefined;
-			var  field = frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0];
-			field.read_only = 0;
+			child.override_rate = 0;
+			child.weekday_rate = undefined;
+			child.actual_weekday_rate = 0;
+			child.weekend_rate = undefined;
+			child.actual_weekend_rate = 0;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "room_rate"})[0].read_only = 0;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "override_rate"})[0].read_only = 0;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "actual_weekday_rate"})[0].read_only = 0;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "actual_weekend_rate"})[0].read_only = 0;
+			frappe.utils.filter_dict(grid_row.docfields, {fieldname: "total_bill_amount"})[0].hidden = 0;
 		}
 
 		frm.refresh_field('room_stay');
@@ -104,10 +118,12 @@ frappe.ui.form.on('Room Stay', {
 						departure: child.departure,
 						room_rate_id: child.room_rate,
 						discount: child.discount_percentage,
-
+						actual_weekday: child.actual_weekday_rate,
+						actual_weekend: child.actual_weekend_rate,
 					},
 					callback: (response) => {
 						child.total_bill_amount = response.message;
+						frm.refresh_field('room_stay');
 					}
 				});
 			}
@@ -142,9 +158,12 @@ frappe.ui.form.on('Room Stay', {
 						departure: child.departure,
 						room_rate_id: child.room_rate,
 						discount: child.discount_percentage,
+						actual_weekday: child.actual_weekday_rate,
+						actual_weekend: child.actual_weekend_rate,
 					},
 					callback: (response) => {
 						child.total_bill_amount = response.message;
+						frm.refresh_field('room_stay');
 					}
 				});
 			}
@@ -232,9 +251,12 @@ frappe.ui.form.on('Room Stay', {
 					departure: child.departure,
 					room_rate_id: child.room_rate,
 					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
 				},
 				callback: (response) => {
 					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
 				}
 			});
 		}
@@ -250,13 +272,91 @@ frappe.ui.form.on('Room Stay', {
 					departure: child.departure,
 					room_rate_id: child.room_rate,
 					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
 				},
 				callback: (response) => {
 					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
 				}
 			});
 		}
 	},
+	actual_weekday_rate: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		if (child.actual_weekday_rate == undefined) {
+			child.actual_weekday_rate = 0;
+			frm.refresh_field('room_stay');
+		}
+		// recalculate room stay bill
+		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
+				},
+				callback: (response) => {
+					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
+				}
+			});
+		}
+	},
+	actual_weekend_rate: function(frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		if (child.actual_weekend_rate == undefined) {
+			child.actual_weekend_rate = 0;
+			frm.refresh_field('room_stay');
+		}
+		// recalculate room stay bill
+		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
+				},
+				callback: (response) => {
+					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
+				}
+			});
+		}
+	},
+	override_rate: function (frm, cdt, cdn) {
+		var child = locals[cdt][cdn];
+		if (child.override_rate == 0) {
+			child.actual_weekday_rate = 0;
+			child.actual_weekend_rate = 0;
+		}
+		// recalculate room stay bill
+		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
+				},
+				callback: (response) => {
+					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
+				}
+			});
+		}
+	}
 })
 
 function formatDate(date) {
