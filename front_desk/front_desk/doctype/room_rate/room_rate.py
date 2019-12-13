@@ -71,32 +71,34 @@ def get_rate_after_tax(room_rate_id, selector, discount, actual_rate):
 	breakdown_list = room_rate.get('room_rate_breakdown')
 	total_weekday = 0.0
 	total_weekend = 0.0
-	rate_to_be_calculated = 0.0
+	if actual_rate is not None:
+		actual_rate = float(actual_rate)
+	else:
+		actual_rate = 0
 	amount_multiplier = 1 - float(discount) / 100.0
 
 	if selector == "Weekday Rate":
-
+		if actual_rate == 0:
+			diff = 0
+		else:
+			diff = actual_rate - room_rate.rate_weekday
 		for bd_item in breakdown_list:
 			if bd_item.breakdown_name != 'Weekend Rate':
-				if float(actual_rate) > 0 and float(actual_rate) > bd_item.breakdown_amount:
-					rate_to_be_calculated = float(actual_rate)
-				else:
-					rate_to_be_calculated = bd_item.breakdown_amount
 				_, _, tb_total = calculate_hotel_tax_and_charges(
-					amount_multiplier * rate_to_be_calculated * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
+					amount_multiplier * (bd_item.breakdown_amount + diff) * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
 				total_weekday = total_weekday + tb_total[-1]
 
 		return total_weekday
 
 	if selector == "Weekend Rate":
 		for bd_item in breakdown_list:
-			if float(actual_rate) > 0 and float(actual_rate) > bd_item.breakdown_amount:
-				rate_to_be_calculated = float(actual_rate)
+			if actual_rate == 0:
+				diff = 0
 			else:
-				rate_to_be_calculated = bd_item.breakdown_amount
+				diff = actual_rate - room_rate.rate_weekend
 			if bd_item.breakdown_name != 'Weekday Rate':
 				_, _, tb_total = calculate_hotel_tax_and_charges(
-					amount_multiplier * rate_to_be_calculated * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
+					amount_multiplier * (bd_item.breakdown_amount + diff) * float(bd_item.breakdown_qty), bd_item.breakdown_tax)
 				total_weekend = total_weekend + tb_total[-1]
 
 		return total_weekend
