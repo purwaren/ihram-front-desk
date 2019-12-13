@@ -544,6 +544,21 @@ def calculate_room_bill_amount(doc, method):
 
 	doc.room_bill_amount = room_bill_amount
 
+def fill_actual_room_rate(doc, method):
+	room_stay = doc.get('room_stay')
+	if len(room_stay) > 0:
+		for rs_item in room_stay:
+			if rs_item.override_rate == 0:
+				rs_item.actual_weekday_rate = rs_item.weekday_rate
+				rs_item.actual_weekend_rate = rs_item.weekend_rate
+			else:
+				if rs_item.actual_weekday_rate == 0 and rs_item.actual_weekend_rate == 0:
+					rs_item.override_rate = 0
+				if rs_item.actual_weekday_rate == 0:
+					rs_item.actual_weekday_rate = rs_item.weekday_rate
+				if rs_item.actual_weekend_rate == 0:
+					rs_item.actual_weekend_rate = rs_item.weekend_rate
+
 
 @frappe.whitelist()
 def recalculate_room_bill_amount_after_guest_requested_move_room(reservation_id):

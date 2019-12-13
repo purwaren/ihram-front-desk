@@ -96,7 +96,8 @@ doc_events = {
 		"validate": "front_desk.front_desk.doctype.hotel_bill.hotel_bill.calculate_bill_total"
 	},
 	"Reservation": {
-		"validate": "front_desk.front_desk.doctype.reservation.reservation.calculate_room_bill_amount",
+		"validate": ["front_desk.front_desk.doctype.reservation.reservation.calculate_room_bill_amount",
+					 "front_desk.front_desk.doctype.reservation.reservation.fill_actual_room_rate",]
 	},
 	"Hotel Room": {
 		"validate": "front_desk.front_desk.doctype.hotel_room.hotel_room.calculate_total_amenities_cost"

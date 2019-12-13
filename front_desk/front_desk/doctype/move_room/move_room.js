@@ -104,6 +104,7 @@ frappe.ui.form.on('Room Stay', {
 						departure: child.departure,
 						room_rate_id: child.room_rate,
 						discount: child.discount_percentage,
+
 					},
 					callback: (response) => {
 						child.total_bill_amount = response.message;

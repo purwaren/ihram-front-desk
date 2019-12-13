@@ -586,6 +586,8 @@ frappe.ui.form.on('Room Stay', {
 												departure: child.departure,
 												room_rate_id: child.room_rate,
 												discount: child.discount_percentage,
+												actual_weekday: child.actual_weekday_rate,
+												actual_weekend: child.actual_weekend_rate,
 											},
 											callback: (response) => {
 												if (old_total_bill_amount > 0) {
@@ -668,6 +670,8 @@ frappe.ui.form.on('Room Stay', {
 					departure: child.departure,
 					room_rate_id: child.room_rate,
 					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
 				},
 				callback: (response) => {
 					child.total_bill_amount = response.message;
@@ -687,11 +691,63 @@ frappe.ui.form.on('Room Stay', {
 					departure: child.departure,
 					room_rate_id: child.room_rate,
 					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
 				},
 				callback: (response) => {
 					if (old_total_bill_amount > 0) {
 						child.old_total_bill_amount = old_total_bill_amount;
 					}
+					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
+				}
+			});
+		}
+	},
+	actual_weekend_rate: function(frm,cdt, cdn) {
+		let child = locals[cdt][cdn];
+		if (child.actual_weekend_rate < child.weekend_rate) {
+			frappe.msgprint("Actual Weekend Rate must be higher than or at least equal with Bottom Weekend Rate");
+			child.actual_weekend_rate = 0;
+			frm.refresh_field('room_stay');
+		}
+		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
+				},
+				callback: (response) => {
+					child.total_bill_amount = response.message;
+					frm.refresh_field('room_stay');
+				}
+			});
+		}
+	},
+	actual_weekday_rate: function(frm,cdt, cdn) {
+		let child = locals[cdt][cdn];
+		if (child.actual_weekday_rate < child.weekday_rate) {
+			frappe.msgprint("Actual Weekday Rate must be higher than or at least equal with Bottom Weekday Rate");
+			child.actual_weekday_rate = 0;
+			frm.refresh_field('room_stay');
+		}
+		if (child.arrival != undefined && child.departure != undefined && child.room_rate != undefined) {
+			frappe.call({
+				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
+				args: {
+					arrival: child.arrival,
+					departure: child.departure,
+					room_rate_id: child.room_rate,
+					discount: child.discount_percentage,
+					actual_weekday: child.actual_weekday_rate,
+					actual_weekend: child.actual_weekend_rate,
+				},
+				callback: (response) => {
 					child.total_bill_amount = response.message;
 					frm.refresh_field('room_stay');
 				}
@@ -1105,13 +1161,18 @@ function copy_reservation_detail_to_room_stay(frm, cdt, cdn) {
 			var arrivalString = arrival.getFullYear() + '-' + ('0' + (arrival.getMonth()+1)).slice(-2) + '-' + ('0' + arrival.getDate()).slice(-2) + ' ' + ('0' + now_date.getHours()).slice(-2) + ':' + ('0' + now_date.getMinutes()).slice(-2) + ':00';
 			var departureString = departure.getFullYear() + '-' + ('0' + (departure.getMonth()+1)).slice(-2) + '-' + ('0' + departure.getDate()).slice(-2) + ' ' + ('0' + now_date.getHours()).slice(-2) + ':' + ('0' + now_date.getMinutes()).slice(-2) + ':00';
 
-			frappe.call({
+			frappe.db.get_value('Room Rate', {'name': d.room_rate}, ['rate_weekend', 'rate_weekday'], function(response) {
+				let base_rate_weekend = response.rate_weekend;
+				let base_rate_weekday = response.rate_weekday;
+				frappe.call({
 				method: 'front_desk.front_desk.doctype.room_stay.room_stay.calculate_room_stay_bill',
 				args: {
 					arrival: arrivalString,
 					departure: departureString,
 					room_rate_id: d.room_rate,
 					discount: 0,
+					actual_weekday: 0,
+					actual_weekend: 0,
 				},
 				callback: (response) => {
                     frappe.call({
@@ -1131,10 +1192,13 @@ function copy_reservation_detail_to_room_stay(frm, cdt, cdn) {
                                 item.room_id = d.room_id;
                             }
                             item.room_rate = d.room_rate;
+                            item.weekend_rate = base_rate_weekend;
+                            item.weekday_rate = base_rate_weekday;
                             item.total_bill_amount = response.message;
                         }
                     })
 				}
+			});
 			});
 		})
 	}

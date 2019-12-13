@@ -26,7 +26,7 @@ def process_move_room(initial_room_stay_name):
 
 	initial_room_stay.departure = replacement_room_stay.arrival
 	# calculate total bill amount karena departure berubah
-	initial_room_stay.total_bill_amount = room_stay.calculate_room_stay_bill(str(initial_room_stay.arrival), str(initial_room_stay.departure), initial_room_stay.room_rate, initial_room_stay.discount_percentage)
+	initial_room_stay.total_bill_amount = room_stay.calculate_room_stay_bill(str(initial_room_stay.arrival), str(initial_room_stay.departure), initial_room_stay.room_rate, initial_room_stay.discount_percentage, initial_room_stay.actual_weekday_rate, initial_room_stay.actial_weekend_rate)
 	initial_room_stay.old_total_bill_amount = old__initial_room_stay_bill_amount
 	initial_room_stay.save()
 

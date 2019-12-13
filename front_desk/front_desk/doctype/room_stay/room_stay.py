@@ -276,7 +276,7 @@ def daterange(start_date, end_date):
         yield start_date + datetime.timedelta(n)
 
 @frappe.whitelist()
-def calculate_room_stay_bill(arrival, departure, room_rate_id, discount):
+def calculate_room_stay_bill(arrival, departure, room_rate_id, discount, actual_weekday, actual_weekend):
     start = datetime.datetime.strptime(arrival, "%Y-%m-%d %H:%M:%S")
     day_before_start = datetime.datetime.strptime((datetime.datetime.strftime(start - datetime.timedelta(1), "%Y-%m-%d %H:%M:%S")), "%Y-%m-%d %H:%M:%S")
     end = datetime.datetime.strptime(departure, "%Y-%m-%d %H:%M:%S")
@@ -289,8 +289,8 @@ def calculate_room_stay_bill(arrival, departure, room_rate_id, discount):
         if day.weekday() < 5:
             weekday = weekday + 1
     weekend = total_day - weekday
-    rate_weekday_taxed = get_rate_after_tax(room_rate_id, 'Weekday Rate', discount)
-    rate_weekend_taxed = get_rate_after_tax(room_rate_id, 'Weekend Rate', discount)
+    rate_weekday_taxed = get_rate_after_tax(room_rate_id, 'Weekday Rate', discount, actual_weekday)
+    rate_weekend_taxed = get_rate_after_tax(room_rate_id, 'Weekend Rate', discount, actual_weekend)
 
     total_rate = (float(weekday) * rate_weekday_taxed) + (float(weekend) * rate_weekend_taxed)
 
