@@ -26,7 +26,7 @@ def process_move_room(initial_room_stay_name):
 
 	initial_room_stay.departure = replacement_room_stay.arrival
 	# calculate total bill amount karena departure berubah
-	initial_room_stay.total_bill_amount = room_stay.calculate_room_stay_bill(str(initial_room_stay.arrival), str(initial_room_stay.departure), initial_room_stay.room_rate, initial_room_stay.discount_percentage, initial_room_stay.actual_weekday_rate, initial_room_stay.actial_weekend_rate)
+	initial_room_stay.total_bill_amount = room_stay.calculate_room_stay_bill(str(initial_room_stay.arrival), str(initial_room_stay.departure), initial_room_stay.room_rate, initial_room_stay.discount_percentage, initial_room_stay.actual_weekday_rate, initial_room_stay.actual_weekend_rate)
 	initial_room_stay.old_total_bill_amount = old__initial_room_stay_bill_amount
 	initial_room_stay.save()
 
@@ -50,3 +50,18 @@ def process_move_room(initial_room_stay_name):
 	if is_guest_request == 1 and diff > 0:
 		# trigger recalculate_room_bill_amount
 		reservation.recalculate_room_bill_amount_after_guest_requested_move_room(initial_room_stay.reservation_id)
+
+def fill_actual_room_rate(doc, method):
+	room_stay = doc.get('room_stay')
+	if len(room_stay) > 0:
+		for rs_item in room_stay:
+			if rs_item.override_rate == 0:
+				rs_item.actual_weekday_rate = rs_item.weekday_rate
+				rs_item.actual_weekend_rate = rs_item.weekend_rate
+			else:
+				if rs_item.actual_weekday_rate == 0 and rs_item.actual_weekend_rate == 0:
+					rs_item.override_rate = 0
+				if rs_item.actual_weekday_rate == 0:
+					rs_item.actual_weekday_rate = rs_item.weekday_rate
+				if rs_item.actual_weekend_rate == 0:
+					rs_item.actual_weekend_rate = rs_item.weekend_rate
