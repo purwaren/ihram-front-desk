@@ -329,11 +329,11 @@ def create_room_charge(reservation_id):
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate',
-															  room_stay.discount_percentage)
+															  room_stay.discount_percentage, room_stay.actual_weekday_rate)
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate',
-															  room_stay.discount_percentage)
+															  room_stay.discount_percentage, room_stay.actual_weekend_rate)
 				# !!IMPORTANTE!! sepertinya masukin ke journal entry ketika billing selesai saja. pas saat ini cukup create folio transaction yang sesuai jumlahnya after tax
 				# for rrbd_item in room_rate_breakdown:
 				# 	rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
@@ -800,11 +800,11 @@ def trigger_room_charge(reservation_id):
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate',
-															  room_stay.discount_percentage)
+															  room_stay.discount_percentage, room_stay.actual_weekday_rate)
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate',
-															  room_stay.discount_percentage)
+															  room_stay.discount_percentage, room_stay.actual_weekend_rate)
 
 				# Create Folio Transaction of Room Charge
 				folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
