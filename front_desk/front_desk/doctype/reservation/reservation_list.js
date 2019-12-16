@@ -44,7 +44,7 @@ frappe.listview_settings['Reservation'] = {
     },
     get_indicator: function(doc) {
         return [__(doc.status), {
-            "Created": "orange",
+            "Reserved": "orange",
             "Confirmed": "green",
             "In House": "green",
             "Finish": "blue",

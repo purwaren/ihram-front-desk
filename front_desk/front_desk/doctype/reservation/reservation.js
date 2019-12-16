@@ -152,7 +152,7 @@ frappe.ui.form.on('Reservation', {
 			frm.set_df_property('room_bill_paid', 'hidden', 0);
 		}
 
-		if(reservation.status == 'Created') {
+		if(reservation.status == 'Reserved') {
 			frm.page.add_menu_item(("Cancel"), function () {
 				frappe.confirm(
                 (("You are about to cancel Reservation ") + reservation.name + (", are you sure?")),
@@ -231,7 +231,7 @@ frappe.ui.form.on('Reservation', {
 		// 	});
 		// });
 
-		if (reservation.status != 'Cancel' && reservation.status != 'Created' && reservation.status != 'Confirmed' && parseFloat(reservation.deposit) > 0) {
+		if (reservation.status != 'Cancel' && reservation.status != 'Reserved' && reservation.status != 'Confirmed' && parseFloat(reservation.deposit) > 0) {
 			frm.add_custom_button(__("Show Billing"), function () {
 				frappe.call({
 					method: "front_desk.front_desk.doctype.reservation.reservation.get_hotel_bill_url",
@@ -254,7 +254,7 @@ frappe.ui.form.on('Reservation', {
 		// 		method: "front_desk.front_desk.doctype.reservation.reservation.populate_ba_of_all_folio"
 		// 	})
 		// });
-		if (reservation.status != 'Cancel' && reservation.status != 'Created') {
+		if (reservation.status != 'Cancel' && reservation.status != 'Reserved') {
 			// frm.add_custom_button(__("Trigger Auto Charges"), function () {
 			// 	frappe.call({
 			// 		method: "front_desk.front_desk.doctype.reservation.reservation.trigger_room_charge",
@@ -316,7 +316,7 @@ frappe.ui.form.on('Reservation', {
 			});
 		}
 
-		if (reservation.status == 'Cancel' || reservation.status == 'Created') {
+		if (reservation.status == 'Cancel' || reservation.status == 'Reserved') {
 			frm.set_df_property('deposit', 'hidden', 1);
 			frm.set_df_property('payment_method', 'hidden', 1);
 			frm.set_df_property('room_stay_section', 'hidden', 1);

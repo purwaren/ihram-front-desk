@@ -35,7 +35,7 @@ def check_in(reservation_id_list):
 	reservation_id_list = json.loads(reservation_id_list)
 
 	for reservation_id in reservation_id_list:
-		if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Created':
+		if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Reserved':
 			doc = frappe.get_doc('Reservation', reservation_id)
 			doc.status = 'Confirmed'
 			doc.save()
@@ -204,7 +204,7 @@ def get_status(reservation_id_list):
 
 @frappe.whitelist()
 def cancel_reservation(reservation_id):
-	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Created':
+	if frappe.db.get_value('Reservation', reservation_id, 'status') == 'Reserved':
 		reservation = frappe.get_doc('Reservation', reservation_id)
 		reservation.status = "Cancel"
 		# TODO: free room in tabRoom Booking
@@ -270,7 +270,7 @@ def checkout_reservation(reservation_id):
 
 @frappe.whitelist()
 def auto_release_reservation_at_six_pm():
-	reservation_list = frappe.get_all('Reservation', {'status': 'Created', 'is_guaranteed': 0})
+	reservation_list = frappe.get_all('Reservation', {'status': 'Reserved', 'is_guaranteed': 0})
 	for reservation in reservation_list:
 		reservation_detail_list = frappe.get_all('Reservation Detail', filters={'parent': reservation.name},
 												 fields=['expected_arrival'])
