@@ -63,6 +63,28 @@ def populate_breakdown_summary(doc, method):
 
 	doc.breakdown_summary = summary
 
+def rewrite_breakdown_summary(room_rate_id, actual_weekday_rate, actual_weekend_rate):
+	summary = ''
+	room_rate = frappe.get_doc('Room Rate', room_rate_id)
+	breakdown_list = room_rate.get('room_rate_breakdown')
+	diff_weekday = float(actual_weekday_rate) - float(room_rate.rate_weekday)
+	diff_weekend = float(actual_weekend_rate) - float(room_rate.rate_weekend)
+
+	for index, item in enumerate(breakdown_list):
+		if item.breakdown_name == 'Weekend Rate' or item.breakdown_name == 'Weekday Rate':
+			if (item.breakdown_name == 'Weekday Rate'):
+				item.breakdown_amount = float(item.breakdown_amount) + diff_weekday
+			elif (item.breakdown_name == 'Weekend Rate'):
+				item.breakdown_amount = float(item.breakdown_amount) + diff_weekend
+
+			summary = summary + str(index + 1) + ". " + item.breakdown_name + ' : Rp.' + item.get_formatted(
+				"breakdown_amount") + " per night\n"
+		else:
+			summary = summary + str(
+				index + 1) + ". " + item.breakdown_qty + " " + item.breakdown_name + ' : Rp. ' + item.get_formatted(
+				"breakdown_amount") + " per pax\n"
+
+	return summary
 
 def get_rate_after_tax(room_rate_id, selector, discount, actual_rate):
 	if not discount:
