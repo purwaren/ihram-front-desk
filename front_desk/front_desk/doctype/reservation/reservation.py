@@ -562,6 +562,18 @@ def fill_actual_room_rate(doc, method):
 				if rs_item.actual_weekend_rate == 0:
 					rs_item.actual_weekend_rate = rs_item.weekend_rate
 
+def create_after_cleaning(doc, method):
+	room_stay = doc.get('room_stay')
+	if len(room_stay) > 0:
+		for rs_item in room_stay:
+			exist_after_cleaning = frappe.db.exists('After Cleaning', {'room_stay_id': rs_item.name})
+			if not exist_after_cleaning:
+				after_cleaning = frappe.new_doc('After Cleaning')
+				after_cleaning.room_stay_id = rs_item.name
+				after_cleaning.hotel_room_id = rs_item.room_id
+				after_cleaning.room_status = frappe.get_doc('Hotel Room', rs_item.room_id).status
+				after_cleaning.reservation_id = rs_item.reservation_id
+				after_cleaning.save()
 
 @frappe.whitelist()
 def recalculate_room_bill_amount_after_guest_requested_move_room(reservation_id):

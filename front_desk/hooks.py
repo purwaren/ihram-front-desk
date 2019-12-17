@@ -97,7 +97,8 @@ doc_events = {
 	},
 	"Reservation": {
 		"validate": ["front_desk.front_desk.doctype.reservation.reservation.calculate_room_bill_amount",
-					 "front_desk.front_desk.doctype.reservation.reservation.fill_actual_room_rate",]
+					 "front_desk.front_desk.doctype.reservation.reservation.fill_actual_room_rate",],
+		"on_update": "front_desk.front_desk.doctype.reservation.reservation.create_after_cleaning"
 	},
 	"Move Room": {
 		"validate": "front_desk.front_desk.doctype.move_room.move_room.fill_actual_room_rate",
