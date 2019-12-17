@@ -15,6 +15,7 @@ from front_desk.front_desk.doctype.room_stay.room_stay import add_early_checkin
 from front_desk.front_desk.doctype.room_stay.room_stay import add_late_checkout
 from front_desk.front_desk.doctype.room_stay.room_stay import get_rate_after_tax
 from front_desk.front_desk.doctype.room_stay.room_stay import calculate_room_stay_bill
+from front_desk.front_desk.doctype.room_rate.room_rate import rewrite_breakdown_summary
 
 
 class Reservation(Document):
@@ -431,7 +432,9 @@ def create_room_charge(reservation_id):
 				doc_folio_transaction.against_account_id = je_credit_account
 				doc_folio_transaction.remark = remark
 				doc_folio_transaction.is_void = 0
-				doc_folio_transaction.transaction_detail = room_rate.breakdown_summary
+				doc_folio_transaction.transaction_detail = rewrite_breakdown_summary(room_rate.name,
+																					 room_stay.actual_weekday_rate,
+																					 room_stay.actual_weekend_rate)
 
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
@@ -822,7 +825,9 @@ def trigger_room_charge(reservation_id):
 				doc_folio_transaction.against_account_id = je_credit_account
 				doc_folio_transaction.remark = remark
 				doc_folio_transaction.is_void = 0
-				doc_folio_transaction.transaction_detail = room_rate.breakdown_summary
+				doc_folio_transaction.transaction_detail = rewrite_breakdown_summary(room_rate.name,
+																					 room_stay.actual_weekday_rate,
+																					 room_stay.actual_weekend_rate)
 
 				doc_folio.append('transaction_detail', doc_folio_transaction)
 				doc_folio.save()
