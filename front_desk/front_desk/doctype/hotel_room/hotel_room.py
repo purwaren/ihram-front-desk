@@ -75,3 +75,11 @@ def calculate_total_amenities_cost(doc, method):
 @frappe.whitelist()
 def get_room_status(room_id):
 	return frappe.db.get_value('Hotel Room', {'name': room_id}, "room_status")
+
+@frappe.whitelist()
+def change_cleaning_status(room_list, to_status):
+	room_list = json.loads(room_list)
+	for room_id in room_list:
+		room = frappe.get_doc('Hotel Room', room_id)
+		room.cleaning_status = to_status
+		room.save()
