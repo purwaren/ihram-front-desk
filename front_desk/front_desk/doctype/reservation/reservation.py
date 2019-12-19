@@ -229,19 +229,20 @@ def checkout_reservation(reservation_id):
 				# Update reservation status to "FINISH"
 				reservation.status = "Finish"
 
-				# TODO: checkout room stay dan hotel room tidak get_all
+				room_stay_list = reservation.get('room_stay')
+				for room_stay_item in room_stay_list:
+					if room_stay_item.status == 'Checked In':
+						# Update departure time in room stay
+						room_stay_item.departure = frappe.utils.now()
+						room_stay_item.status = 'Checked Out'
+						room_stay_item.save()
 
-				room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
-				# Update departure time in room stay
-				room_stay.departure = frappe.utils.now()
-				# room_stay.save()
+						hotel_room = frappe.get_doc('Hotel Room', room_stay_item.room_id)
+						# Update room_status dari hotel_room menjadi "Vacant Dirty"
+						hotel_room.room_status = "Vacant Dirty"
+						hotel_room.save()
 
 				reservation.save()
-
-				hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
-				# Update room_status dari hotel_room menjadi "Vacant Dirty"
-				hotel_room.room_status = "Vacant Dirty"
-				hotel_room.save()
 
 				# Update room booking status
 				update_by_reservation(reservation_id)
