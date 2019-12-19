@@ -265,6 +265,6 @@ def get_all_guest_name(reservation_id):
 
 	room_stay_list = frappe.get_doc('Reservation', reservation_id).get('room_stay')
 	for item in room_stay_list:
-		return_list.append(item.guest)
+		return_list.append(item.guest_name)
 
 	return return_list
