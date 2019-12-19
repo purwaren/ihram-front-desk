@@ -229,6 +229,8 @@ def checkout_reservation(reservation_id):
 				# Update reservation status to "FINISH"
 				reservation.status = "Finish"
 
+				# TODO: checkout room stay dan hotel room tidak get_all
+
 				room_stay = frappe.get_doc('Room Stay', {"reservation_id": reservation_id})
 				# Update departure time in room stay
 				room_stay.departure = frappe.utils.now()
@@ -1075,11 +1077,3 @@ def get_all_room_id_in_reservation(reservation_id):
 
 	return return_list
 
-def get_all_guest_name(reservation_id):
-	return_list = []
-
-	room_stay_list = frappe.get_doc('Reservation', reservation_id).get('room_stay')
-	for item in room_stay_list:
-		return_list.append(item.guest)
-
-	return return_list

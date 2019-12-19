@@ -7,7 +7,6 @@ import json
 import frappe
 import datetime
 from frappe.model.document import Document
-from front_desk.front_desk.doctype.reservation.reservation import get_all_guest_name
 
 class Folio(Document):
 	pass
@@ -259,3 +258,13 @@ def populate_sales_invoice_summary(sales_invoice_id):
 		summary = summary + str(index + 1) + ". " + item.item_name + '     ' + str(int(item.qty)) + ' X ' + item.get_formatted(
 				"rate") + "\n"
 	return summary
+
+
+def get_all_guest_name(reservation_id):
+	return_list = []
+
+	room_stay_list = frappe.get_doc('Reservation', reservation_id).get('room_stay')
+	for item in room_stay_list:
+		return_list.append(item.guest)
+
+	return return_list
