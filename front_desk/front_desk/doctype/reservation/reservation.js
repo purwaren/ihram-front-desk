@@ -904,6 +904,7 @@ function set_all_field_read_only(doc_field, flag) {
 	for (var i = 0; i < x; i++) {
 		fields[i].read_only = flag;
 	}
+	frappe.meta.get_docfield('Room Stay', 'status', reservation.name).read_only = true;
 	frappe.meta.get_docfield('Room Stay', 'weekend_rate', reservation.name).read_only = true;
 	frappe.meta.get_docfield('Room Stay', 'weekday_rate', reservation.name).read_only = true;
 	frappe.meta.get_docfield('Room Stay', 'total_bill_amount', reservation.name).read_only = true;
