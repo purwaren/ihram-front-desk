@@ -322,7 +322,7 @@ def create_room_charge(reservation_id):
 				amount_multiplier = 1 - room_stay_discount
 				room_rate_breakdown = frappe.get_all('Room Rate Breakdown', filters={'parent': room_stay.room_rate},
 													 fields=['*'])
-				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
+				remark = 'Auto Room Charge: ' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 
@@ -1072,5 +1072,14 @@ def get_all_room_id_in_reservation(reservation_id):
 	room_stay_list = frappe.get_doc('Reservation', reservation_id).get('room_stay')
 	for item in room_stay_list:
 		return_list.append(item.room_id)
+
+	return return_list
+
+def get_all_guest_name(reservation_id):
+	return_list = []
+
+	room_stay_list = frappe.get_doc('Reservation', reservation_id).get('room_stay')
+	for item in room_stay_list:
+		return_list.append(item.guest)
 
 	return return_list

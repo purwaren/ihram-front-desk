@@ -7,6 +7,7 @@ import json
 import frappe
 import datetime
 from frappe.model.document import Document
+from front_desk.front_desk.doctype.reservation.reservation import get_all_guest_name
 
 class Folio(Document):
 	pass
@@ -90,6 +91,8 @@ def copy_all_trx_from_sales_invoice_to_folio():
 def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 	folio_id = frappe.get_doc('Folio', {"reservation_id": reservation_id}).name
 	customer_id = frappe.get_doc('Reservation', reservation_id).customer_id
+	guest_name = get_all_guest_name(reservation_id)
+	complete_guest_name = guest_name.append(customer_id)
 	pos_profile_list = frappe.get_all('POS Profile', filters={"disabled": 0})
 	restaurant_list = frappe.get_all('Restaurant')
 
@@ -97,7 +100,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 		if pos_profile:
 			sales_invoice_list = frappe.get_all('Sales Invoice',
 												filters={
-													'customer_name': customer_id,
+													'customer_name': ('in', complete_guest_name),
 													'pos_profile': pos_profile.name,
 												},
 												or_filters=[
@@ -110,7 +113,6 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 				if not frappe.db.exists('Folio Transaction', {'sales_invoice_id': sales_invoice.name}):
 					doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 					doc = frappe.new_doc('Folio Transaction')
-					# TODO: room_stay_id in folio_trx
 					doc.folio_id = folio_id
 					doc.amount = sales_invoice.total
 					doc.amount_after_tax = sales_invoice.grand_total
@@ -120,6 +122,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 					doc.flag = 'Debit'
 					doc.account_id = sales_invoice.against_income_account
 					doc.against_account_id = sales_invoice.debit_to
+					doc.room_stay_id = frappe.db.get_value('Room Stay', {'reservation_id': reservation_id, 'guest_name': sales_invoice.customer_name}, "name")
 					doc.remark = 'Invoice POS ' + pos_profile.name + ' - ' + sales_invoice.posting_date.strftime(
 						"%d/%m/%Y") + '\n\n' + populate_sales_invoice_summary(sales_invoice.name)
 					doc.is_void = 0
@@ -130,7 +133,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 	for restaurant in restaurant_list:
 		sales_invoice_list = frappe.get_all('Sales Invoice',
 											filters={
-												'customer_name': customer_id,
+												'customer_name': ('in', complete_guest_name),
 												'restaurant': restaurant.name,
 											},
 											or_filters=[
@@ -143,7 +146,6 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 			if not frappe.db.exists('Folio Transaction', {'sales_invoice_id': sales_invoice.name}):
 				doc_folio = frappe.get_doc('Folio', {'name': folio_id})
 				doc = frappe.new_doc('Folio Transaction')
-				# TODO: room_stay_id in folio_trx
 				doc.folio_id = folio_id
 				doc.amount = sales_invoice.total
 				doc.amount_after_tax = sales_invoice.grand_total
@@ -152,6 +154,7 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 				doc.flag = 'Debit'
 				doc.account_id = sales_invoice.against_income_account
 				doc.against_account_id = sales_invoice.debit_to
+				doc.room_stay_id = frappe.db.get_value('Room Stay', {'reservation_id': reservation_id, 'guest_name': sales_invoice.customer_name}, "name")
 				doc.remark = 'Invoice Restaurant ' + sales_invoice.restaurant + ' ID: ' + sales_invoice.posting_date.strftime("%d/%m/%Y")
 				doc.is_void = 0
 
