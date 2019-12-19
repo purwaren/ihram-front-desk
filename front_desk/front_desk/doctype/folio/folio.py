@@ -120,7 +120,8 @@ def copy_trx_from_sales_invoice_to_folio_transaction(reservation_id):
 					doc.flag = 'Debit'
 					doc.account_id = sales_invoice.against_income_account
 					doc.against_account_id = sales_invoice.debit_to
-					doc.remark = 'Invoice POS ' + pos_profile.name + ' - ' + sales_invoice.posting_date.strftime("%d/%m/%Y")
+					doc.remark = 'Invoice POS ' + pos_profile.name + ' - ' + sales_invoice.posting_date.strftime(
+						"%d/%m/%Y") + '\n\n' + populate_sales_invoice_summary(sales_invoice.name)
 					doc.is_void = 0
 
 					doc_folio.append('transaction_detail', doc)
@@ -246,3 +247,12 @@ def set_ar_city_ledger_invoice_id_to_null(folio_id):
 	folio = frappe.get_doc('Folio', folio_id)
 	if folio.ar_city_ledger_invoice_id is not None:
 		frappe.db.set_value('Folio', folio_id, 'ar_city_ledger_invoice_id', None)
+
+def populate_sales_invoice_summary(sales_invoice_id):
+	summary = ''
+	sinv_doc = frappe.get_doc('Sales Invoice', sales_invoice_id)
+	sinv_items = sinv_doc.get('items')
+	for index, item in enumerate(sinv_items):
+		summary = summary + str(index + 1) + ". " + item.item_name + '     ' + str(int(item.qty)) + ' X ' + item.get_formatted(
+				"rate") + "\n"
+	return summary
