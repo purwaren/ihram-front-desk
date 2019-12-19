@@ -656,6 +656,20 @@ frappe.ui.form.on('Room Stay', {
 			}
 
 	},
+	check_out_room: function(frm, cdt, cdn) {
+		frappe.call({
+			method: 'front_desk.front_desk.doctype.room_stay.room_stay.checkout_room_stay',
+			args: {
+				room_stay_id: cdn
+			},
+			callback: (r) => {
+				if (r.message) {
+					frappe.msgprint(__(r.message));
+					frm.refresh();
+				}
+			}
+		});
+	},
 	discount_percentage: function(frm, cdt, cdn) {
 		if (child.discount_percentage >= max_discount) {
 			frappe.msgprint("Discount Limit of "  + max_discount+ "% Exceeded. Please input lower Discount Rate.");

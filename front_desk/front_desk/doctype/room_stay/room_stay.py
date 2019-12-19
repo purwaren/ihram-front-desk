@@ -8,6 +8,7 @@ import frappe
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import get_folio_name
 from front_desk.front_desk.doctype.room_rate.room_rate import get_rate_after_tax
+from front_desk.front_desk.doctype.room_booking.room_booking import update_by_room_stay
 
 class RoomStay(Document):
     pass
@@ -374,3 +375,21 @@ def checkout_early_refund(room_stay_id):
 @frappe.whitelist()
 def get_room_stay_id_by_room_id(reservation_id, room_id_blah):
     return frappe.get_doc('Room Stay', {'reservation_id': reservation_id, 'room_id': room_id_blah})
+
+@frappe.whitelist()
+def checkout_room_stay(room_stay_id):
+    room_stay = frappe.get_doc('Room Stay', room_stay_id)
+    if room_stay.status == 'Checked In':
+        room_stay.departure = frappe.utils.now()
+        room_stay.status = 'Checked Out'
+        room_stay.save()
+        hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
+        # Update room_status dari hotel_room menjadi "Vacant Dirty"
+        hotel_room.room_status = "Vacant Dirty"
+        hotel_room.save()
+        # Update room booking status
+        update_by_room_stay(room_stay_id)
+
+        return "Room " + str(room_stay.room_id) + " successfully checked out."
+    else:
+        return "Room " + str(room_stay.room_id) + " already checked out."
