@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import json
 import datetime
 import frappe
+import requests
 from frappe.model.document import Document
 from front_desk.front_desk.doctype.folio.folio import create_folio
 from front_desk.front_desk.doctype.room_booking.room_booking import update_by_reservation
@@ -333,11 +334,13 @@ def create_room_charge(reservation_id):
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate',
-															  room_stay.discount_percentage, room_stay.actual_weekday_rate)
+															  room_stay.discount_percentage,
+															  room_stay.actual_weekday_rate)
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate',
-															  room_stay.discount_percentage, room_stay.actual_weekend_rate)
+															  room_stay.discount_percentage,
+															  room_stay.actual_weekend_rate)
 				# !!IMPORTANTE!! sepertinya masukin ke journal entry ketika billing selesai saja. pas saat ini cukup create folio transaction yang sesuai jumlahnya after tax
 				# for rrbd_item in room_rate_breakdown:
 				# 	rrbd_remark = rrbd_item.breakdown_name + ' of Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
@@ -543,7 +546,7 @@ def calculate_room_bill_amount(doc, method):
 				replacement_rs = frappe.get_doc('Room Stay', move_room.replacement_room_stay)
 				if replacement_rs.room_bill_paid_id is None:
 					room_bill_amount = room_bill_amount + (
-								initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
+							initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
 			# Default condition, no move room yet
 			elif not rs_item.room_bill_paid_id:
 				room_bill_amount = room_bill_amount + rs_item.total_bill_amount
@@ -594,7 +597,7 @@ def recalculate_room_bill_amount_after_guest_requested_move_room(reservation_id)
 				replacement_rs = frappe.get_doc('Room Stay', move_room.replacement_room_stay)
 				if replacement_rs.room_bill_paid_id is None:
 					room_bill_amount = room_bill_amount + (
-								initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
+							initial_rs.total_bill_amount + replacement_rs.total_bill_amount - initial_rs.old_total_bill_amount)
 
 	reservation.room_bill_amount = room_bill_amount
 	reservation.save()
@@ -818,11 +821,13 @@ def trigger_room_charge(reservation_id):
 				if is_weekday():
 					today_rate = room_rate.rate_weekday * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekday Rate',
-															  room_stay.discount_percentage, room_stay.actual_weekday_rate)
+															  room_stay.discount_percentage,
+															  room_stay.actual_weekday_rate)
 				else:
 					today_rate = room_rate.rate_weekend * amount_multiplier
 					today_rate_after_tax = get_rate_after_tax(room_rate.name, 'Weekend Rate',
-															  room_stay.discount_percentage, room_stay.actual_weekend_rate)
+															  room_stay.discount_percentage,
+															  room_stay.actual_weekend_rate)
 
 				# Create Folio Transaction of Room Charge
 				folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
@@ -1078,3 +1083,41 @@ def get_all_room_id_in_reservation(reservation_id):
 
 	return return_list
 
+
+@frappe.whitelist()
+def issue_card_check_in(pcId, cmd, technology, cardOperation, encoder, room, activationDate, activationTime, expiryDate,
+				  expiryTime, grant, keypad, operator, track1, track2, room2, room3, room4, returnCardId, cardId):
+
+	# Example Post
+	# {"pcId": "1", "cmd": "PI", "room": "102", "activationDate": "16/05/2017",
+	#  "activationTime": "12:00", "expiryDate": "17/05/2017", "expiryTime": "12:00",
+	#  "cardOperation": "RP", "operator": "tesa"}
+
+	# api-endpoint
+	url = 'http://tesa-server-url-change-here'
+
+	# defining a params dict for the parameters to be sent to the API
+	params = {
+		'pcId': pcId,
+		'cmd': cmd,
+		'technology': technology,
+		'cardOperation': cardOperation,
+		'encoder': encoder,
+		'room': room,
+		'activationDate': activationDate,
+		'activationTime': activationTime,
+		'expiryDate': expiryDate,
+		'expiryTime': expiryTime,
+		'grant': grant,
+		'keypad': keypad,
+		'operator': operator,
+		'track1': track1,
+		'track2': track2,
+		'room2': room2,
+		'room3': room3,
+		'room4': room4,
+		'returnCardId': returnCardId,
+		'cardId': cardId
+	}
+
+	r = requests.post(url=url, params=params)
