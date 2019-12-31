@@ -60,6 +60,7 @@ def add_early_checkin(room_stay_id):
             doc_folio_transaction = frappe.new_doc('Folio Transaction')
             doc_folio_transaction.folio_id = doc_folio.name
             doc_folio_transaction.amount = special_charge_amount
+            doc_folio_transaction.amount_after_tax = special_charge_amount
             doc_folio_transaction.flag = 'Debit'
             doc_folio_transaction.account_id = je_debit_account
             doc_folio_transaction.against_account_id = je_credit_account
@@ -182,6 +183,7 @@ def add_late_checkout(room_stay_id):
             doc_folio_transaction = frappe.new_doc('Folio Transaction')
             doc_folio_transaction.folio_id = doc_folio.name
             doc_folio_transaction.amount = special_charge_amount
+            doc_folio_transaction.amount_after_tax = special_charge_amount
             doc_folio_transaction.flag = 'Debit'
             doc_folio_transaction.account_id = je_debit_account
             doc_folio_transaction.against_account_id = je_credit_account

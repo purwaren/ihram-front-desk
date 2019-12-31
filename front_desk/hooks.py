@@ -103,6 +103,9 @@ doc_events = {
 	"Move Room": {
 		"validate": "front_desk.front_desk.doctype.move_room.move_room.fill_actual_room_rate",
 	},
+	"Night Audit": {
+		"validate": "front_desk.front_desk.doctype.night_audit.night_audit.populate_night_audit_id",
+	},
 	"Hotel Room": {
 		"validate": "front_desk.front_desk.doctype.hotel_room.hotel_room.calculate_total_amenities_cost"
 	},
