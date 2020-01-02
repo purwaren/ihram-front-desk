@@ -23,6 +23,7 @@ frappe.ui.form.on('Night Audit', {
 							item.remark = d.remark;
 							item.debit_account = d.debit_account;
 							item.credit_account = d.credit_account;
+							item.customer_id = d.customer_id;
 						});
 						refresh_field('night_audit_transaction');
 					}
@@ -30,6 +31,21 @@ frappe.ui.form.on('Night Audit', {
 						frappe.msgprint("No Transaction made to  be audited today.")
 					}
 
+				}
+			}
+		})
+	}
+});
+frappe.ui.form.on('Night Audit Transaction', {
+	make_journal_entry: function (frm, cdt, cdn) {
+		frappe.call({
+			method: "front_desk.front_desk.doctype.night_audit_transaction.night_audit_transaction.make_journal_entry",
+			args: {
+				nat_id: frappe.get_doc(cdt, cdn).name
+			},
+			callback: (response) => {
+				if (response.message) {
+					frm.refresh_field('night_audit_transaction')
 				}
 			}
 		})
