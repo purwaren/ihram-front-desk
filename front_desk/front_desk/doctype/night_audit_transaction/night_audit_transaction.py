@@ -13,6 +13,7 @@ class NightAuditTransaction(Document):
 @frappe.whitelist()
 def make_journal_entry(nat_id):
 	doc_nat = frappe.get_doc('Night Audit Transaction', nat_id)
+	doc_na = frappe.get_doc('Night Audit', doc_nat.parent)
 	doc_je = frappe.new_doc('Journal Entry')
 	doc_je.title = doc_nat.title
 	doc_je.voucher_type = 'Journal Entry'
@@ -46,7 +47,12 @@ def make_journal_entry(nat_id):
 	doc_je.submit()
 
 	doc_nat.journal_entry_id = doc_je.name
+	doc_nat.posting_date = doc_je.posting_date
 	doc_nat.save()
+
+	doc_na.posting_date = doc_je.posting_date
+	doc_na.save()
+
 
 	if 'Folio Transaction - ' in doc_nat.transaction_type:
 		doc_ft = frappe.get_doc('Folio Transaction', doc_nat.transaction_id)
@@ -81,5 +87,5 @@ def make_journal_entry(nat_id):
 		doc_aclip.journal_entry_id = doc_je.name
 		doc_aclip.save()
 
-	return_message = "Journal Entry ID: " + doc_je.name
+	return_message = doc_je.name
 	return return_message
