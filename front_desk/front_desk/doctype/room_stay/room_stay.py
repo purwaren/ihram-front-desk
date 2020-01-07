@@ -73,37 +73,37 @@ def add_early_checkin(room_stay_id):
             doc_folio.save()
 
             # JOURNAL ENTRY CREATION: EARLY CHECKIN
-            doc_journal_entry = frappe.new_doc('Journal Entry')
-            doc_journal_entry.title = "JE " + doc_folio_transaction.name
-            doc_journal_entry.voucher_type = 'Journal Entry'
-            doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-            doc_journal_entry.posting_date = datetime.date.today()
-            doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-            doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-            doc_journal_entry.remark = doc_folio_transaction.name + "-" + ec_remark
-            doc_journal_entry.user_remark = doc_folio_transaction.name + "-" + ec_remark
-
-            doc_debit = frappe.new_doc('Journal Entry Account')
-            doc_debit.account = je_debit_account
-            doc_debit.debit = special_charge_amount
-            doc_debit.party_type = 'Customer'
-            doc_debit.party = cust_name
-            doc_debit.debit_in_account_currency = special_charge_amount
-            doc_debit.user_remark = doc_folio_transaction.name + "-" + ec_remark
-
-            doc_credit = frappe.new_doc('Journal Entry Account')
-            doc_credit.account = je_credit_account
-            doc_credit.credit = special_charge_amount
-            doc_credit.party_type = 'Customer'
-            doc_credit.party = cust_name
-            doc_credit.credit_in_account_currency = special_charge_amount
-            doc_credit.user_remark = doc_folio_transaction.name + "-" + ec_remark
-
-            doc_journal_entry.append('accounts', doc_debit)
-            doc_journal_entry.append('accounts', doc_credit)
-
-            doc_journal_entry.save()
-            doc_journal_entry.submit()
+            # doc_journal_entry = frappe.new_doc('Journal Entry')
+            # doc_journal_entry.title = "JE " + doc_folio_transaction.name
+            # doc_journal_entry.voucher_type = 'Journal Entry'
+            # doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+            # doc_journal_entry.posting_date = datetime.date.today()
+            # doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+            # doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+            # doc_journal_entry.remark = doc_folio_transaction.name + "-" + ec_remark
+            # doc_journal_entry.user_remark = doc_folio_transaction.name + "-" + ec_remark
+            #
+            # doc_debit = frappe.new_doc('Journal Entry Account')
+            # doc_debit.account = je_debit_account
+            # doc_debit.debit = special_charge_amount
+            # doc_debit.party_type = 'Customer'
+            # doc_debit.party = cust_name
+            # doc_debit.debit_in_account_currency = special_charge_amount
+            # doc_debit.user_remark = doc_folio_transaction.name + "-" + ec_remark
+            #
+            # doc_credit = frappe.new_doc('Journal Entry Account')
+            # doc_credit.account = je_credit_account
+            # doc_credit.credit = special_charge_amount
+            # doc_credit.party_type = 'Customer'
+            # doc_credit.party = cust_name
+            # doc_credit.credit_in_account_currency = special_charge_amount
+            # doc_credit.user_remark = doc_folio_transaction.name + "-" + ec_remark
+            #
+            # doc_journal_entry.append('accounts', doc_debit)
+            # doc_journal_entry.append('accounts', doc_credit)
+            #
+            # doc_journal_entry.save()
+            # doc_journal_entry.submit()
 
     else:
         if exist_folio_trx_ec:
@@ -119,37 +119,37 @@ def add_early_checkin(room_stay_id):
                                                           {'billing_folio_trx_id': folio_trx_ec.name})
 
                 # JOURNAL ENTRY CREATION: FLIP EARLY CHECKIN JOURNAL ENTRY: LIKELY WILL NOT BE USED
-                doc_journal_entry = frappe.new_doc('Journal Entry')
-                doc_journal_entry.title = "Flip " + doc_je.title
-                doc_journal_entry.voucher_type = 'Journal Entry'
-                doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-                doc_journal_entry.posting_date = datetime.date.today()
-                doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-                doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-                doc_journal_entry.remark = "Flip " + doc_je.remark
-                doc_journal_entry.user_remark = "Flip " + doc_je.user_remark
-
-                doc_debit = frappe.new_doc('Journal Entry Account')
-                doc_debit.account = doc_credit_je.account
-                doc_debit.debit = doc_debit_je.debit
-                doc_debit.party_type = 'Customer'
-                doc_debit.party = doc_debit_je.party
-                doc_debit.debit_in_account_currency = doc_debit_je.debit_in_account_currency
-                doc_debit.user_remark = "Flip " + doc_debit_je.user_remark
-
-                doc_credit = frappe.new_doc('Journal Entry Account')
-                doc_credit.account = doc_debit_je.account
-                doc_credit.credit = doc_credit_je.credit
-                doc_credit.party_type = 'Customer'
-                doc_credit.party = doc_credit_je.party
-                doc_credit.credit_in_account_currency = doc_credit_je.credit_in_account_currency
-                doc_credit.user_remark = "Flip " + doc_credit_je.user_remark
-
-                doc_journal_entry.append('accounts', doc_debit)
-                doc_journal_entry.append('accounts', doc_credit)
-
-                doc_journal_entry.save()
-                doc_journal_entry.submit()
+                # doc_journal_entry = frappe.new_doc('Journal Entry')
+                # doc_journal_entry.title = "Flip " + doc_je.title
+                # doc_journal_entry.voucher_type = 'Journal Entry'
+                # doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+                # doc_journal_entry.posting_date = datetime.date.today()
+                # doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+                # doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+                # doc_journal_entry.remark = "Flip " + doc_je.remark
+                # doc_journal_entry.user_remark = "Flip " + doc_je.user_remark
+                #
+                # doc_debit = frappe.new_doc('Journal Entry Account')
+                # doc_debit.account = doc_credit_je.account
+                # doc_debit.debit = doc_debit_je.debit
+                # doc_debit.party_type = 'Customer'
+                # doc_debit.party = doc_debit_je.party
+                # doc_debit.debit_in_account_currency = doc_debit_je.debit_in_account_currency
+                # doc_debit.user_remark = "Flip " + doc_debit_je.user_remark
+                #
+                # doc_credit = frappe.new_doc('Journal Entry Account')
+                # doc_credit.account = doc_debit_je.account
+                # doc_credit.credit = doc_credit_je.credit
+                # doc_credit.party_type = 'Customer'
+                # doc_credit.party = doc_credit_je.party
+                # doc_credit.credit_in_account_currency = doc_credit_je.credit_in_account_currency
+                # doc_credit.user_remark = "Flip " + doc_credit_je.user_remark
+                #
+                # doc_journal_entry.append('accounts', doc_debit)
+                # doc_journal_entry.append('accounts', doc_credit)
+                #
+                # doc_journal_entry.save()
+                # doc_journal_entry.submit()
 
                 frappe.delete_doc("Folio Transaction", folio_trx_ec.name)
                 frappe.delete_doc("Hotel Bill Breakdown", doc_hotel_bill_breakdown.name)
@@ -195,37 +195,37 @@ def add_late_checkout(room_stay_id):
             doc_folio.append('transaction_detail', doc_folio_transaction)
             doc_folio.save()
             # JOURNAL ENTRY CREATION: LATE CHECKOUT
-            doc_journal_entry = frappe.new_doc('Journal Entry')
-            doc_journal_entry.title = "JE " + doc_folio_transaction.name
-            doc_journal_entry.voucher_type = 'Journal Entry'
-            doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-            doc_journal_entry.posting_date = datetime.date.today()
-            doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-            doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-            doc_journal_entry.remark = doc_folio_transaction.name + "-" + lc_remark
-            doc_journal_entry.user_remark = doc_folio_transaction.name + "-" + lc_remark
-
-            doc_debit = frappe.new_doc('Journal Entry Account')
-            doc_debit.account = je_debit_account
-            doc_debit.debit = special_charge_amount
-            doc_debit.party_type = 'Customer'
-            doc_debit.party = cust_name
-            doc_debit.debit_in_account_currency = special_charge_amount
-            doc_debit.user_remark = doc_folio_transaction.name + "-" + lc_remark
-
-            doc_credit = frappe.new_doc('Journal Entry Account')
-            doc_credit.account = je_credit_account
-            doc_credit.credit = special_charge_amount
-            doc_credit.party_type = 'Customer'
-            doc_credit.party = cust_name
-            doc_credit.credit_in_account_currency = special_charge_amount
-            doc_credit.user_remark = doc_folio_transaction.name + "-" + lc_remark
-
-            doc_journal_entry.append('accounts', doc_debit)
-            doc_journal_entry.append('accounts', doc_credit)
-
-            doc_journal_entry.save()
-            doc_journal_entry.submit()
+            # doc_journal_entry = frappe.new_doc('Journal Entry')
+            # doc_journal_entry.title = "JE " + doc_folio_transaction.name
+            # doc_journal_entry.voucher_type = 'Journal Entry'
+            # doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+            # doc_journal_entry.posting_date = datetime.date.today()
+            # doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+            # doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+            # doc_journal_entry.remark = doc_folio_transaction.name + "-" + lc_remark
+            # doc_journal_entry.user_remark = doc_folio_transaction.name + "-" + lc_remark
+            #
+            # doc_debit = frappe.new_doc('Journal Entry Account')
+            # doc_debit.account = je_debit_account
+            # doc_debit.debit = special_charge_amount
+            # doc_debit.party_type = 'Customer'
+            # doc_debit.party = cust_name
+            # doc_debit.debit_in_account_currency = special_charge_amount
+            # doc_debit.user_remark = doc_folio_transaction.name + "-" + lc_remark
+            #
+            # doc_credit = frappe.new_doc('Journal Entry Account')
+            # doc_credit.account = je_credit_account
+            # doc_credit.credit = special_charge_amount
+            # doc_credit.party_type = 'Customer'
+            # doc_credit.party = cust_name
+            # doc_credit.credit_in_account_currency = special_charge_amount
+            # doc_credit.user_remark = doc_folio_transaction.name + "-" + lc_remark
+            #
+            # doc_journal_entry.append('accounts', doc_debit)
+            # doc_journal_entry.append('accounts', doc_credit)
+            #
+            # doc_journal_entry.save()
+            # doc_journal_entry.submit()
     else:
         if exist_folio_trx_lc:
             folio_trx_lc = frappe.get_doc('Folio Transaction',
@@ -239,37 +239,37 @@ def add_late_checkout(room_stay_id):
                 doc_hotel_bill_breakdown = frappe.get_doc('Hotel Bill Breakdown', {'billing_folio_trx_id': folio_trx_lc.name})
 
                 # JOURNAL ENTRY CREATION: FLIP LATE CHECKOUT. LIKELY WILL NOT BE USED
-                doc_journal_entry = frappe.new_doc('Journal Entry')
-                doc_journal_entry.title = "Flip " + doc_je.title
-                doc_journal_entry.voucher_type = 'Journal Entry'
-                doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-                doc_journal_entry.posting_date = datetime.date.today()
-                doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-                doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-                doc_journal_entry.remark = "Flip " + doc_je.remark
-                doc_journal_entry.user_remark = "Flip " + doc_je.user_remark
-
-                doc_debit = frappe.new_doc('Journal Entry Account')
-                doc_debit.account = doc_credit_je.account
-                doc_debit.debit = doc_debit_je.debit
-                doc_debit.party_type = 'Customer'
-                doc_debit.party = doc_debit_je.party
-                doc_debit.debit_in_account_currency = doc_debit_je.debit_in_account_currency
-                doc_debit.user_remark = "Flip " + doc_debit_je.user_remark
-
-                doc_credit = frappe.new_doc('Journal Entry Account')
-                doc_credit.account = doc_debit_je.account
-                doc_credit.credit = doc_credit_je.credit
-                doc_credit.party_type = 'Customer'
-                doc_credit.party = doc_credit_je.party
-                doc_credit.credit_in_account_currency = doc_credit_je.credit_in_account_currency
-                doc_credit.user_remark = "Flip " + doc_credit_je.user_remark
-
-                doc_journal_entry.append('accounts', doc_debit)
-                doc_journal_entry.append('accounts', doc_credit)
-
-                doc_journal_entry.save()
-                doc_journal_entry.submit()
+                # doc_journal_entry = frappe.new_doc('Journal Entry')
+                # doc_journal_entry.title = "Flip " + doc_je.title
+                # doc_journal_entry.voucher_type = 'Journal Entry'
+                # doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+                # doc_journal_entry.posting_date = datetime.date.today()
+                # doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+                # doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+                # doc_journal_entry.remark = "Flip " + doc_je.remark
+                # doc_journal_entry.user_remark = "Flip " + doc_je.user_remark
+                #
+                # doc_debit = frappe.new_doc('Journal Entry Account')
+                # doc_debit.account = doc_credit_je.account
+                # doc_debit.debit = doc_debit_je.debit
+                # doc_debit.party_type = 'Customer'
+                # doc_debit.party = doc_debit_je.party
+                # doc_debit.debit_in_account_currency = doc_debit_je.debit_in_account_currency
+                # doc_debit.user_remark = "Flip " + doc_debit_je.user_remark
+                #
+                # doc_credit = frappe.new_doc('Journal Entry Account')
+                # doc_credit.account = doc_debit_je.account
+                # doc_credit.credit = doc_credit_je.credit
+                # doc_credit.party_type = 'Customer'
+                # doc_credit.party = doc_credit_je.party
+                # doc_credit.credit_in_account_currency = doc_credit_je.credit_in_account_currency
+                # doc_credit.user_remark = "Flip " + doc_credit_je.user_remark
+                #
+                # doc_journal_entry.append('accounts', doc_debit)
+                # doc_journal_entry.append('accounts', doc_credit)
+                #
+                # doc_journal_entry.save()
+                # doc_journal_entry.submit()
 
                 frappe.delete_doc("Folio Transaction", folio_trx_lc.name)
                 frappe.delete_doc("Hotel Bill Breakdown", doc_hotel_bill_breakdown.name)

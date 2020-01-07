@@ -75,31 +75,31 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 
 	if not exist_deposit_folio_trx:
 		# JOURNAL ENTRY CREATION: DEPOSIT
-		doc_journal_entry = frappe.new_doc('Journal Entry')
-		doc_journal_entry.voucher_type = 'Journal Entry'
-		doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-		doc_journal_entry.posting_date = datetime.date.today()
-		doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-		doc_journal_entry.remark = remark
-		doc_journal_entry.user_remark = remark
-
-		doc_debit = frappe.new_doc('Journal Entry Account')
-		doc_debit.account = debit_account_name
-		doc_debit.debit = amount
-		doc_debit.debit_in_account_currency = amount
-		doc_debit.user_remark = remark
-
-		doc_credit = frappe.new_doc('Journal Entry Account')
-		doc_credit.account = credit_account_name
-		doc_credit.credit = amount
-		doc_credit.credit_in_account_currency = amount
-		doc_credit.user_remark = remark
-
-		doc_journal_entry.append('accounts', doc_debit)
-		doc_journal_entry.append('accounts', doc_credit)
-
-		doc_journal_entry.save()
-		doc_journal_entry.submit()
+		# doc_journal_entry = frappe.new_doc('Journal Entry')
+		# doc_journal_entry.voucher_type = 'Journal Entry'
+		# doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+		# doc_journal_entry.posting_date = datetime.date.today()
+		# doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+		# doc_journal_entry.remark = remark
+		# doc_journal_entry.user_remark = remark
+		#
+		# doc_debit = frappe.new_doc('Journal Entry Account')
+		# doc_debit.account = debit_account_name
+		# doc_debit.debit = amount
+		# doc_debit.debit_in_account_currency = amount
+		# doc_debit.user_remark = remark
+		#
+		# doc_credit = frappe.new_doc('Journal Entry Account')
+		# doc_credit.account = credit_account_name
+		# doc_credit.credit = amount
+		# doc_credit.credit_in_account_currency = amount
+		# doc_credit.user_remark = remark
+		#
+		# doc_journal_entry.append('accounts', doc_debit)
+		# doc_journal_entry.append('accounts', doc_credit)
+		#
+		# doc_journal_entry.save()
+		# doc_journal_entry.submit()
 
 		doc_folio = frappe.get_doc('Folio', folio_name)
 
@@ -484,37 +484,37 @@ def create_additional_charge(reservation_id):
 												   'remark': remark})
 			if not exist_folio_trx_ac:
 				# JOURNAL ENTRY CREATION: ADDITIONAL CHARGE
-				doc_journal_entry = frappe.new_doc('Journal Entry')
-				doc_journal_entry.title = ac_item.name + " Additional Charge of Reservation: " + reservation_id
-				doc_journal_entry.voucher_type = 'Journal Entry'
-				doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-				doc_journal_entry.posting_date = datetime.date.today()
-				doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-				doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
-				doc_journal_entry.remark = remark
-				doc_journal_entry.user_remark = remark
-
-				doc_debit = frappe.new_doc('Journal Entry Account')
-				doc_debit.account = je_debit_account
-				doc_debit.debit = ac_item.ac_amount
-				doc_debit.debit_in_account_currency = ac_item.ac_amount
-				doc_debit.party_type = 'Customer'
-				doc_debit.party = cust_name
-				doc_debit.user_remark = remark
-
-				doc_credit = frappe.new_doc('Journal Entry Account')
-				doc_credit.account = je_credit_account
-				doc_credit.credit = ac_item.ac_amount
-				doc_credit.party_type = 'Customer'
-				doc_credit.party = cust_name
-				doc_credit.credit_in_account_currency = ac_item.ac_amount
-				doc_credit.user_remark = remark
-
-				doc_journal_entry.append('accounts', doc_debit)
-				doc_journal_entry.append('accounts', doc_credit)
-
-				doc_journal_entry.save()
-				doc_journal_entry.submit()
+				# doc_journal_entry = frappe.new_doc('Journal Entry')
+				# doc_journal_entry.title = ac_item.name + " Additional Charge of Reservation: " + reservation_id
+				# doc_journal_entry.voucher_type = 'Journal Entry'
+				# doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+				# doc_journal_entry.posting_date = datetime.date.today()
+				# doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+				# doc_journal_entry.total_amount_currency = frappe.get_doc("Global Defaults").default_currency
+				# doc_journal_entry.remark = remark
+				# doc_journal_entry.user_remark = remark
+				#
+				# doc_debit = frappe.new_doc('Journal Entry Account')
+				# doc_debit.account = je_debit_account
+				# doc_debit.debit = ac_item.ac_amount
+				# doc_debit.debit_in_account_currency = ac_item.ac_amount
+				# doc_debit.party_type = 'Customer'
+				# doc_debit.party = cust_name
+				# doc_debit.user_remark = remark
+				#
+				# doc_credit = frappe.new_doc('Journal Entry Account')
+				# doc_credit.account = je_credit_account
+				# doc_credit.credit = ac_item.ac_amount
+				# doc_credit.party_type = 'Customer'
+				# doc_credit.party = cust_name
+				# doc_credit.credit_in_account_currency = ac_item.ac_amount
+				# doc_credit.user_remark = remark
+				#
+				# doc_journal_entry.append('accounts', doc_debit)
+				# doc_journal_entry.append('accounts', doc_credit)
+				#
+				# doc_journal_entry.save()
+				# doc_journal_entry.submit()
 
 				doc_folio_transaction = frappe.new_doc('Folio Transaction')
 				doc_folio_transaction.folio_id = doc_folio.name
@@ -656,31 +656,31 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 													{'parent': doc_folio.name,
 													 'remark': remark})
 		if not exist_folio_trx_rbp_item:
-			if rbp_item.mode_of_payment != 'City Ledger':
-				# JOURNAL ENTRY CREATION: ROOM BILL PAYMENT
-				doc_journal_entry = frappe.new_doc('Journal Entry')
-				doc_journal_entry.voucher_type = 'Journal Entry'
-				doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-				doc_journal_entry.posting_date = datetime.date.today()
-				doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-				doc_journal_entry.remark = remark
-				doc_journal_entry.user_remark = remark
-				doc_debit = frappe.new_doc('Journal Entry Account')
-				doc_debit.account = debit_account_name
-				doc_debit.debit = amount
-				doc_debit.debit_in_account_currency = amount
-				doc_debit.user_remark = remark
-
-				doc_credit = frappe.new_doc('Journal Entry Account')
-				doc_credit.account = credit_account_name
-				doc_credit.credit = amount
-				doc_credit.credit_in_account_currency = amount
-				doc_credit.user_remark = remark
-				doc_journal_entry.append('accounts', doc_debit)
-				doc_journal_entry.append('accounts', doc_credit)
-
-				doc_journal_entry.save()
-				doc_journal_entry.submit()
+			# if rbp_item.mode_of_payment != 'City Ledger':
+			# 	# JOURNAL ENTRY CREATION: ROOM BILL PAYMENT
+			# 	doc_journal_entry = frappe.new_doc('Journal Entry')
+			# 	doc_journal_entry.voucher_type = 'Journal Entry'
+			# 	doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			# 	doc_journal_entry.posting_date = datetime.date.today()
+			# 	doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			# 	doc_journal_entry.remark = remark
+			# 	doc_journal_entry.user_remark = remark
+			# 	doc_debit = frappe.new_doc('Journal Entry Account')
+			# 	doc_debit.account = debit_account_name
+			# 	doc_debit.debit = amount
+			# 	doc_debit.debit_in_account_currency = amount
+			# 	doc_debit.user_remark = remark
+			#
+			# 	doc_credit = frappe.new_doc('Journal Entry Account')
+			# 	doc_credit.account = credit_account_name
+			# 	doc_credit.credit = amount
+			# 	doc_credit.credit_in_account_currency = amount
+			# 	doc_credit.user_remark = remark
+			# 	doc_journal_entry.append('accounts', doc_debit)
+			# 	doc_journal_entry.append('accounts', doc_credit)
+			#
+			# 	doc_journal_entry.save()
+			# 	doc_journal_entry.submit()
 
 			doc_folio_transaction = frappe.new_doc('Folio Transaction')
 			doc_folio_transaction.folio_id = doc_folio.name
@@ -700,42 +700,41 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 			frappe.db.set_value('Room Bill Payments', rbp_item.name, 'room_bill_paid_id', doc_rbpd.name)
 			frappe.db.set_value('Room Bill Payments', rbp_item.name, 'is_paid', 1)
 
-		# JOURNAL ENTRY CREATION: ROOM BILL PAID CHANGE
 		# Create Journal Entry for Room Bill Paid Change if there is any Change
 		if float(doc_rbpd.rbpd_rounded_change_amount) > 0:
 			rbpd_change_remark = "Change from " + doc_rbpd.name
 			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
 			kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
 
-			# JOURNAL ENTRY CREATION ROOM BILL PAID CHANGE
-			change_doc_journal_entry = frappe.new_doc('Journal Entry')
-			change_doc_journal_entry.voucher_type = 'Journal Entry'
-			change_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
-			change_doc_journal_entry.posting_date = datetime.date.today()
-			change_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
-			change_doc_journal_entry.remark = rbpd_change_remark
-			change_doc_journal_entry.user_remark = rbpd_change_remark
-
-			change_doc_debit = frappe.new_doc('Journal Entry Account')
-			change_doc_debit.account = kas_dp_kamar
-			change_doc_debit.debit = doc_rbpd.rbpd_rounded_change_amount
-			change_doc_debit.party_type = 'Customer'
-			change_doc_debit.party = reservation.customer_id
-			change_doc_debit.debit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
-			change_doc_debit.user_remark = rbpd_change_remark
-
-			change_doc_credit = frappe.new_doc('Journal Entry Account')
-			change_doc_credit.account = kas_kecil
-			change_doc_credit.credit = doc_rbpd.rbpd_rounded_change_amount
-			change_doc_credit.credit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
-			change_doc_credit.user_remark = rbpd_change_remark
-			change_doc_credit.party_type = 'Customer'
-			change_doc_credit.party = reservation.customer_id
-			change_doc_journal_entry.append('accounts', change_doc_debit)
-			change_doc_journal_entry.append('accounts', change_doc_credit)
-
-			change_doc_journal_entry.save()
-			change_doc_journal_entry.submit()
+			# JOURNAL ENTRY CREATION: ROOM BILL PAID CHANGE
+			# change_doc_journal_entry = frappe.new_doc('Journal Entry')
+			# change_doc_journal_entry.voucher_type = 'Journal Entry'
+			# change_doc_journal_entry.naming_series = 'ACC-JV-.YYYY.-'
+			# change_doc_journal_entry.posting_date = datetime.date.today()
+			# change_doc_journal_entry.company = frappe.get_doc("Global Defaults").default_company
+			# change_doc_journal_entry.remark = rbpd_change_remark
+			# change_doc_journal_entry.user_remark = rbpd_change_remark
+			#
+			# change_doc_debit = frappe.new_doc('Journal Entry Account')
+			# change_doc_debit.account = kas_dp_kamar
+			# change_doc_debit.debit = doc_rbpd.rbpd_rounded_change_amount
+			# change_doc_debit.party_type = 'Customer'
+			# change_doc_debit.party = reservation.customer_id
+			# change_doc_debit.debit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
+			# change_doc_debit.user_remark = rbpd_change_remark
+			#
+			# change_doc_credit = frappe.new_doc('Journal Entry Account')
+			# change_doc_credit.account = kas_kecil
+			# change_doc_credit.credit = doc_rbpd.rbpd_rounded_change_amount
+			# change_doc_credit.credit_in_account_currency = doc_rbpd.rbpd_rounded_change_amount
+			# change_doc_credit.user_remark = rbpd_change_remark
+			# change_doc_credit.party_type = 'Customer'
+			# change_doc_credit.party = reservation.customer_id
+			# change_doc_journal_entry.append('accounts', change_doc_debit)
+			# change_doc_journal_entry.append('accounts', change_doc_credit)
+			#
+			# change_doc_journal_entry.save()
+			# change_doc_journal_entry.submit()
 
 			change_doc_folio_transaction = frappe.new_doc('Folio Transaction')
 			change_doc_folio_transaction.folio_id = doc_folio.name
