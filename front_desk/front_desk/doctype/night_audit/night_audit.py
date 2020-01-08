@@ -303,9 +303,17 @@ def get_total(na_id):
 def post_all_to_journal(na_id):
 	doc = frappe.get_doc('Night Audit', na_id)
 	nat_list = doc.get('night_audit_transaction')
+	tobe_posted = []
 	for nat_item in nat_list:
 		if nat_item.journal_entry_id is None:
-			make_journal_entry(nat_item.name)
+			tobe_posted.append(nat_item.name)
+
+	if len(tobe_posted) > 0:
+		for item in tobe_posted:
+			make_journal_entry(item)
+		frappe.msgprint(str(len(tobe_posted)) + " transaction(s) posted to Journal")
+	else:
+		frappe.msgprint("All Transactions already Posted to Journal")
 
 def populate_night_audit_id(doc, method):
 	nat_list = doc.get('night_audit_transaction')
