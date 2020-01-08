@@ -50,7 +50,7 @@ def make_journal_entry(nat_id):
 	frappe.db.set_value('Night Audit Transaction', doc_nat.name, 'posting_date', doc_je.posting_date)
 	frappe.db.set_value('Night Audit', doc_na.name, 'posting_date', doc_je.posting_date)
 
-	if 'Folio Transaction - ' in doc_nat.transaction_type:
+	if 'Folio - ' in doc_nat.transaction_type:
 		doc_ft = frappe.get_doc('Folio Transaction', doc_nat.transaction_id)
 		doc_ft.journal_entry_id = doc_je.name
 		doc_ft.save()

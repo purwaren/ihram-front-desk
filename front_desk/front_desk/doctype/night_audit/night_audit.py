@@ -75,7 +75,7 @@ def fetch_transactions():
 								'name': doc_ft.parent}, "reservation_id")).customer_id).name
 				if ' -  Additional Charge ' in doc_ft.remark:
 					doc_nat = frappe.new_doc('Night Audit Transaction')
-					doc_nat.transaction_type = 'Folio Transaction - Additional Charge'
+					doc_nat.transaction_type = 'Folio - Additional Charge'
 					doc_nat.transaction_id = ft_item.name
 					doc_nat.reservation_id = frappe.db.get_value('Folio', {'name': doc_ft.parent}, "reservation_id")
 					doc_nat.folio_id = doc_ft.parent
@@ -88,7 +88,7 @@ def fetch_transactions():
 					list_of_transactions.append(doc_nat)
 				elif 'Early Check In Room ' in doc_ft.remark:
 					doc_nat = frappe.new_doc('Night Audit Transaction')
-					doc_nat.transaction_type = 'Folio Transaction - Room Stay Early Checkin'
+					doc_nat.transaction_type = 'Folio - Room Stay Early Checkin'
 					doc_nat.transaction_id = ft_item.name
 					doc_nat.reservation_id = frappe.db.get_value('Folio', {'name': doc_ft.parent}, "reservation_id")
 					doc_nat.folio_id = doc_ft.parent
@@ -101,7 +101,7 @@ def fetch_transactions():
 					list_of_transactions.append(doc_nat)
 				elif 'Late Check Out Room ' in doc_ft.remark:
 					doc_nat = frappe.new_doc('Night Audit Transaction')
-					doc_nat.transaction_type = 'Folio Transaction - Room Stay Late Checkout'
+					doc_nat.transaction_type = 'Folio - Room Stay Late Checkout'
 					doc_nat.transaction_id = ft_item.name
 					doc_nat.reservation_id = frappe.db.get_value('Folio', {'name': doc_ft.parent}, "reservation_id")
 					doc_nat.folio_id = doc_ft.parent
@@ -114,7 +114,7 @@ def fetch_transactions():
 					list_of_transactions.append(doc_nat)
 				elif 'Deposit ' in doc_ft.remark:
 					doc_nat = frappe.new_doc('Night Audit Transaction')
-					doc_nat.transaction_type = 'Folio Transaction - Reservation Deposit'
+					doc_nat.transaction_type = 'Folio - Reservation Deposit'
 					doc_nat.transaction_id = ft_item.name
 					doc_nat.reservation_id = frappe.db.get_value('Folio', {'name': doc_ft.parent}, "reservation_id")
 					doc_nat.folio_id = doc_ft.parent
@@ -127,7 +127,7 @@ def fetch_transactions():
 					list_of_transactions.append(doc_nat)
 				elif 'Room Bill Payment: ' in doc_ft.remark:
 					doc_nat = frappe.new_doc('Night Audit Transaction')
-					doc_nat.transaction_type = 'Folio Transaction - Room Bill Payment'
+					doc_nat.transaction_type = 'Folio - Room Bill Payment'
 					doc_nat.transaction_id = ft_item.name
 					doc_nat.reservation_id = frappe.db.get_value('Folio', {'name': doc_ft.parent}, "reservation_id")
 					doc_nat.folio_id = doc_ft.parent
@@ -140,7 +140,7 @@ def fetch_transactions():
 					list_of_transactions.append(doc_nat)
 				elif 'Change from ' in doc_ft.remark:
 					doc_nat = frappe.new_doc('Night Audit Transaction')
-					doc_nat.transaction_type = 'Folio Transaction - Room Bill Payment Change'
+					doc_nat.transaction_type = 'Folio - Room Bill Payment Change'
 					doc_nat.transaction_id = ft_item.name
 					doc_nat.reservation_id = frappe.db.get_value('Folio', {'name': doc_ft.parent}, "reservation_id")
 					doc_nat.folio_id = doc_ft.parent
@@ -153,7 +153,7 @@ def fetch_transactions():
 					list_of_transactions.append(doc_nat)
 				elif 'Cancellation Fee - Reservation: ' in doc_ft.remark:
 					doc_nat = frappe.new_doc('Night Audit Transaction')
-					doc_nat.transaction_type = 'Folio Transaction - Reservation Cancellation Fee'
+					doc_nat.transaction_type = 'Folio - Reservation Cancellation Fee'
 					doc_nat.transaction_id = ft_item.name
 					doc_nat.reservation_id = frappe.db.get_value('Folio', {'name': doc_ft.parent}, "reservation_id")
 					doc_nat.folio_id = doc_ft.parent
