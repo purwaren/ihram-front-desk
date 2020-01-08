@@ -77,7 +77,7 @@ frappe.ui.form.on('Night Audit Transaction', {
 			frappe.meta.get_docfield('Night Audit Transaction', 'section_break_0', night_audit_id).hidden = 1;
 		}
 		let child = locals[cdt][cdn];
-		if (child.journal_entry_id != null) {
+		if (child.journal_entry_id) {
 			read_only_nat(frm, true);
 		}
 		else {

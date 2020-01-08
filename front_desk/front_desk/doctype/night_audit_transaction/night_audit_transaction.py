@@ -46,13 +46,9 @@ def make_journal_entry(nat_id):
 	doc_je.save()
 	doc_je.submit()
 
-	doc_nat.journal_entry_id = doc_je.name
-	doc_nat.posting_date = doc_je.posting_date
-	doc_nat.save()
-
-	doc_na.posting_date = doc_je.posting_date
-	doc_na.save()
-
+	frappe.db.set_value('Night Audit Transaction', doc_nat.name, 'journal_entry_id', doc_je.name)
+	frappe.db.set_value('Night Audit Transaction', doc_nat.name, 'posting_date', doc_je.posting_date)
+	frappe.db.set_value('Night Audit', doc_na.name, 'posting_date', doc_je.posting_date)
 
 	if 'Folio Transaction - ' in doc_nat.transaction_type:
 		doc_ft = frappe.get_doc('Folio Transaction', doc_nat.transaction_id)
