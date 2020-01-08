@@ -381,17 +381,21 @@ def get_room_stay_id_by_room_id(reservation_id, room_id_blah):
 @frappe.whitelist()
 def checkout_room_stay(room_stay_id):
     room_stay = frappe.get_doc('Room Stay', room_stay_id)
-    if room_stay.status == 'Checked In':
-        room_stay.departure = frappe.utils.now()
-        room_stay.status = 'Checked Out'
-        room_stay.save()
-        hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
-        # Update room_status dari hotel_room menjadi "Vacant Dirty"
-        hotel_room.room_status = "Vacant Dirty"
-        hotel_room.save()
-        # Update room booking status
-        update_by_room_stay(room_stay_id)
+    reservation = frappe.get_doc('Reservation', room_stay.parent)
+    if reservation.status == 'In House':
+        if room_stay.status == 'Checked In':
+            room_stay.departure = frappe.utils.now()
+            room_stay.status = 'Checked Out'
+            room_stay.save()
+            hotel_room = frappe.get_doc('Hotel Room', room_stay.room_id)
+            # Update room_status dari hotel_room menjadi "Vacant Dirty"
+            hotel_room.room_status = "Vacant Dirty"
+            hotel_room.save()
+            # Update room booking status
+            update_by_room_stay(room_stay_id)
 
-        return "Room " + str(room_stay.room_id) + " successfully checked out."
+            return "Room " + str(room_stay.room_id) + " successfully checked out."
+        else:
+            return "Room " + str(room_stay.room_id) + " already checked out."
     else:
-        return "Room " + str(room_stay.room_id) + " already checked out."
+        return "Reservation " + str(reservation.name) + " status not In House, can't check out."
