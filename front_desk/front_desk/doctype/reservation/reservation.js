@@ -108,8 +108,10 @@ frappe.ui.form.on('Reservation', {
 
 		if (reservation.__unsaved == 1) {
 			frappe.meta.get_docfield('Room Stay', 'section_break_1', reservation.name).hidden = true;
+			frappe.meta.get_docfield('Room Stay', 'section_break_4', reservation.name).hidden = true;
 		} else {
 			frappe.meta.get_docfield('Room Stay', 'section_break_1', reservation.name).hidden = false;
+			frappe.meta.get_docfield('Room Stay', 'section_break_4', reservation.name).hidden = false;
 		}
 
 		if (reservation.__islocal == 1) {
