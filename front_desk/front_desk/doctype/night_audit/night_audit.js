@@ -29,6 +29,8 @@ frappe.ui.form.on('Night Audit', {
 		}
 		if (frm.doc.night_audit_transaction  && frm.doc.night_audit_transaction.length > 0) {
 			frm.set_df_property('fetch_button', 'hidden', 1);
+			frm.set_df_property('today_transaction_only', 'hidden', 1);
+
 		}
 	},
 	fetch_button: function (frm) {
