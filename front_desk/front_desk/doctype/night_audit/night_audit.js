@@ -27,13 +27,16 @@ frappe.ui.form.on('Night Audit', {
 				}
 			})
 		}
-		if (frm.doc.night_audit_transaction.length > 0) {
+		if (frm.doc.night_audit_transaction  && frm.doc.night_audit_transaction.length > 0) {
 			frm.set_df_property('fetch_button', 'hidden', 1);
 		}
 	},
 	fetch_button: function (frm) {
 		frappe.call({
 			method: "front_desk.front_desk.doctype.night_audit.night_audit.fetch_transactions",
+			args: {
+				fetch_all_check: frm.doc.today_transaction_only
+			},
 			callback: (response) => {
 				if (response.message) {
 					frm.set_value('night_audit_transaction', []);

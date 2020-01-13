@@ -19,12 +19,11 @@ def get_mode_of_payment_account(mode_of_payment_id, company_name):
 
 
 @frappe.whitelist()
-def fetch_transactions():
+def fetch_transactions(fetch_all_check):
 	list_of_transactions = []
 	nat_list_transaction_id = []
 	today = datetime.today()
 	midnight = datetime.combine(today, datetime.min.time())
-
 	# # 1. get all AR City Ledger Invoice - Change
 	# acli_list = frappe.get_all('AR City Ledger Invoice',
 	# 						   filters={'creation': ['>=', midnight], 'change_amount': ['>', 0],
@@ -59,10 +58,17 @@ def fetch_transactions():
 	# 										 'bill_change_amount': ['>', 0], 'change_journal_entry_id': ['=', '']},
 	# 								fields=['name', 'creation', 'reservation_id', 'bill_rounded_change_amount', 'customer_id'])
 	# 8. get all Folio Transaction
-	ft_list = frappe.get_all('Folio Transaction', filters={'creation': ['>=', midnight], 'journal_entry_id': ['=', '']})
-
+	if fetch_all_check == 0:
+		ft_list = frappe.get_all('Folio Transaction', filters={'journal_entry_id': ['=', '']})
+	else:
+		ft_list = frappe.get_all('Folio Transaction',
+								 filters={'creation': ['>=', midnight], 'journal_entry_id': ['=', '']})
 	# 9. get all Night Audit Transaction
-	nat_list = frappe.get_all('Night Audit Transaction', filters={'creation': ['>=', midnight]}, fields=['transaction_id'])
+	if fetch_all_check == 0:
+		nat_list = frappe.get_all('Night Audit Transaction', fields=['transaction_id'])
+	else:
+		nat_list = frappe.get_all('Night Audit Transaction', filters={'creation': ['>=', midnight]},
+								  fields=['transaction_id'])
 	for nat_item in nat_list:
 		nat_list_transaction_id.append(nat_item.transaction_id)
 
