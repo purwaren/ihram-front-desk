@@ -13,11 +13,11 @@ var max_discount = 90;
 frappe.ui.form.on('Reservation', {
 	onload: function(frm, cdt, cdn) {
 		freeze_reservation();
-		frm.set_query('payment_method', () => {
-			return {
-				query: 'front_desk.front_desk.doctype.reservation.reservation.get_debit_account'
-			}
-		});
+		// frm.set_query('payment_method', () => {
+		// 	return {
+		// 		query: 'front_desk.front_desk.doctype.reservation.reservation.get_debit_account'
+		// 	}
+		// });
 		MakePaymentButtonStatus(frm, cdt,cdn);
 		frm.get_field("room_bill_paid").grid.only_sortable();
 		if (frm.doc.__islocal != 1 && frm.doc.status == 'Confirmed') {
@@ -407,11 +407,11 @@ frappe.ui.form.on('Reservation', {
 				}
 
 				frappe.call({
-					method: 'front_desk.front_desk.doctype.reservation.reservation.create_deposit_journal_entry',
+					method: 'front_desk.front_desk.doctype.reservation.reservation.create_deposit_journal_entry_with_mode_of_payment',
 					args: {
 						reservation_id: reservation.name,
 						amount: reservation.deposit,
-						debit_account_name: reservation.payment_method
+						payment_method: reservation.payment_method
 					}
 				});
 			}

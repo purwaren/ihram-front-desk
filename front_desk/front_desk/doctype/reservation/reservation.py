@@ -116,6 +116,31 @@ def create_deposit_journal_entry(reservation_id, amount, debit_account_name):
 		doc_folio.append('transaction_detail', doc_folio_transaction)
 		doc_folio.save()
 
+@frappe.whitelist()
+def create_deposit_journal_entry_with_mode_of_payment(reservation_id, amount, payment_method):
+	credit_account_name = get_credit_account_name()
+	folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
+	debit_account_name = get_mode_of_payment_account(payment_method,
+													 frappe.get_doc("Global Defaults").default_company)
+	remark = 'Deposit ' + reservation_id
+	exist_deposit_folio_trx = frappe.db.exists('Folio Transaction', {'parent': folio_name, 'remark': remark})
+
+	if not exist_deposit_folio_trx:
+
+		doc_folio = frappe.get_doc('Folio', folio_name)
+
+		doc_folio_transaction = frappe.new_doc('Folio Transaction')
+		doc_folio_transaction.folio_id = doc_folio.name
+		doc_folio_transaction.amount = amount
+		doc_folio_transaction.amount_after_tax = amount
+		doc_folio_transaction.flag = 'Credit'
+		doc_folio_transaction.account_id = credit_account_name
+		doc_folio_transaction.against_account_id = debit_account_name
+		doc_folio_transaction.remark = remark
+		doc_folio_transaction.is_void = 0
+
+		doc_folio.append('transaction_detail', doc_folio_transaction)
+		doc_folio.save()
 
 def get_credit_account_name():
 	temp = frappe.db.get_list('Account',
