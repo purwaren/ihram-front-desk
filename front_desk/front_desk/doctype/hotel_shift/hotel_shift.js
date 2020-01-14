@@ -1,10 +1,56 @@
 // Copyright (c) 2020, PMM and contributors
 // For license information, please see license.txt
 var total_cash_count = 0;
+var total_payment = 0;
+var total_refund = 0;
 
 frappe.ui.form.on('Hotel Shift', {
 	onload: function(frm) {
 		frm.get_field('cc_detail').grid.cannot_add_rows = true;
+		frm.get_field('payment_detail').grid.cannot_add_rows = true;
+		frm.get_field('refund_detail').grid.cannot_add_rows = true;
+		frappe.call({
+			method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_payment",
+			callback: (response) => {
+				if (response.message) {
+					frm.set_value('payment_detail', []);
+					$.each(response.message, function (i, d) {
+						let item = frm.add_child('payment_detail');
+						item.mode_of_payment = d.mode_of_payment;
+						item.amount = d.amount;
+						total_payment += d.amount;
+					});
+					frm.set_value('total_payment', total_payment);
+				}
+				frm.refresh_field('payment_detail');
+
+				frappe.call({
+					method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_refund",
+					callback: (response) => {
+						if (response.message) {
+							frm.set_value('refund_detail', []);
+							$.each(response.message, function (i, d) {
+								let item = frm.add_child('refund_detail');
+								item.type = d.type;
+								item.amount = d.amount;
+								total_refund += d.amount;
+							});
+							frm.set_value('total_refund', total_refund);
+							frm.set_value('balance', total_payment);
+						}
+						frm.refresh_field('refund_detail');
+					}
+				});
+			}
+		});
+		frappe.call({
+			method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.get_cash_balance",
+			callback: (response) => {
+				if (response.message) {
+					frm.set_value('cash_balance', response.message);
+				}
+			}
+		});
 		if (frm.doc.__islocal == 1) {
 			frappe.call({
 				method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cash_count",
@@ -21,7 +67,7 @@ frappe.ui.form.on('Hotel Shift', {
 					}
 					frm.refresh_field('cc_detail');
 				}
-			})
+			});
 		}
 	}
 });
