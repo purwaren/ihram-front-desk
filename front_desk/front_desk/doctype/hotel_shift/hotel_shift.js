@@ -5,6 +5,11 @@ var total_payment = 0;
 var total_refund = 0;
 
 frappe.ui.form.on('Hotel Shift', {
+	onload_post_render: function(frm) {
+		if (frm.doc.__islocal == 1) {
+			cur_frm.set_df_property('section_break_3', 'hidden', 1);
+		}
+	},
 	onload: function(frm) {
 		frm.get_field('cc_detail').grid.cannot_add_rows = true;
 		frm.get_field('payment_detail').grid.cannot_add_rows = true;
@@ -50,6 +55,7 @@ frappe.ui.form.on('Hotel Shift', {
 								method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_payment",
 								args: {
 									hotel_shift_id: null,
+									selector: 'recap',
 								},
 								callback: (response) => {
 									if (response.message) {
@@ -69,6 +75,7 @@ frappe.ui.form.on('Hotel Shift', {
 										method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_refund",
 										args: {
 											hotel_shift_id: null,
+											selector: 'recap',
 										},
 										callback: (response) => {
 											if (response.message) {
@@ -88,6 +95,58 @@ frappe.ui.form.on('Hotel Shift', {
 									});
 								}
 							});
+
+							//second call for populate transaction details
+							frappe.call({
+								method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_payment",
+								args: {
+									hotel_shift_id: null,
+									selector: 'detail',
+								},
+								callback: (response) => {
+									if (response.message) {
+										frm.set_value('cr_payment_transaction', []);
+										$.each(response.message, function (i, d) {
+											let item = frm.add_child('cr_payment_transaction');
+											item.type = d.type;
+											item.trx_id = d.trx_id;
+											item.reservation_id = d.reservation_id;
+											item.folio_id = d.folio_id;
+											item.customer_id = d.customer_id;
+											item.account = d.account;
+											item.amount = d.amount;
+											item.user = d.user;
+										});
+									}
+									frm.refresh_field('cr_payment_transaction');
+
+									frappe.call({
+										method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_refund",
+										args: {
+											hotel_shift_id: null,
+											selector: 'detail',
+										},
+										callback: (response) => {
+											if (response.message) {
+												frm.set_value('cr_refund_transaction', []);
+												$.each(response.message, function (i, d) {
+													let item = frm.add_child('cr_refund_transaction');
+													item.type = d.type;
+													item.trx_id = d.trx_id;
+													item.reservation_id = d.reservation_id;
+													item.folio_id = d.folio_id;
+													item.customer_id = d.customer_id;
+													item.account = d.account;
+													item.amount = d.amount;
+													item.user = d.user;
+												});
+											}
+											frm.refresh_field('cr_refund_transaction');
+										}
+									});
+								}
+							});
+
 							frappe.call({
 								method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.get_cash_balance",
 								args: {
@@ -110,6 +169,7 @@ frappe.ui.form.on('Hotel Shift', {
 					method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_payment",
 					args: {
 						hotel_shift_id: frm.doc.name,
+						selector: 'recap',
 					},
 					callback: (response) => {
 						if (response.message) {
@@ -128,6 +188,7 @@ frappe.ui.form.on('Hotel Shift', {
 							method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_refund",
 							args: {
 								hotel_shift_id: frm.doc.name,
+								selector: 'recap',
 							},
 							callback: (response) => {
 								if (response.message) {
@@ -146,6 +207,58 @@ frappe.ui.form.on('Hotel Shift', {
 						});
 					}
 				});
+
+				//second call for populate transaction details
+				frappe.call({
+					method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_payment",
+					args: {
+						hotel_shift_id: frm.doc.name,
+						selector: 'detail',
+					},
+					callback: (response) => {
+						if (response.message) {
+							frm.set_value('cr_payment_transaction', []);
+							$.each(response.message, function (i, d) {
+								let item = frm.add_child('cr_payment_transaction');
+								item.type = d.type;
+								item.trx_id = d.trx_id;
+								item.reservation_id = d.reservation_id;
+								item.folio_id = d.folio_id;
+								item.customer_id = d.customer_id;
+								item.account = d.account;
+								item.amount = d.amount;
+								item.user = d.user;
+							});
+						}
+						frm.refresh_field('cr_payment_transaction');
+
+						frappe.call({
+							method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.populate_cr_refund",
+							args: {
+								hotel_shift_id: frm.doc.name,
+								selector: 'detail',
+							},
+							callback: (response) => {
+								if (response.message) {
+									frm.set_value('cr_refund_transaction', []);
+									$.each(response.message, function (i, d) {
+										let item = frm.add_child('cr_refund_transaction');
+										item.type = d.type;
+										item.trx_id = d.trx_id;
+										item.reservation_id = d.reservation_id;
+										item.folio_id = d.folio_id;
+										item.customer_id = d.customer_id;
+										item.account = d.account;
+										item.amount = d.amount;
+										item.user = d.user;
+									});
+								}
+								frm.refresh_field('cr_refund_transaction');
+							}
+						});
+					}
+				});
+
 				frappe.call({
 					method: "front_desk.front_desk.doctype.hotel_shift.hotel_shift.get_cash_balance",
 					args: {

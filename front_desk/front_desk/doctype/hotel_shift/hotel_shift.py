@@ -15,27 +15,44 @@ def populate_cash_count():
 	return [100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
 @frappe.whitelist()
-def populate_cr_payment(hotel_shift_id):
+def populate_cr_payment(hotel_shift_id, selector):
 	cr_payment_detail_list = []
 	return_list = []
+	transaction_list = []
 	mode_of_payment = frappe.get_all('Mode of Payment')
-	reservation_list = frappe.get_all('Reservation', filters={'status': ['in', ['In House', 'Finish']]})
+	reservation_list = frappe.get_all('Reservation', filters={'status': ['in', ['In House', 'Finish']]}, fields=['*'])
 	hotel_shift_list = frappe.get_all('Hotel Shift')
 
 	if hotel_shift_id:
-		last_shift = frappe.get_last_doc('Hotel Shift')
-		if last_shift.name == hotel_shift_id:
+		last_shift = get_last_closed_shift()	
+		if last_shift is None:
 			for reservation_item in reservation_list:
 				# 1. Room Bill Payment
 				rbp_list = frappe.get_all('Room Bill Payments',
 										  filters={'parent': reservation_item.name,
-												   'is_paid': 1}, fields=['mode_of_payment', 'rbp_amount'])
+												   'is_paid': 1}, fields=['name','mode_of_payment', 'rbp_amount'])
 				for rbp_item in rbp_list:
 					cr_payment_detail_doc_from_rbp = frappe.new_doc('CR Payment Detail')
 					cr_payment_detail_doc_from_rbp.amount = rbp_item.rbp_amount
 					cr_payment_detail_doc_from_rbp.mode_of_payment = rbp_item.mode_of_payment
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_rbp)
+					if selector == 'detail' and rbp_item.rbp_amount != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Room Bill Payment'
+						crpt_doc.trx_id = rbp_item.name
+						crpt_doc.reservation_id = reservation_item.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crpt_doc.customer_id = reservation_item.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': rbp_item.mode_of_payment,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+						crpt_doc.amount = rbp_item.rbp_amount
+						crpt_doc.user = rbp_item.owner
+						transaction_list.append(crpt_doc)
+
 
 				# 2. Reservation Deposit
 				doc_reservation = frappe.get_doc('Reservation', reservation_item.name)
@@ -44,6 +61,21 @@ def populate_cr_payment(hotel_shift_id):
 				cr_payment_detail_doc_from_deposit.mode_of_payment = doc_reservation.payment_method
 
 				cr_payment_detail_list.append(cr_payment_detail_doc_from_deposit)
+				if selector == 'detail' and doc_reservation.deposit != 0:
+					crpt_doc = frappe.new_doc('CR Payment Transaction')
+					crpt_doc.type = 'Reservation'
+					crpt_doc.trx_id = doc_reservation.name
+					crpt_doc.reservation_id = doc_reservation.name
+					crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': doc_reservation.name}, ['name'])
+					crpt_doc.customer_id = doc_reservation.customer_id
+					crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': doc_reservation.payment_method,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+					crpt_doc.amount = doc_reservation.deposit
+					crpt_doc.user = crpt_doc.owner
+					transaction_list.append(crpt_doc)
 
 				# 3. Hotel Bill Payment
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
@@ -54,18 +86,48 @@ def populate_cr_payment(hotel_shift_id):
 					cr_payment_detail_doc_from_hbp.mode_of_payment = bill_payment_item.mode_of_payment
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_hbp)
+					if selector == 'detail' and bill_payment_item.payment_amount != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Hotel Bill Payments'
+						crpt_doc.trx_id = bill_payment_item.name
+						crpt_doc.reservation_id = reservation_item.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crpt_doc.customer_id = reservation_item.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': bill_payment_item.mode_of_payment,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+						crpt_doc.amount = bill_payment_item.payment_amount
+						crpt_doc.user = bill_payment_item.owner
+						transaction_list.append(crpt_doc)
 		else:
 			for reservation_item in reservation_list:
 				# 1. Room Bill Payment
 				rbp_list = frappe.get_all('Room Bill Payments', filters={'creation': ['>=', last_shift.time_out],
 																		 'parent': reservation_item.name, 'is_paid': 1},
-										  fields=['mode_of_payment', 'rbp_amount'])
+										  fields=['name', 'mode_of_payment', 'rbp_amount'])
 				for rbp_item in rbp_list:
 					cr_payment_detail_doc_from_rbp = frappe.new_doc('CR Payment Detail')
 					cr_payment_detail_doc_from_rbp.amount = rbp_item.rbp_amount
 					cr_payment_detail_doc_from_rbp.mode_of_payment = rbp_item.mode_of_payment
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_rbp)
+					if selector == 'detail' and rbp_item.rbp_amount != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Room Bill Payment'
+						crpt_doc.trx_id = rbp_item.name
+						crpt_doc.reservation_id = reservation_item.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crpt_doc.customer_id = reservation_item.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': rbp_item.mode_of_payment,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+						crpt_doc.amount = rbp_item.rbp_amount
+						crpt_doc.user = rbp_item.owner
+						transaction_list.append(crpt_doc)
 
 				# 2. Reservation Deposit
 				remark = 'Deposit ' + reservation_item.name
@@ -78,6 +140,21 @@ def populate_cr_payment(hotel_shift_id):
 					cr_payment_detail_doc_from_deposit.mode_of_payment = doc_reservation.payment_method
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_deposit)
+					if selector == 'detail' and doc_reservation.deposit != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Reservation'
+						crpt_doc.trx_id = doc_reservation.name
+						crpt_doc.reservation_id = doc_reservation.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': doc_reservation.name}, ['name'])
+						crpt_doc.customer_id = doc_reservation.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+																   {'parent': doc_reservation.payment_method,
+																	'company': frappe.get_doc(
+																		"Global Defaults").default_company},
+																   "default_account")
+						crpt_doc.amount = doc_reservation.deposit
+						crpt_doc.user = crpt_doc.owner
+						transaction_list.append(crpt_doc)
 
 				# 3. Hotel Bill Payment
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
@@ -89,9 +166,24 @@ def populate_cr_payment(hotel_shift_id):
 						cr_payment_detail_doc_from_hbp.mode_of_payment = bill_payment_item.mode_of_payment
 
 						cr_payment_detail_list.append(cr_payment_detail_doc_from_hbp)
+						if selector == 'detail' and bill_payment_item.payment_amount != 0:
+							crpt_doc = frappe.new_doc('CR Payment Transaction')
+							crpt_doc.type = 'Hotel Bill Payments'
+							crpt_doc.trx_id = bill_payment_item.name
+							crpt_doc.reservation_id = reservation_item.name
+							crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+							crpt_doc.customer_id = reservation_item.customer_id
+							crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+																   {'parent': bill_payment_item.mode_of_payment,
+																	'company': frappe.get_doc(
+																		"Global Defaults").default_company},
+																   "default_account")
+							crpt_doc.amount = bill_payment_item.payment_amount
+							crpt_doc.user = bill_payment_item.owner
+							transaction_list.append(crpt_doc)
 	else:
 		if len(frappe.get_all('Hotel Shift')) > 0:
-			last_shift = frappe.get_last_doc('Hotel Shift')
+			last_shift = get_last_closed_shift()
 			for reservation_item in reservation_list:
 				# 1. Room Bill Payment
 				rbp_list = frappe.get_all('Room Bill Payments', filters={'creation': ['>=', last_shift.time_out],
@@ -103,6 +195,21 @@ def populate_cr_payment(hotel_shift_id):
 					cr_payment_detail_doc_from_rbp.mode_of_payment = rbp_item.mode_of_payment
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_rbp)
+					if selector == 'detail' and rbp_item.rbp_amount != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Room Bill Payment'
+						crpt_doc.trx_id = rbp_item.name
+						crpt_doc.reservation_id = reservation_item.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crpt_doc.customer_id = reservation_item.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': rbp_item.mode_of_payment,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+						crpt_doc.amount = rbp_item.rbp_amount
+						crpt_doc.user = rbp_item.owner
+						transaction_list.append(crpt_doc)
 
 				# 2. Reservation Deposit
 				remark = 'Deposit ' + reservation_item.name
@@ -115,6 +222,21 @@ def populate_cr_payment(hotel_shift_id):
 					cr_payment_detail_doc_from_deposit.mode_of_payment = doc_reservation.payment_method
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_deposit)
+					if selector == 'detail' and doc_reservation.deposit != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Reservation'
+						crpt_doc.trx_id = doc_reservation.name
+						crpt_doc.reservation_id = doc_reservation.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': doc_reservation.name}, ['name'])
+						crpt_doc.customer_id = doc_reservation.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+																   {'parent': doc_reservation.payment_method,
+																	'company': frappe.get_doc(
+																		"Global Defaults").default_company},
+																   "default_account")
+						crpt_doc.amount = doc_reservation.deposit
+						crpt_doc.user = crpt_doc.owner
+						transaction_list.append(crpt_doc)
 
 				# 3. Hotel Bill Payment
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
@@ -126,6 +248,21 @@ def populate_cr_payment(hotel_shift_id):
 						cr_payment_detail_doc_from_hbp.mode_of_payment = bill_payment_item.mode_of_payment
 
 						cr_payment_detail_list.append(cr_payment_detail_doc_from_hbp)
+						if selector == 'detail' and bill_payment_item.payment_amount != 0:
+							crpt_doc = frappe.new_doc('CR Payment Transaction')
+							crpt_doc.type = 'Hotel Bill Payments'
+							crpt_doc.trx_id = bill_payment_item.name
+							crpt_doc.reservation_id = reservation_item.name
+							crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+							crpt_doc.customer_id = reservation_item.customer_id
+							crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+																   {'parent': bill_payment_item.mode_of_payment,
+																	'company': frappe.get_doc(
+																		"Global Defaults").default_company},
+																   "default_account")
+							crpt_doc.amount = bill_payment_item.payment_amount
+							crpt_doc.user = bill_payment_item.owner
+							transaction_list.append(crpt_doc)
 		else:
 			for reservation_item in reservation_list:
 				# 1. Room Bill Payment
@@ -138,6 +275,21 @@ def populate_cr_payment(hotel_shift_id):
 					cr_payment_detail_doc_from_rbp.mode_of_payment = rbp_item.mode_of_payment
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_rbp)
+					if selector == 'detail' and rbp_item.rbp_amount != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Room Bill Payment'
+						crpt_doc.trx_id = rbp_item.name
+						crpt_doc.reservation_id = reservation_item.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crpt_doc.customer_id = reservation_item.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': rbp_item.mode_of_payment,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+						crpt_doc.amount = rbp_item.rbp_amount
+						crpt_doc.user = rbp_item.owner
+						transaction_list.append(crpt_doc)
 
 				# 2. Reservation Deposit
 				doc_reservation = frappe.get_doc('Reservation', reservation_item.name)
@@ -146,6 +298,21 @@ def populate_cr_payment(hotel_shift_id):
 				cr_payment_detail_doc_from_deposit.mode_of_payment = doc_reservation.payment_method
 
 				cr_payment_detail_list.append(cr_payment_detail_doc_from_deposit)
+				if selector == 'detail' and doc_reservation.deposit != 0:
+					crpt_doc = frappe.new_doc('CR Payment Transaction')
+					crpt_doc.type = 'Reservation'
+					crpt_doc.trx_id = doc_reservation.name
+					crpt_doc.reservation_id = doc_reservation.name
+					crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': doc_reservation.name}, ['name'])
+					crpt_doc.customer_id = doc_reservation.customer_id
+					crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': doc_reservation.payment_method,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+					crpt_doc.amount = doc_reservation.deposit
+					crpt_doc.user = crpt_doc.owner
+					transaction_list.append(crpt_doc)
 
 				# 3. Hotel Bill Payment
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
@@ -156,6 +323,21 @@ def populate_cr_payment(hotel_shift_id):
 					cr_payment_detail_doc_from_hbp.mode_of_payment = bill_payment_item.mode_of_payment
 
 					cr_payment_detail_list.append(cr_payment_detail_doc_from_hbp)
+					if selector == 'detail' and bill_payment_item.payment_amount != 0:
+						crpt_doc = frappe.new_doc('CR Payment Transaction')
+						crpt_doc.type = 'Hotel Bill Payments'
+						crpt_doc.trx_id = bill_payment_item.name
+						crpt_doc.reservation_id = reservation_item.name
+						crpt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crpt_doc.customer_id = reservation_item.customer_id
+						crpt_doc.account = frappe.db.get_value('Mode of Payment Account',
+															   {'parent': bill_payment_item.mode_of_payment,
+																'company': frappe.get_doc(
+																	"Global Defaults").default_company},
+															   "default_account")
+						crpt_doc.amount = bill_payment_item.payment_amount
+						crpt_doc.user = bill_payment_item.owner
+						transaction_list.append(crpt_doc)
 
 	for item in mode_of_payment:
 		new_payment_detail = frappe.new_doc('CR Payment Detail')
@@ -166,12 +348,15 @@ def populate_cr_payment(hotel_shift_id):
 				new_payment_detail.amount += cr_payment_detail_item.amount
 		if new_payment_detail.amount > 0:
 			return_list.append(new_payment_detail)
-
-	return return_list
+	if selector == 'recap':
+		return return_list
+	else:
+		return transaction_list
 
 @frappe.whitelist()
-def populate_cr_refund(hotel_shift_id):
+def populate_cr_refund(hotel_shift_id, selector):
 	return_list = []
+	transaction_list = []
 	cr_refund = frappe.new_doc('CR Refund Detail')
 	cr_refund.type = 'Refund'
 	cr_refund.amount = 0
@@ -180,88 +365,224 @@ def populate_cr_refund(hotel_shift_id):
 	cr_change.type = 'Change'
 	cr_change.amount = 0
 
-	reservation_list = frappe.get_all('Reservation', filters={'status': ['in', ['In House', 'Finish']]})
+	reservation_list = frappe.get_all('Reservation', filters={'status': ['in', ['In House', 'Finish']]}, fields=['*'])
 
 	if hotel_shift_id:
-		last_shift = frappe.get_last_doc('Hotel Shift')
-		if last_shift.name == hotel_shift_id:
+		last_shift = get_last_closed_shift()
+		if last_shift is None:
 			for reservation_item in reservation_list:
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
 				# Hotel Bill Change
 				cr_change.amount += hotel_bill.bill_rounded_change_amount
+				if selector == 'detail' and hotel_bill.bill_rounded_change_amount != 0:
+					crrt_doc = frappe.new_doc('CR Refund Transaction')
+					crrt_doc.type = 'Hotel Bill'
+					crrt_doc.trx_id = hotel_bill.name
+					crrt_doc.reservation_id = reservation_item.name
+					crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+					crrt_doc.customer_id = reservation_item.customer_id
+					crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name  # nanti update coa diganti
+					crrt_doc.amount = hotel_bill.bill_rounded_change_amount
+					crrt_doc.user = crrt_doc.owner
+					transaction_list.append(crrt_doc)
 				# Room Bill Paid Change
 				room_bill_paid_list = hotel_bill.get('room_bill_paid')
 				if room_bill_paid_list:
 					for rbpd_item in room_bill_paid_list:
 						cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+						if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
+							crrt_doc = frappe.new_doc('CR Refund Transaction')
+							crrt_doc.type = 'Room Bill Paid'
+							crrt_doc.trx_id = rbpd_item.name
+							crrt_doc.reservation_id = reservation_item.name
+							crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+							crrt_doc.customer_id = reservation_item.customer_id
+							crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name #nanti update coa diganti
+							crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+							crrt_doc.user = crrt_doc.owner
+							transaction_list.append(crrt_doc)
 				# Hotel Bill Refund
 				hotel_bill_refund_list = hotel_bill.get('bill_refund')
 				if hotel_bill_refund_list:
 					for hbr_item in hotel_bill_refund_list:
 						cr_refund.amount += hbr_item.refund_amount
+						if selector == 'detail':
+							if selector == 'detail':
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Hotel Bill Refund'
+								crrt_doc.trx_id = hbr_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = hbr_item.account
+								crrt_doc.amount = hbr_item.refund_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 		else:
 			for reservation_item in reservation_list:
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
 				if hotel_bill.creation >= last_shift.time_out:
 					# Hotel Bill Change
 					cr_change.amount += hotel_bill.bill_rounded_change_amount
+					if selector == 'detail' and hotel_bill.bill_rounded_change_amount != 0:
+						crrt_doc = frappe.new_doc('CR Refund Transaction')
+						crrt_doc.type = 'Hotel Bill'
+						crrt_doc.trx_id = hotel_bill.name
+						crrt_doc.reservation_id = reservation_item.name
+						crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crrt_doc.customer_id = reservation_item.customer_id
+						crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name  # nanti update coa diganti
+						crrt_doc.amount = hotel_bill.bill_rounded_change_amount
+						crrt_doc.user = crrt_doc.owner
+					transaction_list.append(crrt_doc)
 					# Room Bill Paid Change
 					room_bill_paid_list = hotel_bill.get('room_bill_paid')
 					if room_bill_paid_list:
 						for rbpd_item in room_bill_paid_list:
 							cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+							if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Room Bill Paid'
+								crrt_doc.trx_id = rbpd_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name  # nanti update coa diganti
+								crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 				# Hotel Bill Refund
 				hotel_bill_refund_list = hotel_bill.get('bill_refund')
 				if hotel_bill_refund_list:
 					for hbr_item in hotel_bill_refund_list:
 						if hbr_item.creation >= last_shift.time_out:
 							cr_refund.amount += hbr_item.refund_amount
+							if selector == 'detail':
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Hotel Bill Refund'
+								crrt_doc.trx_id = hbr_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = hbr_item.account
+								crrt_doc.amount = hbr_item.refund_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 	else:
 		if len(frappe.get_all('Hotel Shift')) > 0:
-			last_shift = frappe.get_last_doc('Hotel Shift')
+			last_shift = get_last_closed_shift()
 			for reservation_item in reservation_list:
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
 				if hotel_bill.creation >= last_shift.time_out:
 					# Hotel Bill Change
 					cr_change.amount += hotel_bill.bill_rounded_change_amount
+					if selector == 'detail' and hotel_bill.bill_rounded_change_amount != 0:
+						crrt_doc = frappe.new_doc('CR Refund Transaction')
+						crrt_doc.type = 'Hotel Bill'
+						crrt_doc.trx_id = hotel_bill.name
+						crrt_doc.reservation_id = reservation_item.name
+						crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+						crrt_doc.customer_id = reservation_item.customer_id
+						crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name  # nanti update coa diganti
+						crrt_doc.amount = hotel_bill.bill_rounded_change_amount
+						crrt_doc.user = crrt_doc.owner
+						transaction_list.append(crrt_doc)
 					# Room Bill Paid Change
 					room_bill_paid_list = hotel_bill.get('room_bill_paid')
 					if room_bill_paid_list:
 						for rbpd_item in room_bill_paid_list:
 							cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+							if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Room Bill Paid'
+								crrt_doc.trx_id = rbpd_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name #nanti update coa diganti
+								crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 				# Hotel Bill Refund
 				hotel_bill_refund_list = hotel_bill.get('bill_refund')
 				if hotel_bill_refund_list:
 					for hbr_item in hotel_bill_refund_list:
 						if hbr_item.creation >= last_shift.time_out:
 							cr_refund.amount += hbr_item.refund_amount
+							if selector == 'detail':
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Hotel Bill Refund'
+								crrt_doc.trx_id = hbr_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = hbr_item.account
+								crrt_doc.amount = hbr_item.refund_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 		else:
 			for reservation_item in reservation_list:
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
 				# Hotel Bill Change
 				cr_change.amount += hotel_bill.bill_rounded_change_amount
+				if selector == 'detail':
+					crrt_doc = frappe.new_doc('CR Refund Transaction')
+					crrt_doc.type = 'Hotel Bill'
+					crrt_doc.trx_id = hotel_bill.name
+					crrt_doc.reservation_id = reservation_item.name
+					crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+					crrt_doc.customer_id = reservation_item.customer_id
+					crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name  # nanti update coa diganti
+					crrt_doc.amount = hotel_bill.bill_rounded_change_amount
+					crrt_doc.user = crrt_doc.owner
+					transaction_list.append(crrt_doc)
 				# Room Bill Paid Change
 				room_bill_paid_list = hotel_bill.get('room_bill_paid')
 				if room_bill_paid_list:
 					for rbpd_item in room_bill_paid_list:
 						cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+						if selector == 'detail':
+							crrt_doc = frappe.new_doc('CR Refund Transaction')
+							crrt_doc.type = 'Room Bill Paid'
+							crrt_doc.trx_id = rbpd_item.name
+							crrt_doc.reservation_id = reservation_item.name
+							crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+							crrt_doc.customer_id = reservation_item.customer_id
+							crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name #nanti update coa diganti
+							crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+							crrt_doc.user = crrt_doc.owner
+							transaction_list.append(crrt_doc)
 				# Hotel Bill Refund
 				hotel_bill_refund_list = hotel_bill.get('bill_refund')
 				if hotel_bill_refund_list:
 					for hbr_item in hotel_bill_refund_list:
 						cr_refund.amount += hbr_item.refund_amount
+						if selector == 'detail':
+							crrt_doc = frappe.new_doc('CR Refund Transaction')
+							crrt_doc.type = 'Hotel Bill Refund'
+							crrt_doc.trx_id = hbr_item.name
+							crrt_doc.reservation_id = reservation_item.name
+							crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+							crrt_doc.customer_id = reservation_item.customer_id
+							crrt_doc.account = hbr_item.account
+							crrt_doc.amount = hbr_item.refund_amount
+							crrt_doc.user = crrt_doc.owner
+							transaction_list.append(crrt_doc)
 
 	if cr_refund.amount > 0:
 		return_list.append(cr_refund)
 	if cr_change.amount > 0:
 		return_list.append(cr_change)
-	return return_list
 
+	if selector == 'recap':
+		return return_list
+	else:
+		return transaction_list
 
 @frappe.whitelist()
 def get_cash_balance(hotel_shift_id):
-	cr_payment = populate_cr_payment(hotel_shift_id)
-	cr_refund = populate_cr_refund(hotel_shift_id)
+	cr_payment = populate_cr_payment(hotel_shift_id, 'recap')
+	cr_refund = populate_cr_refund(hotel_shift_id, 'recap')
 	total_cash_payment = 0
 	total_refund = 0
 	for item in cr_refund:
@@ -293,3 +614,11 @@ def close_shift(hotel_shift_id):
 		return True
 	else:
 		return False
+
+
+def get_last_closed_shift():
+	d = frappe.get_all('Hotel Shift', filters={'status': 'Closed'}, order_by='creation desc', limit_page_length=1)
+	if d:
+		return frappe.get_doc('Hotel Shift', d[0].name)
+	else:
+		return None
