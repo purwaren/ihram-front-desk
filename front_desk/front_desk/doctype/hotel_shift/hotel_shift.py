@@ -188,7 +188,7 @@ def populate_cr_payment(hotel_shift_id, selector):
 				# 1. Room Bill Payment
 				rbp_list = frappe.get_all('Room Bill Payments', filters={'creation': ['>=', last_shift.time_out],
 																		 'parent': reservation_item.name, 'is_paid': 1},
-										  fields=['mode_of_payment', 'rbp_amount'])
+										  fields=['*'])
 				for rbp_item in rbp_list:
 					cr_payment_detail_doc_from_rbp = frappe.new_doc('CR Payment Detail')
 					cr_payment_detail_doc_from_rbp.amount = rbp_item.rbp_amount
@@ -268,7 +268,7 @@ def populate_cr_payment(hotel_shift_id, selector):
 				# 1. Room Bill Payment
 				rbp_list = frappe.get_all('Room Bill Payments',
 										  filters={'parent': reservation_item.name,
-												   'is_paid': 1}, fields=['mode_of_payment', 'rbp_amount'])
+												   'is_paid': 1}, fields=['*'])
 				for rbp_item in rbp_list:
 					cr_payment_detail_doc_from_rbp = frappe.new_doc('CR Payment Detail')
 					cr_payment_detail_doc_from_rbp.amount = rbp_item.rbp_amount
