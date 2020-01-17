@@ -280,7 +280,11 @@ frappe.ui.form.on('Hotel Shift', {
 		}
 	},
 	print_cash_remittance: function(frm, cdt, cdn) {
-		let w = window.open(frappe.urllib.get_full_url("/printview?"
+		if (frm.doc.__unsaved) {
+			frappe.msgprint("Please save the document changes first, before printing report");
+		}
+		else {
+			let w = window.open(frappe.urllib.get_full_url("/printview?"
 				+"doctype="+encodeURIComponent("Hotel Shift")
 				+"&name="+encodeURIComponent(cdn)
 				+"&format="+encodeURIComponent("Cash Remittance")
@@ -290,10 +294,16 @@ frappe.ui.form.on('Hotel Shift', {
 			if (!w) {
 				frappe.msgprint(__("Please enable pop-ups")); return;
 			}
+		}
+
 
 	},
 	print_cashier_report: function(frm, cdt, cdn) {
-		let w = window.open(frappe.urllib.get_full_url("/printview?"
+		if (frm.doc.__unsaved) {
+			frappe.msgprint("Please save the document changes first, before printing report");
+		}
+		else {
+			let w = window.open(frappe.urllib.get_full_url("/printview?"
 				+"doctype="+encodeURIComponent("Hotel Shift")
 				+"&name="+encodeURIComponent(cdn)
 				+"&format="+encodeURIComponent("Cashier Report")
@@ -303,6 +313,7 @@ frappe.ui.form.on('Hotel Shift', {
 			if (!w) {
 				frappe.msgprint(__("Please enable pop-ups")); return;
 			}
+		}
 
 	},
 	close_shift: function (frm) {
