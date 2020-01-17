@@ -1,6 +1,7 @@
 // Copyright (c) 2020, PMM and contributors
 // For license information, please see license.txt
 var total_cash_count = 0;
+var total_cash_qty = 0;
 var total_payment = 0;
 var total_refund = 0;
 
@@ -11,6 +12,7 @@ frappe.ui.form.on('Hotel Shift', {
 		}
 	},
 	onload: function(frm) {
+		frm.set_df_property('total_cash_qty', 'hidden', 0);
 		frm.get_field('cc_detail').grid.cannot_add_rows = true;
 		frm.get_field('payment_detail').grid.cannot_add_rows = true;
 		frm.get_field('refund_detail').grid.cannot_add_rows = true;
@@ -277,6 +279,32 @@ frappe.ui.form.on('Hotel Shift', {
 			}
 		}
 	},
+	print_cash_remittance: function(frm, cdt, cdn) {
+		let w = window.open(frappe.urllib.get_full_url("/printview?"
+				+"doctype="+encodeURIComponent("Hotel Shift")
+				+"&name="+encodeURIComponent(cdn)
+				+"&format="+encodeURIComponent("Cash Remittance")
+				+"&no_letterhead=0"
+				));
+
+			if (!w) {
+				frappe.msgprint(__("Please enable pop-ups")); return;
+			}
+
+	},
+	print_cashier_report: function(frm, cdt, cdn) {
+		let w = window.open(frappe.urllib.get_full_url("/printview?"
+				+"doctype="+encodeURIComponent("Hotel Shift")
+				+"&name="+encodeURIComponent(cdn)
+				+"&format="+encodeURIComponent("Cashier Report")
+				+"&no_letterhead=0"
+				));
+
+			if (!w) {
+				frappe.msgprint(__("Please enable pop-ups")); return;
+			}
+
+	},
 	close_shift: function (frm) {
 		frappe.confirm(__("You are about to close the shift. Are you sure?"), function() {
 			frappe.call({
@@ -303,10 +331,13 @@ frappe.ui.form.on('CC Detail',{
 
 		let cc_detail_list = frm.doc.cc_detail;
 		total_cash_count = 0;
+		total_cash_qty = 0;
 		for (var i = 0; i < cc_detail_list.length; i++) {
 			total_cash_count += cc_detail_list[i].amount;
+			total_cash_qty += parseInt(cc_detail_list[i].qty, 10);
 		}
 		frm.set_value('total_cash_count', total_cash_count);
+		frm.set_value('total_cash_qty', total_cash_qty);
 	}
 });
 
