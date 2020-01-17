@@ -227,7 +227,7 @@ def fetch_transactions(fetch_all_check):
 	# 		doc_nat.remark = doc_nat.title + ' - @' + str(hbp_item.creation)
 	# 		doc_nat.debit_account = get_mode_of_payment_account(hbp_item.mode_of_payment,
 	# 														 frappe.get_doc("Global Defaults").default_company)
-	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 	# 		doc_nat.customer_id = frappe.db.get_value('Hotel Bill', {'name': hbp_item.parent}, "customer_id")
 	# 		list_of_transactions.append(doc_nat)
 	#

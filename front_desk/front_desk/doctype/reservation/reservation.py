@@ -353,7 +353,7 @@ def create_room_charge(reservation_id):
 													 fields=['*'])
 				remark = 'Auto Room Charge: ' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
-				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 
 				# define room rate for folio transaction. If room stay discount exist, apply the discount
 				if is_weekday():
@@ -499,7 +499,7 @@ def create_additional_charge(reservation_id):
 		for ac_item in ac_list:
 			cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
 			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
-			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 			remark = ac_item.name + " -  Additional Charge " + reservation_id + " " + ac_item.ac_description
 			folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 			doc_folio = frappe.get_doc('Folio', folio_name)
@@ -639,7 +639,7 @@ def create_room_bill_payment_entry(reservation_id, room_bill_amount, paid_bill_a
 	rbp_list = frappe.get_all('Room Bill Payments', filters={'parent': reservation_id, 'is_paid': 0}, fields=["*"])
 	room_stay_list = frappe.get_all('Room Stay', filters={'reservation_id': reservation_id}, fields=["*"])
 	kas_dp_kamar = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
-	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 
 	# Create Room Bill Paid Entry for this "MAKE PAYMENT" action
 	doc_rbpd = frappe.new_doc('Room Bill Paid')
@@ -840,7 +840,7 @@ def trigger_room_charge(reservation_id):
 				amount_multiplier = 1 - room_stay_discount
 				remark = 'Auto Room Charge:' + room_name + " - " + datetime.datetime.today().strftime("%d/%m/%Y")
 				je_debit_account = frappe.db.get_list('Account', filters={'account_number': '2121.002'})[0].name
-				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+				je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 
 				# define room rate for folio transaction. If room stay discount exist, apply the discount
 				if is_weekday():
@@ -944,7 +944,7 @@ def cancel_individual_reservation(reservation_id):
 		create_hotel_bill(reservation_id)
 	hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_id})
 	remark = "Cancellation Fee - Reservation: " + reservation_id
-	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 	piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 
 	total_rbpd = 0.0

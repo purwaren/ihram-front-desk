@@ -59,7 +59,7 @@ def create_additional_charge(reservation_id):
 		for ac_item in ac_list:
 			cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
 			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
-			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 			remark = ac_item.name + " -  Additional Charge " + reservation_id + " " + ac_item.ac_description
 			folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
 			doc_folio = frappe.get_doc('Folio', folio_name)
@@ -517,7 +517,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 			frappe.db.set_value('Hotel Bill Refund', br_item.name, 'is_refunded', 1)
 		# 3. Hotel Bill Payment Journal Entry
 		for bp_item in bill_payment_list:
-			bp_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
+			bp_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '4210.001'})[0].name
 			bp_debit_account_name = get_mode_of_payment_account(bp_item.mode_of_payment,
 															 frappe.get_doc("Global Defaults").default_company)
 			bp_title = 'Hotel Bill Payment (' + str(bp_item.mode_of_payment) + '): ' + str(bp_item.parent) + ' - ' + bp_item.name
