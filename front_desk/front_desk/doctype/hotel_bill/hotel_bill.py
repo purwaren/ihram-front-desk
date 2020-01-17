@@ -614,7 +614,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 			depo_doc_journal_entry.submit()
 		# 5. Hotel Bill Change Journal Entry, if Cash Used in Payments, and there is excess in payment needed to be returned
 		if float(hotel_bill.bill_change_amount) > 0:
-			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.001'})[0].name
+			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
 			piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
 			change_title = 'Hotel Bill Change: ' + hotel_bill.name
 			change_remark = change_title + ' - @' + str(hotel_bill.creation)
