@@ -269,7 +269,7 @@ def fetch_transactions(fetch_all_check):
 	# 		doc_nat.amount = acli_item.rounded_change_amount
 	# 		doc_nat.title = 'AR City Ledger Change: ' + acli_item.name
 	# 		doc_nat.remark = doc_nat.title + ' -@' + str(acli_item.creation)
-	# 		doc_nat.debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.002'})[0].name
+	# 		doc_nat.debit_account = frappe.db.get_list('Account', filters={'account_number': '1133.001'})[0].name
 	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
 	# 		doc_nat.customer_id = acli_item.customer_id
 	# 		list_of_transactions.append(doc_nat)
@@ -284,7 +284,7 @@ def fetch_transactions(fetch_all_check):
 	# 		doc_nat.remark = doc_nat.title + ' -@' + str(aclip_item.creation)
 	# 		doc_nat.debit_account = get_mode_of_payment_account(aclip_item.mode_of_payment,
 	# 															frappe.get_doc("Global Defaults").default_company)
-	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.002'})[0].name
+	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '1133.001'})[0].name
 	# 		doc_nat.customer_id = frappe.get_doc('AR City Ledger Invoice', aclip_item.parent).customer_id
 	# 		list_of_transactions.append(doc_nat)
 	# # AR CITY LEDGER - END

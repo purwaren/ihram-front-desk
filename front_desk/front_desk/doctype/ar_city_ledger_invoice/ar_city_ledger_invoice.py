@@ -56,7 +56,7 @@ def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outsta
 		frappe.msgprint("There are still outstanding amount needed to be paid")
 	else:
 		for payment_item in acli_payment_details:
-			piutang_city_ledger = frappe.db.get_list('Account', filters={'account_number': '1132.002'})[0].name
+			piutang_city_ledger = frappe.db.get_list('Account', filters={'account_number': '1133.001'})[0].name
 			debit_account_name = get_mode_of_payment_account(payment_item.mode_of_payment,
 															 frappe.get_doc("Global Defaults").default_company)
 			title = 'AR City Ledger Payment (' + str(payment_item.mode_of_payment) + '): ' + payment_item.name
@@ -97,7 +97,7 @@ def make_payment_ar_city_ledger_invoice(ar_city_ledger_invoice_id, latest_outsta
 
 		if float(acli.change_amount) > 0:
 			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-			piutang_city_ledger = frappe.db.get_list('Account', filters={'account_number': '1132.002'})[0].name
+			piutang_city_ledger = frappe.db.get_list('Account', filters={'account_number': '1133.001'})[0].name
 			change_title = 'AR City Ledger Change: ' + acli.name
 			change_remark = change_title + ' -@' + str(acli.creation)
 
