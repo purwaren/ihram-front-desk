@@ -498,7 +498,7 @@ def create_additional_charge(reservation_id):
 	if len(ac_list) > 0:
 		for ac_item in ac_list:
 			cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
-			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 			remark = ac_item.name + " -  Additional Charge " + reservation_id + " " + ac_item.ac_description
 			folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
@@ -945,7 +945,7 @@ def cancel_individual_reservation(reservation_id):
 	hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_id})
 	remark = "Cancellation Fee - Reservation: " + reservation_id
 	kas_pendapatan_kamar = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
-	piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+	piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 
 	total_rbpd = 0.0
 	rbpd_list = reservation.get('room_bill_paid')

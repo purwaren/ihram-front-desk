@@ -58,7 +58,7 @@ def create_additional_charge(reservation_id):
 	if len(ac_list) > 0:
 		for ac_item in ac_list:
 			cust_name = frappe.get_doc('Customer', frappe.get_doc('Reservation', reservation_id).customer_id).name
-			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			je_debit_account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 			je_credit_account = frappe.db.get_list('Account', filters={'account_number': '4320.001'})[0].name
 			remark = ac_item.name + " -  Additional Charge " + reservation_id + " " + ac_item.ac_description
 			folio_name = frappe.db.get_value('Folio', {'reservation_id': reservation_id}, ['name'])
@@ -562,7 +562,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 
 		# 4. Deposit as Payment Journal Entry, if Use Deposit is checked
 		if hotel_bill.use_deposit == 1:
-			depo_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			depo_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 			depo_debit_account_name = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
 			depo_title = 'Hotel Bill Payment (Deposit): ' + hotel_bill.name
 			depo_remark = depo_title + ' - @' + str(hotel_bill.creation)
@@ -615,7 +615,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 		# 5. Hotel Bill Change Journal Entry, if Cash Used in Payments, and there is excess in payment needed to be returned
 		if float(hotel_bill.bill_change_amount) > 0:
 			kas_kecil = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-			piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+			piutang_lain2 = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 			change_title = 'Hotel Bill Change: ' + hotel_bill.name
 			change_remark = change_title + ' - @' + str(hotel_bill.creation)
 

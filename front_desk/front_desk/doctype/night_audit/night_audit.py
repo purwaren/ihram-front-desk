@@ -241,7 +241,7 @@ def fetch_transactions(fetch_all_check):
 	# 		doc_nat.title = 'Hotel Bill Payment (Deposit): ' + hb_depo_item.name
 	# 		doc_nat.remark = doc_nat.title + ' - @' + str(hb_depo_item.creation)
 	# 		doc_nat.debit_account = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
-	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 	# 		doc_nat.customer_id = hb_depo_item.customer_id
 	# 		list_of_transactions.append(doc_nat)
 	#
@@ -254,7 +254,7 @@ def fetch_transactions(fetch_all_check):
 	# 		doc_nat.amount = hb_change_item.bill_rounded_change_amount
 	# 		doc_nat.title = 'Hotel Bill Change: ' + hb_change_item.name
 	# 		doc_nat.remark = doc_nat.title + ' - @' + str(hb_change_item.creation)
-	# 		doc_nat.debit_account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})[0].name
+	# 		doc_nat.debit_account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
 	# 		doc_nat.customer_id = hb_change_item.customer_id
 	# 		list_of_transactions.append(doc_nat)

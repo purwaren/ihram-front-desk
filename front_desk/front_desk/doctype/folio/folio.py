@@ -29,7 +29,7 @@ def get_account(account_type, pos_profile, is_checkout=False):
 			if len(account) > 0:
 				account_name = account[0].name
 		elif account_type == 'Credit':
-			account = frappe.db.get_list('Account', filters={'account_number': '1132.001'})
+			account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})
 			if len(account) > 0:
 				account_name = account[0].name
 
