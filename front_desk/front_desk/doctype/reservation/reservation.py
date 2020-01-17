@@ -145,7 +145,7 @@ def create_deposit_journal_entry_with_mode_of_payment(reservation_id, amount, pa
 def get_credit_account_name():
 	temp = frappe.db.get_list('Account',
 							  filters={
-								  'account_number': '1172.000'
+								  'account_number': '2110.005'
 							  }
 							  )
 

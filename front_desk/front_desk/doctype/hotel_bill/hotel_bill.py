@@ -334,7 +334,7 @@ def create_hotel_bill(reservation_id):
 
 		if deposit_refund_amount > 0:
 			refund_description = 'Deposit Refund of Reservation: ' + str(this_hotel_bill.reservation_id)
-			kas_deposit_customer = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+			kas_deposit_customer = frappe.db.get_list('Account', filters={'account_number': '2110.005'})[0].name
 			kas_fo = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
 
 			exist_this_refund_item = frappe.db.exists('Hotel Bill Refund',
@@ -373,7 +373,7 @@ def deposit_refund_account(type):
 	if type == 'account':
 		return frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
 	elif type == 'against':
-		return frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+		return frappe.db.get_list('Account', filters={'account_number': '2110.005'})[0].name
 
 @frappe.whitelist()
 def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
@@ -563,7 +563,7 @@ def make_payment_hotel_bill(hotel_bill_id, latest_outstanding_amount):
 		# 4. Deposit as Payment Journal Entry, if Use Deposit is checked
 		if hotel_bill.use_deposit == 1:
 			depo_credit_account_name = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
-			depo_debit_account_name = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+			depo_debit_account_name = frappe.db.get_list('Account', filters={'account_number': '2110.005'})[0].name
 			depo_title = 'Hotel Bill Payment (Deposit): ' + hotel_bill.name
 			depo_remark = depo_title + ' - @' + str(hotel_bill.creation)
 			refund_description = 'Deposit Refund of Reservation: ' + str(hotel_bill.reservation_id)

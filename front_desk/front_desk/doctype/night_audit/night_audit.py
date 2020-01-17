@@ -240,7 +240,7 @@ def fetch_transactions(fetch_all_check):
 	# 		doc_nat.amount = hb_depo_item.bill_deposit_amount
 	# 		doc_nat.title = 'Hotel Bill Payment (Deposit): ' + hb_depo_item.name
 	# 		doc_nat.remark = doc_nat.title + ' - @' + str(hb_depo_item.creation)
-	# 		doc_nat.debit_account = frappe.db.get_list('Account', filters={'account_number': '1172.000'})[0].name
+	# 		doc_nat.debit_account = frappe.db.get_list('Account', filters={'account_number': '2110.005'})[0].name
 	# 		doc_nat.credit_account = frappe.db.get_list('Account', filters={'account_number': '1133.002'})[0].name
 	# 		doc_nat.customer_id = hb_depo_item.customer_id
 	# 		list_of_transactions.append(doc_nat)
