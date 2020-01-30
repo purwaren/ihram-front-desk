@@ -102,17 +102,22 @@ def get_empty_array(doctype, txt, searchfield, start, page_len, filters):
 	return []
 
 def get_room_book_list(filters):
+	# Room Booking with Room Availability Status = RS and with status = Booked and reference_name != parent in Reservation Detail
 	room_book_list = list(frappe.db.sql(
-		"SELECT rb.room_id FROM `tabRoom Booking` AS rb LEFT JOIN `tabReservation Detail` AS rd ON rb.reference_name = rd.name WHERE (rd.parent != %s) AND (rb.status =	'Booked') AND (rb.start != rb.end) AND ((%s >= rb.start AND %s < rb.end) OR (%s > rb.start AND %s <= rb.end) OR (%s < rb.start AND %s > rb.end))",
+		"SELECT rb.room_id FROM `tabRoom Booking` AS rb LEFT JOIN `tabReservation Detail` AS rd ON rb.reference_name = rd.name WHERE (rd.parent != %s) AND (rb.status =	'Booked') AND (rb.room_availability = 'RS') AND (rb.start != rb.end) AND ((%s >= rb.start AND %s < rb.end) OR (%s > rb.start AND %s <= rb.end) OR (%s < rb.start AND %s > rb.end))",
 		(filters.get('parent'), filters.get('start'), filters.get('start'), filters.get('end'), filters.get('end'),
 		 filters.get('start'), filters.get('end'))))
+	# Room Booking with Room Availability Status != RS & AV and status = Booked
+	room_book_list.extend(list(frappe.db.sql(
+		"SELECT room_id FROM `tabRoom Booking` WHERE status = 'Booked' AND room_availability IN ('UC', 'OU', 'OO', 'HU', 'RC') AND (start != end) AND ((%s >= start AND %s < end) OR (%s > start AND %s <= end) OR (%s < start AND %s > end))",
+		(filters.get('start'), filters.get('start'), filters.get('end'), filters.get('end'),
+		filters.get('start'), filters.get('end')))))
 	room_book_list.extend(list(frappe.db.sql(
 		"SELECT rs.room_id FROM `tabRoom Stay` AS rs LEFT JOIN `tabReservation` AS r ON rs.reservation_id = r.name WHERE (rs.parent != %s) AND (r.status = 'Confirmed' OR r.status = 'In House') AND (CONVERT(rs.arrival, DATE) != CONVERT(rs.departure, DATE)) AND ((%s >= CONVERT(rs.arrival, DATE) AND %s < CONVERT(rs.departure, DATE)) OR (%s > CONVERT(rs.arrival, DATE) AND %s <= CONVERT(rs.departure, DATE)) OR (%s < CONVERT(rs.arrival, DATE) AND %s > CONVERT(rs.departure, DATE)))",
 		(filters.get('parent'), filters.get('start'), filters.get('start'), filters.get('end'), filters.get('end'),
 		 filters.get('start'), filters.get('end')))))
 
 	return room_book_list
-
 
 @frappe.whitelist()
 def get_room_available(doctype, txt, searchfield, start, page_len, filters):
@@ -158,10 +163,9 @@ def get_room_available(doctype, txt, searchfield, start, page_len, filters):
 	room_book_list = get_room_book_list(filters)
 
 	for room_book in room_book_list:
-		for i in range(len(room_list)):
-			if room_list[i][0] == room_book[0]:
-				del room_list[i]
-				break
+		for item in room_list:
+			if item[0] == room_book[0]:
+				room_list.remove(item)
 
 	return room_list
 
