@@ -50,11 +50,8 @@ function search(doc) {
 							height:100%;\
 							max-height:600px;\
 							overflow-y:scroll;\
-							margin-left:90px;\
 						}\
 						.frozen{\
-							position: absolute;\
-							left:0;\
 							width: 100px;\
 							height: 55px;\
 							padding: 10px 15px;\
