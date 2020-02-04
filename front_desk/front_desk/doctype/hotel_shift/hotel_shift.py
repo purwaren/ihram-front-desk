@@ -404,22 +404,22 @@ def populate_cr_refund(hotel_shift_id, selector):
 									crrt_doc.amount = hbr_item.refund_amount
 									crrt_doc.user = crrt_doc.owner
 									transaction_list.append(crrt_doc)
-				# Room Bill Paid Change
-				room_bill_paid_list = reservation_item.get('room_bill_paid')
-				if room_bill_paid_list:
-					for rbpd_item in room_bill_paid_list:
-						cr_change.amount += rbpd_item.rbpd_rounded_change_amount
-						if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
-							crrt_doc = frappe.new_doc('CR Refund Transaction')
-							crrt_doc.type = 'Room Bill Paid'
-							crrt_doc.trx_id = rbpd_item.name
-							crrt_doc.reservation_id = reservation_item.name
-							crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
-							crrt_doc.customer_id = reservation_item.customer_id
-							crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-							crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
-							crrt_doc.user = crrt_doc.owner
-							transaction_list.append(crrt_doc)
+					# Room Bill Paid Change
+					room_bill_paid_list = reservation_item.get('room_bill_paid')
+					if room_bill_paid_list:
+						for rbpd_item in room_bill_paid_list:
+							cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+							if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Room Bill Paid'
+								crrt_doc.trx_id = rbpd_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+								crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 		else:
 			for reservation_item in reservation_list:
 				hotel_bill = frappe.get_doc('Hotel Bill', {'reservation_id': reservation_item.name})
@@ -456,22 +456,22 @@ def populate_cr_refund(hotel_shift_id, selector):
 										crrt_doc.amount = hbr_item.refund_amount
 										crrt_doc.user = crrt_doc.owner
 										transaction_list.append(crrt_doc)
-				# Room Bill Paid Change
-				room_bill_paid_list = reservation_item.get('room_bill_paid')
-				if room_bill_paid_list:
-					for rbpd_item in room_bill_paid_list:
-						cr_change.amount += rbpd_item.rbpd_rounded_change_amount
-						if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
-							crrt_doc = frappe.new_doc('CR Refund Transaction')
-							crrt_doc.type = 'Room Bill Paid'
-							crrt_doc.trx_id = rbpd_item.name
-							crrt_doc.reservation_id = reservation_item.name
-							crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
-							crrt_doc.customer_id = reservation_item.customer_id
-							crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-							crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
-							crrt_doc.user = crrt_doc.owner
-							transaction_list.append(crrt_doc)
+					# Room Bill Paid Change
+					room_bill_paid_list = reservation_item.get('room_bill_paid')
+					if room_bill_paid_list:
+						for rbpd_item in room_bill_paid_list:
+							cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+							if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Room Bill Paid'
+								crrt_doc.trx_id = rbpd_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+								crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 	else:
 		if len(frappe.get_all('Hotel Shift')) > 0:
 			last_shift = get_last_closed_shift()
@@ -510,22 +510,22 @@ def populate_cr_refund(hotel_shift_id, selector):
 										crrt_doc.amount = hbr_item.refund_amount
 										crrt_doc.user = crrt_doc.owner
 										transaction_list.append(crrt_doc)
-				# Room Bill Paid Change
-				room_bill_paid_list = reservation_item.get('room_bill_paid')
-				if room_bill_paid_list:
-					for rbpd_item in room_bill_paid_list:
-						cr_change.amount += rbpd_item.rbpd_rounded_change_amount
-						if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
-							crrt_doc = frappe.new_doc('CR Refund Transaction')
-							crrt_doc.type = 'Room Bill Paid'
-							crrt_doc.trx_id = rbpd_item.name
-							crrt_doc.reservation_id = reservation_item.name
-							crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
-							crrt_doc.customer_id = reservation_item.customer_id
-							crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-							crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
-							crrt_doc.user = crrt_doc.owner
-							transaction_list.append(crrt_doc)
+					# Room Bill Paid Change
+					room_bill_paid_list = reservation_item.get('room_bill_paid')
+					if room_bill_paid_list:
+						for rbpd_item in room_bill_paid_list:
+							cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+							if selector == 'detail' and rbpd_item.rbpd_rounded_change_amount != 0:
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Room Bill Paid'
+								crrt_doc.trx_id = rbpd_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+								crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 
 		else:
 			for reservation_item in reservation_list:
@@ -563,22 +563,22 @@ def populate_cr_refund(hotel_shift_id, selector):
 								crrt_doc.user = crrt_doc.owner
 								transaction_list.append(crrt_doc)
 
-				# Room Bill Paid Change
-				room_bill_paid_list = reservation_item.get('room_bill_paid')
-				if room_bill_paid_list:
-					for rbpd_item in room_bill_paid_list:
-						cr_change.amount += rbpd_item.rbpd_rounded_change_amount
-						if selector == 'detail':
-							crrt_doc = frappe.new_doc('CR Refund Transaction')
-							crrt_doc.type = 'Room Bill Paid'
-							crrt_doc.trx_id = rbpd_item.name
-							crrt_doc.reservation_id = reservation_item.name
-							crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
-							crrt_doc.customer_id = reservation_item.customer_id
-							crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
-							crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
-							crrt_doc.user = crrt_doc.owner
-							transaction_list.append(crrt_doc)
+					# Room Bill Paid Change
+					room_bill_paid_list = reservation_item.get('room_bill_paid')
+					if room_bill_paid_list:
+						for rbpd_item in room_bill_paid_list:
+							cr_change.amount += rbpd_item.rbpd_rounded_change_amount
+							if selector == 'detail':
+								crrt_doc = frappe.new_doc('CR Refund Transaction')
+								crrt_doc.type = 'Room Bill Paid'
+								crrt_doc.trx_id = rbpd_item.name
+								crrt_doc.reservation_id = reservation_item.name
+								crrt_doc.folio_id = frappe.db.get_value('Folio', {'reservation_id': reservation_item.name}, ['name'])
+								crrt_doc.customer_id = reservation_item.customer_id
+								crrt_doc.account = frappe.db.get_list('Account', filters={'account_number': '1111.003'})[0].name
+								crrt_doc.amount = rbpd_item.rbpd_rounded_change_amount
+								crrt_doc.user = crrt_doc.owner
+								transaction_list.append(crrt_doc)
 
 	if cr_refund.amount > 0:
 		return_list.append(cr_refund)
