@@ -31,6 +31,14 @@ def fetch_problematic_reservation(audit_date):
 				problematic_reservation['description'] = 'Must Check In Today'
 				reservation_to_returned.append(problematic_reservation)
 
+	# reservation_list = frappe.get_all('Reservation')
+	# for reservation in reservation_list:
+	# 	keys = ['reservation_id', 'description']
+	# 	problematic_reservation = dict.fromkeys(keys, None)
+	# 	problematic_reservation['reservation_id'] = reservation.name
+	# 	problematic_reservation['description'] = 'Must Check In Today'
+	# 	reservation_to_returned.append(problematic_reservation)
+
 	return reservation_to_returned
 
 def fetch_problematic_room_stay(audit_date):
@@ -45,6 +53,14 @@ def fetch_problematic_room_stay(audit_date):
 			problematic_room_stay['description'] = 'Must Check Out Today'
 			room_stay_to_returned.append(problematic_room_stay)
 
+	# room_stay_list = frappe.get_all('Room Stay', filters={'status': 'Checked In'}, fields=['*'])
+	# for room_stay in room_stay_list:
+	# 	keys = ['room_stay_id', 'description']
+	# 	problematic_room_stay = dict.fromkeys(keys, None)
+	# 	problematic_room_stay['room_stay_id'] = room_stay.name
+	# 	problematic_room_stay['description'] = 'Must Check Out Today'
+	# 	room_stay_to_returned.append(problematic_room_stay)
+
 	return  room_stay_to_returned
 
 @frappe.whitelist()
@@ -52,3 +68,18 @@ def precheck_dayend_close(audit_date):
 	audit_date_object = datetime.datetime.strptime(audit_date, '%Y-%m-%d').date()
 	return fetch_problematic_reservation(audit_date_object), fetch_problematic_room_stay(audit_date_object)
 
+@frappe.whitelist()
+def get_reservation_url(reservation_id):
+	return frappe.utils.get_url_to_form('Reservation', reservation_id)
+
+@frappe.whitelist()
+def get_room_stay_url(room_stay_id):
+	return frappe.utils.get_url_to_form('Room Stay', room_stay_id)
+
+@frappe.whitelist()
+def proceed_dayend_close(dayend_close_id):
+	dayend_close = frappe.get_doc('Dayend Close', dayend_close_id)
+	dayend_close.is_closed = 1
+	dayend_close.save()
+
+	return frappe.db.get_value('Dayend Close', dayend_close_id, "is_closed")
