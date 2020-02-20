@@ -239,6 +239,9 @@ frappe.ui.form.on('Room Stay', {
 				}
 			});
 		}
+		else {
+			get_available('room_id', 'room_stay', child);
+		}
 	},
 	discount_percentage: function(frm, cdt, cdn) {
 		var child = locals[cdt][cdn];
@@ -410,7 +413,8 @@ function get_available(child_field, doc_field, child) {
 				'parent': initial_room_stay.reservation_id,
 				'allow_smoke': child.allow_smoke,
 				'room_type': child.room_type,
-				'bed_type': child.bed_type
+				'bed_type': child.bed_type,
+				'doc_field': doc_field
 			}
 		}
 	}
